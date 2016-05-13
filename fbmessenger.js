@@ -1,7 +1,9 @@
 var request = require('request'); // For making HTTP requests
 
-var recipientUrl = "https://www.messenger.com/t/ar.alexandre.rose";
-var cookie = "datr=Agw1V9d_8BmmeorcPYRBXvso; lu=gAJUWY8szjNLQb_UyPnycqbg; act=1463099107187%2F30; p=-2; c_user=512556997; xs=58%3AlCwZPdZBVmLGug%3A2%3A1463094278%3A3609; csm=2; s=Aa6USszVzI7qEWRq; sb=Bgw1VzrCC4G25vt28rlg5eHw; presence=EDvF3EtimeF1463149734EuserFA2512556997A2EstateFDutF1463149734436CEchFDp_5f512556997F251CC; wd=913x643";
+var recipientUrl = "https://www.messenger.com/t/" + null; // Your recipient;
+var recipientId = null; // recipientId
+var cookie = null; // Your cookie;
+var userId = null; // Your userID;
 var messageBody = process.argv[2];
 var utcTimestamp = new Date().getTime();
 var localTime = new Date().toLocaleTimeString().replace(/\s+/g, '').toLowerCase();
@@ -21,7 +23,7 @@ request.post("https://www.messenger.com/ajax/mercury/send_messages.php?dpr=1", {
   },
   formData: {
     'message_batch[0][action_type]':'ma-type:user-generated-message',
-    'message_batch[0][author]':'fbid:512556997',
+    'message_batch[0][author]':'fbid:' + userId,
     'message_batch[0][timestamp]': utcTimestamp,
     'message_batch[0][timestamp_absolute]':'Today',
     'message_batch[0][timestamp_relative]': localTime,
@@ -38,16 +40,16 @@ request.post("https://www.messenger.com/ajax/mercury/send_messages.php?dpr=1", {
     'message_batch[0][body]': messageBody,
     'message_batch[0][has_attachment]':'false',
     'message_batch[0][html_body]':'false',
-    'message_batch[0][specific_to_list][0]':'fbid:731419306',
-    'message_batch[0][specific_to_list][1]':'fbid:512556997',
+    'message_batch[0][specific_to_list][0]':'fbid:' + recipientId,
+    'message_batch[0][specific_to_list][1]':'fbid:' + userId,
     'message_batch[0][status]':'0',
     //'message_batch[0][offline_threading_id]': messageId,
     //'message_batch[0][message_id]': messageId,
     'message_batch[0][ephemeral_ttl_mode]':'0',
     'message_batch[0][manual_retry_cnt]':'0',
-    'message_batch[0][other_user_fbid]':'731419306',
+    'message_batch[0][other_user_fbid]': recipientId,
     'client':'mercury',
-    '__user':'512556997',
+    '__user': userId,
     '__a':'1',
     '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
     '__req':'2q',
