@@ -67,7 +67,46 @@ Messenger.prototype.sendMessage = function(body) {
     if (err) {
       return console.error('upload failed:', err);
     }
-    console.log('Post successful');
+  });
+};
+
+Messenger.prototype.getLastMessage = function() {
+  var messenger = this;
+  var offSetString = 'messages[user_ids][' + messenger.recipientId + '][offset]';
+  var limitString = 'messages[user_ids][' + messenger.recipientId + '][limit]';
+  request.post('https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1', {
+    headers: {
+      'origin': 'https://www.messenger.com',
+      'accept-encoding': 'gzip, deflate',
+      'x-msgr-region': 'ATN',
+      'accept-language': 'en-US,en;q=0.8',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': '*/*',
+      'referer': messenger.recipientUrl,
+      'cookie': messenger.cookie,
+      'authority': 'www.messenger.com'
+    },
+    formData: {
+      offSetString : '1',
+      limitString : '20',
+      'client':'mercury',
+      '__user':'512556997',
+      '__a':'1',
+      '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
+      '__req':'5',
+      '__be':'0',
+      '__pc':'EXP1:messengerdotcom_pkg',
+      'fb_dtsg':'AQG6Jrs1CKiJ:AQF6DSaM1AMk',
+      'ttstamp':'2658171547411411549677510574586581705468839777496577107',
+      '__rev':'2335772'
+    },
+    gzip: true
+  }, function(err, httpResponse, body) {
+    if (err) {
+      return console.error('upload failed:', err);
+    }
+    console.log(httpResponse);
   });
 };
 
