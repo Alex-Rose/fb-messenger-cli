@@ -1,13 +1,16 @@
 var request = require('request'); // For making HTTP requests
+var rp = require('request-promise');
+var vm = require('vm');
 
-var Messenger = function(recipient, recipientId, cookie, userId) {
+var Messenger = function(recipient, recipientId, cookie, userId, fbdtsg) {
   this.recipientUrl = "https://www.messenger.com/t/" + recipient; // Your recipient;
   this.recipientId = recipientId; // recipientId
   this.cookie = cookie; // Your cookie;
   this.userId = userId; // Your userID;
+  this.fbdtsg = fbdtsg;
 };
 
-Messenger.prototype.sendMessage = function(body) {
+Messenger.prototype.sendMessage = function(body, callback) {
   var messenger = this;
   var utcTimestamp = new Date().getTime();
   var localTime = new Date().toLocaleTimeString().replace(/\s+/g, '').toLowerCase();
@@ -55,26 +58,28 @@ Messenger.prototype.sendMessage = function(body) {
       'client':'mercury',
       '__user': messenger.userId,
       '__a':'1',
-      '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
       '__req':'2q',
       '__be':'0',
       '__pc':'EXP1:messengerdotcom_pkg',
-      'fb_dtsg':'AQFIEwDCU4vu:AQH-RM3y48nr',
+      'fb_dtsg': messenger.fbdtsg,
       'ttstamp':'265817073691196867855211811758658172458277511215256110114',
       '__rev':'2335431'
     }
   }, function(err, httpResponse, body) {
     if (err) {
-      return console.error('upload failed:', err);
+      callback(err);
     }
   });
 };
 
-Messenger.prototype.getLastMessage = function() {
+Messenger.prototype.getLastMessage = function(callback) {
   var messenger = this;
   var offSetString = 'messages[user_ids][' + messenger.recipientId + '][offset]';
   var limitString = 'messages[user_ids][' + messenger.recipientId + '][limit]';
-  request.post('https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1', {
+
+  var options = {
+    url: 'https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1',
+    method: 'POST',
     headers: {
       'origin': 'https://www.messenger.com',
       'accept-encoding': 'gzip, deflate',
@@ -93,21 +98,60 @@ Messenger.prototype.getLastMessage = function() {
       'client':'mercury',
       '__user':'512556997',
       '__a':'1',
-      '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
       '__req':'5',
       '__be':'0',
       '__pc':'EXP1:messengerdotcom_pkg',
-      'fb_dtsg':'AQG6Jrs1CKiJ:AQF6DSaM1AMk',
       'ttstamp':'2658171547411411549677510574586581705468839777496577107',
       '__rev':'2335772'
     },
-    gzip: true
-  }, function(err, httpResponse, body) {
-    if (err) {
-      return console.error('upload failed:', err);
-    }
-    console.log(httpResponse);
-  });
+    gzip: true,
+    json: true
+  };
+
+  rp(options)
+    .then(function(body){
+      jsonpSandbox = vm.createContext({callback: function(r){return r;}});
+      parsedBody = vm.runInContext(body,jsonpSandbox);
+      callback(false, parsedBody);
+    })
+    .catch(function(err){
+      callback(err);
+    });
+
+  // request.post('https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1', {
+  //   headers: {
+  //     'origin': 'https://www.messenger.com',
+  //     'accept-encoding': 'gzip, deflate',
+  //     'x-msgr-region': 'ATN',
+  //     'accept-language': 'en-US,en;q=0.8',
+  //     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+  //     'content-type': 'application/x-www-form-urlencoded',
+  //     'accept': '*/*',
+  //     'referer': messenger.recipientUrl,
+  //     'cookie': messenger.cookie,
+  //     'authority': 'www.messenger.com'
+  //   },
+  //   formData: {
+  //     offSetString : '1',
+  //     limitString : '20',
+  //     'client':'mercury',
+  //     '__user':'512556997',
+  //     '__a':'1',
+  //     '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
+  //     '__req':'5',
+  //     '__be':'0',
+  //     '__pc':'EXP1:messengerdotcom_pkg',
+  //     'fb_dtsg':'AQG6Jrs1CKiJ:AQF6DSaM1AMk',
+  //     'ttstamp':'2658171547411411549677510574586581705468839777496577107',
+  //     '__rev':'2335772'
+  //   },
+  //   gzip: true
+  // }, function(err, response, body) {
+  //   if (err) {
+  //     callback(err);
+  //   }
+  //   callback(false, body);
+  // });
 };
 
 module.exports = Messenger;
