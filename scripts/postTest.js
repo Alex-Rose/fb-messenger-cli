@@ -13,10 +13,9 @@ Ask.prototype.password(function (password) {
         var userId = json.c_user;
         var recipient = "samuel.bergeron";
         var recipientId = "512556997";
-        
+
         var messenger = new Messenger(recipient, recipientId, cookie, userId, fbdtsg);
         messenger.sendMessage(process.argv[2]);
     });
-    
-});
 
+});
