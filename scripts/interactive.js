@@ -8,6 +8,7 @@ var crypt = new Crypt('password');
 messenger = undefined;
 
 var options = {};
+var recipientId = '';
 var nextAction = 0;
 var handlers = [
   // 0 - select conversation
@@ -16,20 +17,33 @@ var handlers = [
     var user = messenger.users[id];
     
     messenger.getLastMessage(user.vanity, id, function(messages) {
+      recipientId = id;
       for (i in messages) {
         var message = messages[i];
         var authorString = message.author;
         
         if (authorString.indexOf('fbid:') == 0) authorString = authorString.substr('fbid:'.length);
         
+        
         var author = messenger.users[authorString];
+        
         if (author.id != messenger.userId) {
           stdout.write(author.name.green);
         } else {
           stdout.write(author.name);
         }
+        
         console.log(" : " + message.body);
       }
+      
+      options = {};
+      nextAction = 1;
+    });
+  },
+  // 1 - Send message
+  function(text) {
+    messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, text, function(err) {
+      
     });
   }
 ];
