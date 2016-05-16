@@ -2,15 +2,16 @@ var request = require('request'); // For making HTTP requests
 var rp = require('request-promise');
 var vm = require('vm');
 
-var Messenger = function(recipient, recipientId, cookie, userId, fbdtsg) {
-  this.recipientUrl = "https://www.messenger.com/t/" + recipient; // Your recipient;
-  this.recipientId = recipientId; // recipientId
+var Messenger = function(cookie, userId, fbdtsg) {
+  this.baseUrl = 'https://www.messenger.com';
   this.cookie = cookie; // Your cookie;
   this.userId = userId; // Your userID;
   this.fbdtsg = fbdtsg;
+  this.users = {};
 };
 
-Messenger.prototype.sendMessage = function(body, callback) {
+Messenger.prototype.sendMessage = function(recipient, recipientId, body, callback) {
+  var recipientUrl = this.baseUrl + "/t/" + recipient; // Your recipient;
   var messenger = this;
   var utcTimestamp = new Date().getTime();
   var localTime = new Date().toLocaleTimeString().replace(/\s+/g, '').toLowerCase();
@@ -24,7 +25,7 @@ Messenger.prototype.sendMessage = function(body, callback) {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
       'content-type': 'application/x-www-form-urlencoded',
       'accept': '*/*',
-      'referer': messenger.recipientUrl,
+      'referer': recipientUrl,
       'cookie': messenger.cookie,
       'authority': 'www.messenger.com'
     },
@@ -47,14 +48,14 @@ Messenger.prototype.sendMessage = function(body, callback) {
       'message_batch[0][body]': body,
       'message_batch[0][has_attachment]':'false',
       'message_batch[0][html_body]':'false',
-      'message_batch[0][specific_to_list][0]':'fbid:' + messenger.recipientId,
+      'message_batch[0][specific_to_list][0]':'fbid:' + recipientId,
       'message_batch[0][specific_to_list][1]':'fbid:' + messenger.userId,
       'message_batch[0][status]':'0',
       //'message_batch[0][offline_threading_id]': messageId,
       //'message_batch[0][message_id]': messageId,
       'message_batch[0][ephemeral_ttl_mode]':'0',
       'message_batch[0][manual_retry_cnt]':'0',
-      'message_batch[0][other_user_fbid]': messenger.recipientId,
+      'message_batch[0][other_user_fbid]': recipientId,
       'client':'mercury',
       '__user': messenger.userId,
       '__a':'1',
@@ -72,14 +73,15 @@ Messenger.prototype.sendMessage = function(body, callback) {
   });
 };
 
-Messenger.prototype.getLastMessage = function(callback) {
+Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) {
   var messenger = this;
-  var offSetString = 'messages[user_ids][' + messenger.recipientId + '][offset]';
-  var limitString = 'messages[user_ids][' + messenger.recipientId + '][limit]';
+  var recipientUrl = this.baseUrl + "/t/" + recipient; 
+  var offSetString = 'messages[user_ids][' + recipientId + '][offset]';
+  var limitString = 'messages[user_ids][' + recipientId + '][limit]';
+  var timestampString = 'messages[user_ids][' + recipientId + '][timestamp]';
 
   var options = {
-    url: 'https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1',
-    method: 'POST',
+    url: 'https://www.messenger.com/ajax/mercury/thread_info.php?dpr=1',
     headers: {
       'origin': 'https://www.messenger.com',
       'accept-encoding': 'gzip, deflate',
@@ -88,35 +90,68 @@ Messenger.prototype.getLastMessage = function(callback) {
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
       'content-type': 'application/x-www-form-urlencoded',
       'accept': '*/*',
-      'referer': messenger.recipientUrl,
+      'cache-control': 'max-age=0',
+      'authority': 'www.messenger.com',
       'cookie': messenger.cookie,
-      'authority': 'www.messenger.com'
+      'referer': recipientUrl
     },
     formData: {
-      offSetString : '1',
-      limitString : '20',
       'client':'mercury',
-      '__user':'512556997',
+      '__user':messenger.userId,
       '__a':'1',
-      '__req':'5',
+      '__req':'6',
+      '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O9xicG4EnwkUC9z8Kew',
       '__be':'0',
       '__pc':'EXP1:messengerdotcom_pkg',
-      'ttstamp':'2658171547411411549677510574586581705468839777496577107',
-      '__rev':'2335772'
+      'ttstamp':'265817076671037767104101908958658169691168682107102105117104',
+      'fb_dtsg': messenger.fbdtsg,
+      '__rev':'2336846'
     },
     gzip: true,
-    json: true
   };
-
-  rp(options)
-    .then(function(body){
-      jsonpSandbox = vm.createContext({callback: function(r){return r;}});
-      parsedBody = vm.runInContext(body,jsonpSandbox);
-      callback(false, parsedBody);
-    })
-    .catch(function(err){
-      callback(err);
+  
+  options.formData[offSetString] = '0';
+  options.formData[limitString] = '20';
+  
+  request.post(options, function(err, response, body){
+        if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+        
+        json = JSON.parse(body);
+        msg = json['payload']['actions'];
+        
+        data = [];
+        
+        for (i = 0; i < msg.length; ++i) {
+            m = msg[i];
+            obj = {
+                'author': m['author'],
+                'body': m['body'],
+                'other_user_fbid': m['other_user_fbid'],
+                'thread_fbid': m['thread_fbid'],
+                'timestamp': m['timestamp'],
+                'timestamp_datetime': m['timestamp_datetime']
+            }
+            
+            data.push(obj);
+        }
+        
+        callback(data);
     });
+  
+  // rp(options)
+    // .then(function(body){
+        // console.log(body);
+        // if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+        
+        // json = JSON.parse(body);
+        // console.log(json);
+      // // jsonpSandbox = vm.createContext({callback: function(r){return r;}});
+      // // parsedBody = vm.runInContext(body,jsonpSandbox);
+      // // callback(false, parsedBody);
+    // })
+    // .catch(function(err){
+      // callback("Error happened in vm : " + err);
+    // });
 
   // request.post('https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1', {
   //   headers: {
@@ -154,4 +189,116 @@ Messenger.prototype.getLastMessage = function(callback) {
   // });
 };
 
+Messenger.prototype.getThreads = function(callback) {
+  var messenger = this;
+  
+  var options = {
+    url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
+    headers: {
+      'origin': messenger.baseUrl,
+      'accept-encoding': 'gzip, deflate',
+      'x-msgr-region': 'ATN',
+      'accept-language': 'en-US,en;q=0.8',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': '*/*',
+      'cache-control': 'max-age=0',
+      'authority': 'www.messenger.com',
+      'cookie': messenger.cookie,
+      'referer': messenger.baseUrl
+    },
+    formData: {
+      'inbox[offset]': '0',
+      'inbox[filter]' : '',
+      'inbox[limit]' : '10',
+      'client':'mercury',
+      '__user':messenger.userId,
+      '__a':'1',
+      '__req':'8',
+      '__be':'0',
+      '__pc':'EXP1:messengerdotcom_pkg',
+      'ttstamp':'2658170878850518911395104515865817183457873106120677266',
+      'fb_dtsg': messenger.fbdtsg,
+      '__rev':'2338802'
+    },
+    gzip: true,
+  };
+  
+  request.post(options, function(err, response, body){
+    if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+
+    json = JSON.parse(body);
+    participants = json['payload']['participants'];
+    threads = json['payload']['threads'];
+    
+    data = [];
+    
+    for (i = 0; i < participants.length; ++i) {
+      name = participants[i]['name'];
+      
+      for (j = 0; j < threads.length; ++j) {
+        if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
+          data.push({'name': name, 'snippet' : threads[j]['snippet'], 'thread_fbid': threads[j]['thread_fbid']});
+          break;
+        }
+      }
+    }
+    
+    callback(data);
+  });
+
+};
+
+Messenger.prototype.getFriends = function(callback) {
+  var messenger = this;
+  
+  var options = {
+    url: 'https://www.messenger.com/chat/user_info_all/?viewer=' + messenger.userId + '&dpr=1',
+    headers: {
+      'origin': messenger.baseUrl,
+      'accept-encoding': 'gzip, deflate',
+      'x-msgr-region': 'ATN',
+      'accept-language': 'en-US,en;q=0.8',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': '*/*',
+      'cache-control': 'max-age=0',
+      'authority': 'www.messenger.com',
+      'cookie': messenger.cookie,
+      'referer': messenger.baseUrl
+    },
+    formData: {
+      '__user':messenger.userId,
+      '__a':'1',
+      '__req':'8',
+      '__be':'0',
+      '__pc':'EXP1:messengerdotcom_pkg',
+      'ttstamp':'2658170878850518911395104515865817183457873106120677266',
+      'fb_dtsg': messenger.fbdtsg,
+      '__rev':'2338802'
+    },
+    gzip: true,
+  };
+  
+  request.post(options, function(err, response, body){
+    if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+    json = JSON.parse(body);
+    users = json['payload'];
+    
+    for (id in users) {
+      var entry = {};
+      var user = users[id];
+      
+      entry['id'] = id;
+      entry['firstName'] = user['firstName'];
+      entry['name'] = user['name'];
+      entry['vanity'] = user['vanity'];
+      
+      messenger.users[id] = entry;
+    }
+    
+    callback(messenger.users);
+  });
+  
+};
 module.exports = Messenger;
