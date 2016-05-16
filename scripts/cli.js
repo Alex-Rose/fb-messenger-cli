@@ -1,11 +1,6 @@
 var Login = require('./login.js');
 var prompt = require('prompt');
 
-login = new Login();
-
-
-/////// TEST
-
 var schema = {
     properties: {
       email: {
@@ -20,20 +15,25 @@ var schema = {
   //
   // Start the prompt
   //
-  prompt.start();
+    prompt.start();
 
   //
   // Get two properties from the user: email, password
   //
-  prompt.get(schema, function (err, result) {
-    //
-    // Log the results.
-    //
-    console.log('Command-line input received:');
-    console.log('  name: ' + result.email);
-    // console.log('  password: ' + result.password);
-    
-    login.getCookie(result.email, result.password);
+    prompt.get(schema, function (err, result) {
+      
+        var foo = new run_cmd(
+            'phantomjs', ['phantom.js', result.email, result.password],
+            function () { 
+                
+            }
+        );
   });
 
-///////
+function run_cmd(cmd, args, cb) {
+    var spawn = require('child_process').spawn,
+        child = spawn(cmd, args),
+        me = this;
+    child.stdout.on('data', function (buffer) { console.log(buffer.toString());});
+    child.stdout.on('end', cb);
+}

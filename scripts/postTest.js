@@ -1,9 +1,9 @@
 var Messenger = require('./messenger.js');
 
-var cookie = "datr=Agw1V9d_8BmmeorcPYRBXvso; lu=gAJUWY8szjNLQb_UyPnycqbg; c_user=512556997; xs=58%3AlCwZPdZBVmLGug%3A2%3A1463094278%3A3609; csm=2; s=Aa6USszVzI7qEWRq; sb=Bgw1VzrCC4G25vt28rlg5eHw; p=-2; act=1463161642186%2F11; presence=EDvF3EtimeF1463162784EuserFA2512556997A2EstateFDutF1463162784238CEchFDp_5f512556997F317CC; wd=913x643";
-var recipient = "ar.alexandre.rose";
-var recipientId = "731419306";
-var userId = "512556997";
+var cookie = "datr=9O04V7WwRgh_kfKy3cfsAuMv; sb=bPk4V_BRJu82XWN_8MRfpn4K; c_user=731419306; xs=103%3APCvNW1wqGaFi4w%3A2%3A1463351660%3A11863; csm=2; s=Aa4IsthLMxuNktjn.BXOPlt; lu=RhqXEa0bDQzxBJdt_dhrLrVw; p=-2; presence=EDvF3EtimeF1463352390EuserFA2731419306A2EstateFDutF1463352390707CEchFDp_5f731419306F45CC; wd=400x300";
+var recipient = "samuel.bergeron";
+var recipientId = "512556997";
+var userId = "731419306";
 
 var messenger = new Messenger(recipient, recipientId, cookie, userId);
 messenger.sendMessage(process.argv[2]);
