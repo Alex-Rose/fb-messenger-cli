@@ -4,6 +4,13 @@ var cookie = "datr=Agw1V9d_8BmmeorcPYRBXvso; lu=gAJUWY8szjNLQb_UyPnycqbg; c_user
 var recipient = "ar.alexandre.rose";
 var recipientId = "731419306";
 var userId = "512556997";
+var dtsg = "AQGXavCd-7ML:AQFlZ64DIVja";
 
-var messenger = new Messenger(recipient, recipientId, cookie, userId);
-messenger.getLastMessage();
+var messenger = new Messenger(recipient, recipientId, cookie, userId, dtsg);
+
+console.log(messenger.getLastMessage(function(err, res){
+  if(err)
+    console.log("Error occured during message fetch: ", err);
+  else{
+    console.log(res);
+  }}));
