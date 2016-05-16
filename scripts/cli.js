@@ -42,10 +42,10 @@ function run_cmd(cmd, args, cb) {
         me = this;
         var data = '';
     child.stdout.on('data', function (buffer) { 
-        if (me.data == undefined) { 
+        if (me.data === undefined) { 
             me.data = buffer.toString();
         } else {
-            me.data += buffer.toString()   
+            me.data += buffer.toString(); 
         }
     });
     child.stdout.on('end', cb);

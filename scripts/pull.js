@@ -23,8 +23,8 @@ crypt.load(function(data) {
   url += '&idle=101';
   url += '&qp=y';
   url += '&cap=8';
-  url += '&pws=fresh' // Fresh is better :P
-  url += '&isq=199552' // This magic number is worthy of projet 3
+  url += '&pws=fresh'; // Fresh is better :P
+  url += '&isq=199552'; // This magic number is worthy of projet 3
   url += '&msgs_recv=0';
   url += '&uid=' + userId;
   url += '&viewer_uid' + userId;
@@ -55,7 +55,7 @@ crypt.load(function(data) {
     
     request.get(options).on('data', function(chunk){
       var data = chunk.toString('utf8');
-      if (data.indexOf('for (;;);') == 0) {data = data.substr('for (;;);'.length)};
+      if (data.indexOf('for (;;);') === 0) {data = data.substr('for (;;);'.length);}
       
       try {
         if (data.length > 0) {
@@ -75,7 +75,7 @@ crypt.load(function(data) {
               for (var j in message.ms) {
                 var ms = message.ms[j];
                 // console.log(ms.type);
-                if (ms.type == 'delta' && ms.delta != undefined) {
+                if (ms.type == 'delta' && ms.delta !== undefined) {
                   console.log(ms.delta.body);
                 }
                 else if (ms.type == 'typ') {

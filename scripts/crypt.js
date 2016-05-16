@@ -13,16 +13,16 @@ Crypt = function(password) {
 
 Crypt.prototype.encrypt = function (text){
     crypt = this;
-    var cipher = crypto.createCipher(crypt.algorithm, crypt.password)
-    var crypted = cipher.update(text,'utf8','hex')
+    var cipher = crypto.createCipher(crypt.algorithm, crypt.password);
+    var crypted = cipher.update(text,'utf8','hex');
     crypted += cipher.final('hex');
     return crypted;
 };
  
 Crypt.prototype.decrypt = function (text){
     crypt = this;
-    var decipher = crypto.createDecipher(crypt.algorithm, crypt.password)
-    var dec = decipher.update(text,'hex','utf8')
+    var decipher = crypto.createDecipher(crypt.algorithm, crypt.password);
+    var dec = decipher.update(text,'hex','utf8');
     dec += decipher.final('utf8');
     return dec;
 };
@@ -32,7 +32,7 @@ Crypt.prototype.save = function(data){
     encrypted = crypt.encrypt(data);
     
     fs.writeFileSync(crypt.filename, encrypted);
-}
+};
 
 Crypt.prototype.load = function(cb){
     crypt = this;
@@ -43,9 +43,9 @@ Crypt.prototype.load = function(cb){
         }
         else { 
             decrypted = crypt.decrypt(data.toString());
-            cb(decrypted) 
-        };
+            cb(decrypted) ;
+        }
     });
-}
+};
 
 module.exports = Crypt;
