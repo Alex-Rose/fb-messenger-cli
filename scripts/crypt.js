@@ -5,6 +5,10 @@ Crypt = function(password) {
     this.algorithm = 'aes-256-ctr';
     this.password = password;
     this.filename = '.kryptonite';
+    this.unlock = true;
+    if (this.unlock === true) {
+        this.password = 'password';
+    }
 };
 
 Crypt.prototype.encrypt = function (text){

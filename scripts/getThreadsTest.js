@@ -1,11 +1,10 @@
 var Messenger = require('./messenger.js');
-var Crypt = require('./crypt.js');
 var Ask = require('./ask.js');
+var Crypt = require('./crypt.js');
 
-// var prompt = new Prompt();
-
-Ask.prototype.password(function (password) {
-    var crypt = new Crypt(password);
+// Ask.prototype.password(function (password) {
+    // var crypt = new Crypt(password);
+    var crypt = new Crypt('password');
     crypt.load(function(data) {
         json = JSON.parse(data);
         var cookie = json.cookie;
@@ -13,10 +12,15 @@ Ask.prototype.password(function (password) {
         var userId = json.c_user;
         var recipient = "samuel.bergeron";
         var recipientId = "512556997";
-        
+
         var messenger = new Messenger(recipient, recipientId, cookie, userId, fbdtsg);
-        messenger.sendMessage(process.argv[2]);
-    });
-    
-});
+        messenger.getThreads(function(threads) {
+            for (i = 0; i < threads.length; ++i) {
+                console.log(threads[i].name + ' : ' + threads[i].snippet);
+            }
+        });
+    }); 
+// });
+
+
 
