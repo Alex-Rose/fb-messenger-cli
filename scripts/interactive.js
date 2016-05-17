@@ -1,5 +1,7 @@
 var Crypt = require('./crypt.js');
 var Messenger = require('./messenger.js');
+var util = require('./util.js');
+
 var colors = require('colors');
 var events = require('events');
 var stdin = process.openStdin();
@@ -59,6 +61,7 @@ var getLastMessageListener = function(nb) {
 
   messenger.getLastMessage(user.vanity, id, function(messages) {
     recipientId = id;
+    util.refreshConsole();
     for (var i in messages) {
       var message = messages[i];
       var authorString = message.author;
@@ -81,6 +84,7 @@ var getLastMessageListener = function(nb) {
 
 var getConversationsListener = function() {
   messenger.getThreads(function(threads) {
+    util.refreshConsole();
     options = {};
     for (i = 0; i < threads.length; ++i) {
         console.log('[' + i + '] ' + threads[i].name + ' : ' + threads[i].snippet);
@@ -102,12 +106,16 @@ var handler = function(choice) {
   var value = choice.toString().trim();
 
   // this works for now
-  if(value.toLowerCase() === "menu"){
+  if(value.toLowerCase() === 'menu'){
     console.log('Bringing you back to the friend selection screen...'.cyan);
-    console.log('Press Ctrl-C to exit'.cyan);
-
     emitter.emit('getConvos');
     return;
+  }
+
+  if(value.toLowerCase() === 'exit'){
+    console.log('Thanks for using fb-messenger-cli'.cyan);
+    console.log('Bye!'.cyan);
+    process.exit(0);
   }
 
   if(action === 0) {
