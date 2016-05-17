@@ -106,8 +106,8 @@ Pull.prototype.sendRequest = function() {
               // console.log(ms.type);
               if (ms.type == 'delta' && ms.delta !== undefined && ms.delta.body !== undefined) {
                 // console.log(ms.delta.body);
-                pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body});
-                // console.log(ms.delta);
+                pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body, 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
+                // console.log(ms.delta.messageMetadata.threadKey.otherUserFbId);
               }
               else if (ms.type == 'typ') {
                 if (ms.st == '1') {
@@ -124,13 +124,13 @@ Pull.prototype.sendRequest = function() {
               pull.seq++;
               pull.hadIncrement = false;
             }
-            pull.sendRequest();
+            // pull.sendRequest();
             
           }
           else if (message.t == 'fullReload') {
             pul.seq = message.seq;
             pul.hadIncrement = false;
-            pull.sendRequest();
+            // pull.sendRequest();
           }
         }
       }
@@ -143,6 +143,7 @@ Pull.prototype.sendRequest = function() {
   
   pull.connection.on('end', function() {
     // console.log('CONNECTION HAS ENDED!!!');
+      pull.sendRequest();
   });
   
 };
