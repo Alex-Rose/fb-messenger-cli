@@ -11,9 +11,12 @@ crypt.load(function(data) {
   var userId = json.c_user;
 
   var seq = 1;
-  var clientId = 'a737aed';
+  var hadIncrement = false;
+  // var clientId = 'a737aed';
+  var clientId = '472aed';
   var msgRecv = 0;
-  
+
+var f = function() {  
   var url = 'https://3-edge-chat.messenger.com/pull?';
   url += 'channel=p_' + userId;
   url += '&seq=' + seq;
@@ -52,14 +55,15 @@ crypt.load(function(data) {
       gzip: true,
     };
     
-    
-    request.get(options).on('data', function(chunk){
+    // console.log('requesting seq=' + seq);
+    var connection = request.get(options);
+    connection.on('data', function(chunk){
       var data = chunk.toString('utf8');
       if (data.indexOf('for (;;);') === 0) {data = data.substr('for (;;);'.length);}
       
       try {
         if (data.length > 0) {
-          console.log(data);
+          // console.log(data);
           json = JSON.parse(data);
           
           if (!Array.isArray(json)) {
@@ -70,12 +74,14 @@ crypt.load(function(data) {
             var message = json[i];
             
             if (message.t == 'msg') {
+              seq = message.seq;
+              hadIncrement = true;
               // console.log('Got seq ' + message.seq);
               
               for (var j in message.ms) {
                 var ms = message.ms[j];
                 // console.log(ms.type);
-                if (ms.type == 'delta' && ms.delta !== undefined) {
+                if (ms.type == 'delta' && ms.delta !== undefined && ms.delta.body !== undefined) {
                   console.log(ms.delta.body);
                 }
                 else if (ms.type == 'typ') {
@@ -88,16 +94,35 @@ crypt.load(function(data) {
               }
               
             } else if (message.t == 'heartbeat') {
-              console.log('Got heartbeat... need to restart');
+              // console.log('Got heartbeat... need to restart');
+              if (hadIncrement) {
+                seq++;
+                hadIncrement = false;
+              }
+              f();
+            }
+            else if (message.t == 'fullReload') {
+              seq = message.seq;
+              hadIncrement = false;
+              f();
             }
           }
         }
       } catch (err) {
         console.error(err);
+        console.log('Chunk was : ' + chunk);
       }
     });
     
+    connection.on('end', function() {
+      // console.log('CONNECTION HAS ENDED!!!');
+    });
+    
+  };
+  
+  f();
     // function(err, response, body){
       // console.log(body);
     // });
 }); 
+
