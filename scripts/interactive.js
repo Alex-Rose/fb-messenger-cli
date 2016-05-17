@@ -6,54 +6,14 @@ var colors = require('colors');
 var events = require('events');
 var stdin = process.openStdin();
 var stdout = process.stdout;
-
-var crypt = new Crypt('password');
-messenger = undefined;
-
 var emitter = new events.EventEmitter();
+var crypt = new Crypt('password');
 var options = {};
 var recipientId = '';
 // 0 is select conversation, 1 is send message
 var action = 0;
 
-
-// var handlers = [
-//   // 0 - select conversation
-//   function(nb) {
-//     var id = options[nb];
-//     var user = messenger.users[id];
-//
-//     messenger.getLastMessage(user.vanity, id, function(messages) {
-//       recipientId = id;
-//       for (var i in messages) {
-//         var message = messages[i];
-//         var authorString = message.author;
-//
-//         if (authorString.indexOf('fbid:') === 0) authorString = authorString.substr('fbid:'.length);
-//
-//
-//         var author = messenger.users[authorString];
-//
-//         if (author.id != messenger.userId) {
-//           stdout.write(author.name.green);
-//         } else {
-//           stdout.write(author.name);
-//         }
-//
-//         console.log(" : " + message.body);
-//       }
-//
-//       options = {};
-//       nextAction = 1;
-//     });
-//   },
-//   // 1 - Send message
-//   function(text) {
-//     messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, text, function(err) {
-//     });
-//     console.log('Me : ' + text);
-//   }
-// ];
+function InteractiveCli(){}
 
 var getLastMessageListener = function(nb) {
   var id = options[nb];
@@ -132,39 +92,40 @@ var handler = function(choice) {
   }
 };
 
-// var stdinListener = function(d) {
-//   value = d.toString().trim();
-//
-//   handlers[nextAction](value);
-// };
+InteractiveCli.prototype.run = function(){
+    crypt.load(function(data) {
+      json = JSON.parse(data);
+      var cookie = json.cookie;
+      var fbdtsg = json.fb_dtsg;
+      var userId = json.c_user;
 
-crypt.load(function(data) {
-    json = JSON.parse(data);
-    var cookie = json.cookie;
-    var fbdtsg = json.fb_dtsg;
-    var userId = json.c_user;
+      messenger = new Messenger(cookie, userId, fbdtsg);
 
-    messenger = new Messenger(cookie, userId, fbdtsg);
+      // register our listeners
+      emitter.on('getConvos', getConversationsListener);
+      emitter.on('sendMessage', sendMessageListener);
+      emitter.on('getMessages', getLastMessageListener);
 
-    // register our listeners
-    emitter.on('getConvos', getConversationsListener);
-    emitter.on('sendMessage', sendMessageListener);
-    emitter.on('getMessages', getLastMessageListener);
+      messenger.getFriends(function(friends) {
+        var entry = {};
 
-    messenger.getFriends(function(friends) {
-      var entry = {};
+        // My linter was complaining that this wasn't dot notation... sorry
+        entry.id = userId;
+        entry.firstName = "Me";
+        entry.name = "Me";
+        entry.vanity = "unknown";
+        messenger.users[userId] = entry;
+      });
 
-      // My linter was complaining that this wasn't dot notation... sorry
-      entry.id = userId;
-      entry.firstName = "Me";
-      entry.name = "Me";
-      entry.vanity = "unknown";
-      messenger.users[userId] = entry;
-    });
+      // Print the list for the first times
+      emitter.emit('getConvos');
 
-    // Print the list for the first times
-    emitter.emit('getConvos');
+      stdin.addListener("data", handler);
+    // });
+  });
+};
 
-    stdin.addListener("data", handler);
-  // });
-});
+var interactive = new InteractiveCli();
+interactive.run();
+
+module.exports = InteractiveCli;
