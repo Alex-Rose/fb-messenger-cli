@@ -2,7 +2,7 @@ var request = require('request');
 var Crypt = require('./crypt.js');
 var stream = require('stream');
 
-var crypt = new Crypt('password');
+var crypt = Crypt.getInstance();
 
 crypt.load(function(data) {
   json = JSON.parse(data);

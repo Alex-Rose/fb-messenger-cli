@@ -13,8 +13,8 @@ var Crypt = require('./crypt.js');
         var recipient = "samuel.bergeron";
         var recipientId = "512556997";
 
-        var messenger = new Messenger(recipient, recipientId, cookie, userId, fbdtsg);
-        messenger.getLastMessage(function(a) {
+        var messenger = new Messenger(cookie, userId, fbdtsg);
+        messenger.getLastMessage(recipient, recipientId, function(a) {
             console.log(a);
         });
     });
