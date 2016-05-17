@@ -75,7 +75,7 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
 
 Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) {
   var messenger = this;
-  var recipientUrl = this.baseUrl + "/t/" + recipient; 
+  var recipientUrl = this.baseUrl + "/t/" + recipient;
   var offSetString = 'messages[user_ids][' + recipientId + '][offset]';
   var limitString = 'messages[user_ids][' + recipientId + '][limit]';
   var timestampString = 'messages[user_ids][' + recipientId + '][timestamp]';
@@ -109,18 +109,18 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) 
     },
     gzip: true,
   };
-  
+
   options.formData[offSetString] = '0';
   options.formData[limitString] = '20';
-  
+
   request.post(options, function(err, response, body){
         if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
-        
+
         json = JSON.parse(body);
         msg = json['payload']['actions'];
-        
+
         data = [];
-        
+
         for (i = 0; i < msg.length; ++i) {
             m = msg[i];
             obj = {
@@ -131,18 +131,18 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) 
                 'timestamp': m['timestamp'],
                 'timestamp_datetime': m['timestamp_datetime']
             }
-            
+
             data.push(obj);
         }
-        
+
         callback(data);
     });
-  
+
   // rp(options)
     // .then(function(body){
         // console.log(body);
         // if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
-        
+
         // json = JSON.parse(body);
         // console.log(json);
       // // jsonpSandbox = vm.createContext({callback: function(r){return r;}});
@@ -191,7 +191,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) 
 
 Messenger.prototype.getThreads = function(callback) {
   var messenger = this;
-  
+
   var options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
     headers: {
@@ -223,19 +223,19 @@ Messenger.prototype.getThreads = function(callback) {
     },
     gzip: true,
   };
-  
+
   request.post(options, function(err, response, body){
     if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
 
     json = JSON.parse(body);
     participants = json['payload']['participants'];
     threads = json['payload']['threads'];
-    
+
     data = [];
-    
+
     for (i = 0; i < participants.length; ++i) {
       name = participants[i]['name'];
-      
+
       for (j = 0; j < threads.length; ++j) {
         if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
           data.push({'name': name, 'snippet' : threads[j]['snippet'], 'thread_fbid': threads[j]['thread_fbid']});
@@ -243,7 +243,7 @@ Messenger.prototype.getThreads = function(callback) {
         }
       }
     }
-    
+
     callback(data);
   });
 
@@ -251,7 +251,7 @@ Messenger.prototype.getThreads = function(callback) {
 
 Messenger.prototype.getFriends = function(callback) {
   var messenger = this;
-  
+
   var options = {
     url: 'https://www.messenger.com/chat/user_info_all/?viewer=' + messenger.userId + '&dpr=1',
     headers: {
@@ -279,26 +279,26 @@ Messenger.prototype.getFriends = function(callback) {
     },
     gzip: true,
   };
-  
+
   request.post(options, function(err, response, body){
     if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
     json = JSON.parse(body);
     users = json['payload'];
-    
+
     for (id in users) {
       var entry = {};
       var user = users[id];
-      
+
       entry['id'] = id;
       entry['firstName'] = user['firstName'];
       entry['name'] = user['name'];
       entry['vanity'] = user['vanity'];
-      
+
       messenger.users[id] = entry;
     }
-    
+
     callback(messenger.users);
   });
-  
+
 };
 module.exports = Messenger;
