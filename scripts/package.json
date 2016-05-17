@@ -8,6 +8,7 @@
     "cheerio": "^0.20.0",
     "colors": "^1.1.2",
     "crypto": "0.0.3",
+    "events": "^1.1.0",
     "fs": "0.0.2",
     "node-phantom-simple": "^2.2.4",
     "prompt": "^1.0.0",
