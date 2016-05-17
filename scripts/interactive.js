@@ -1,6 +1,7 @@
 var Crypt = require('./crypt.js');
 var Messenger = require('./messenger.js');
 var util = require('./util.js');
+var Pull = require('./pull.js');
 
 var colors = require('colors');
 var events = require('events');
@@ -13,7 +14,11 @@ var recipientId = '';
 // 0 is select conversation, 1 is send message
 var action = 0;
 
-function InteractiveCli(){}
+function InteractiveCli(){
+  this.pull = new Pull();
+  this.pull.on('message', receiveMessageListener);
+  this.pull.execute();
+};
 
 var getLastMessageListener = function(nb) {
   var id = options[nb];
@@ -61,6 +66,21 @@ var sendMessageListener = function(m) {
   });
 };
 
+var receiveMessageListener = function(message) { 
+  var author = messenger.users[message.author];
+  
+  if (author === undefined) return;
+
+  if (author.id != messenger.userId) {
+    stdout.write(author.name.green);
+  } else {
+    stdout.write(author.name);
+  }
+
+  console.log(" : " + message.body);
+  // console.log(m);
+};
+
 var convoChoice = null;
 var handler = function(choice) {
   var value = choice.toString().trim();
@@ -85,10 +105,10 @@ var handler = function(choice) {
   } else if(action === 1) {
     emitter.emit('sendMessage', value);
 
-    // Wait a little to reprint or we won't see our own message
-    setTimeout(function() {
-      emitter.emit('getMessages', convoChoice);
-    }, 500);
+    // // Wait a little to reprint or we won't see our own message
+    // setTimeout(function() {
+      // emitter.emit('getMessages', convoChoice);
+    // }, 500);
   }
 };
 

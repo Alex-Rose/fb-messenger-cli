@@ -8,7 +8,7 @@ Pull = function() {
   this.seq = 1;
   // var clientId = 'a737aed';
   this.hadIncrement = false;
-  this.clientId = '473aed';
+  this.clientId = '474aed';
   this.msgRecv = 0;
   this.connection = undefined;
 };
@@ -106,7 +106,8 @@ Pull.prototype.sendRequest = function() {
               // console.log(ms.type);
               if (ms.type == 'delta' && ms.delta !== undefined && ms.delta.body !== undefined) {
                 // console.log(ms.delta.body);
-                pull.emit('message', ms.delta.body);
+                pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body});
+                // console.log(ms.delta);
               }
               else if (ms.type == 'typ') {
                 if (ms.st == '1') {
