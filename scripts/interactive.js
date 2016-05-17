@@ -20,7 +20,7 @@ function InteractiveCli(){
   this.pull.execute();
 };
 
-var getLastMessageListener = function(nb) {
+var getInitialThreadMessagesListener = function(nb) {
   var id = options[nb];
   var user = messenger.users[id];
 
@@ -36,14 +36,17 @@ var getLastMessageListener = function(nb) {
 
       var author = messenger.users[authorString];
 
+      var msg = '';
       if (author.id != messenger.userId) {
-        stdout.write(author.name.green);
+        msg = author.name.green;
       } else {
-        stdout.write(author.name);
+        msg = author.name;
       }
 
-      console.log(" : " + message.body);
+      msg += " : " + message.body;
+      threadHistory.push(msg);
     }
+    printThread();
   });
 };
 
@@ -66,19 +69,29 @@ var sendMessageListener = function(m) {
   });
 };
 
-var receiveMessageListener = function(message) { 
+var receiveMessageListener = function(message) {
   var author = messenger.users[message.author];
-  
+
   if (author === undefined) return;
 
+  var msg = '';
   if (author.id != messenger.userId) {
-    stdout.write(author.name.green);
+    msg = author.name.green;
   } else {
-    stdout.write(author.name);
+    msg = author.name;
   }
 
-  console.log(" : " + message.body);
-  // console.log(m);
+  msg += " : " + message.body;
+  threadHistory.push(msg);
+  printThread();
+};
+
+var threadHistory = [];
+var printThread = function(){
+  util.refreshConsole();
+  for(var x=0; x < threadHistory.length; x++){
+    console.log(threadHistory[x]);
+  }
 };
 
 var convoChoice = null;
@@ -124,7 +137,7 @@ InteractiveCli.prototype.run = function(){
       // register our listeners
       emitter.on('getConvos', getConversationsListener);
       emitter.on('sendMessage', sendMessageListener);
-      emitter.on('getMessages', getLastMessageListener);
+      emitter.on('getMessages', getInitialThreadMessagesListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};
