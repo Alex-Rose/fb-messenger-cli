@@ -97,6 +97,9 @@ Pull.prototype.sendRequest = function() {
           var message = json[i];
           
           if (message.t == 'msg') {
+            // if (message.seq > pull.seq + 1) {
+              // console.log('missing a message current :' + pull.seq + ' vs message ' + message.seq);
+            // }
             pull.seq = message.seq;
             pull.hadIncrement = true;
             // console.log('Got seq ' + message.seq);
@@ -128,8 +131,9 @@ Pull.prototype.sendRequest = function() {
             
           }
           else if (message.t == 'fullReload') {
-            pul.seq = message.seq;
-            pul.hadIncrement = false;
+            // console.log('full reload at ' + message.seq + ' vs current (' + pull.seq +')');
+            pull.seq = message.seq;
+            pull.hadIncrement = false;
             // pull.sendRequest();
           }
         }

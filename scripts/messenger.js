@@ -73,7 +73,7 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
   });
 };
 
-Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) {
+Messenger.prototype.getLastMessage = function(recipient, recipientId, count, callback) {
   var messenger = this;
   var recipientUrl = this.baseUrl + "/t/" + recipient;
   var offSetString = 'messages[user_ids][' + recipientId + '][offset]';
@@ -111,7 +111,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, callback) 
   };
 
   options.formData[offSetString] = '0';
-  options.formData[limitString] = '20';
+  options.formData[limitString] = count;
 
   request.post(options, function(err, response, body){
         if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};

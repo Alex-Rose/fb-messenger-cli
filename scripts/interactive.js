@@ -24,8 +24,9 @@ var getInitialThreadMessagesListener = function(nb) {
   var id = options[nb];
   var user = messenger.users[id];
 
-  messenger.getLastMessage(user.vanity, id, function(messages) {
+  messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(messages) {
     recipientId = id;
+    threadHistory = [];
     util.refreshConsole();
     for (var i in messages) {
       var message = messages[i];
@@ -72,7 +73,7 @@ var sendMessageListener = function(m) {
 var receiveMessageListener = function(message) {
   var author = messenger.users[message.author];
 
-  if (author === undefined) return;
+  if (author === undefined || message.threadId != recipientId || action == 0) return;
 
   var msg = '';
   if (author.id != messenger.userId) {
@@ -89,7 +90,13 @@ var receiveMessageListener = function(message) {
 var threadHistory = [];
 var printThread = function(){
   util.refreshConsole();
-  for(var x=0; x < threadHistory.length; x++){
+  var x = 0;
+  if (threadHistory.length > process.stdout.rows) {
+    x = threadHistory.length + 1 - process.stdout.rows;
+  }
+  // var x = Math.min(0, process.stdout.rows - 1 - threadHistory.length);
+  
+  for(; x < threadHistory.length; x++){
     console.log(threadHistory[x]);
   }
 };
@@ -99,7 +106,7 @@ var handler = function(choice) {
   var value = choice.toString().trim();
 
   // this works for now
-  if(value.toLowerCase() === 'menu'){
+  if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
     console.log('Bringing you back to the friend selection screen...'.cyan);
     emitter.emit('getConvos');
     return;
