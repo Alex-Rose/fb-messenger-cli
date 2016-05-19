@@ -1,6 +1,7 @@
 var chai = require('chai');
 var expect = chai.expect; // we are using the "expect" style of Chai
 var Crypt = require('../crypt.js');
+var Messenger = require('../messenger.js');
 
 describe('Crypt', function() {
   it('getInstance() should create a new singleton object', function() {
@@ -36,5 +37,35 @@ describe('Crypt', function() {
       done();
     });
     
+  });
+});
+
+describe('Messenger', function() {
+  var json;
+  var messenger;
+  
+  it('Load cookie', function(done){
+    // Reset crypt
+    var crypt = new Crypt();
+    crypt.filename = '../.kryptonite';
+    
+    crypt.load(function(err, result) {
+      
+      expect(function(){JSON.parse(result)}).not.throw(Error);
+      
+      json = JSON.parse(result);
+      expect(json.cookie).to.not.equal.undefined;
+      expect(json.fb_dtsg).to.not.equal.undefined;
+      expect(json.c_user).to.not.equal.undefined;
+      done();
+    });
+  });
+  
+  it('Create Messenger', function() {
+      messenger = new Messenger(json.cookie, json.c_user, json.fb_dtsg);
+  });
+  
+  it('Send message', function(done) {
+      messenger.sendMessage('ar.alexandre.rose', '731419306', 'Running tests - Send message', done);
   });
 });

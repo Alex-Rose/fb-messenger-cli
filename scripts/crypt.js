@@ -15,9 +15,9 @@ Crypt = function(password) {
     }
 };
 
-Crypt.getInstance = function (){
+Crypt.getInstance = function (password){
   if (instance === undefined && unlock) {
-    new Crypt('password');
+    new Crypt(password);
   }
   return instance;
 };

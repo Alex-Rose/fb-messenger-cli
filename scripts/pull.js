@@ -86,7 +86,7 @@ Pull.prototype.sendRequest = function() {
     
     try {
       if (data.length > 0) {
-        console.log(data);
+        // console.log(data);
         json = JSON.parse(data);
         
         if (!Array.isArray(json)) {
@@ -162,8 +162,8 @@ Pull.prototype.sendRequest = function() {
   
 };
 
-pull = new Pull();
-pull.execute(function () {console.log('ssssssss')});
+// pull = new Pull();
+// pull.execute(function () {console.log('ssssssss')});
 
 // pull.on('message', function(message) {
   // console.log('message : ' + message);

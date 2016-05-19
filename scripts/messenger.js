@@ -70,6 +70,7 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
     if (err) {
       callback(err);
     }
+    callback();
   });
 };
 
