@@ -4,7 +4,7 @@ var phantom;
 
 Login = function() { };
 
-Login.prototype.execute = function() {
+Login.prototype.execute = function(callback) {
   var login = this;
   var schema = {
       properties: {
@@ -30,6 +30,8 @@ Login.prototype.execute = function() {
         // Save data in the vault
         crypt = new Crypt(result.password);
         crypt.save(phantom.data);
+        
+        callback(undefined, result);
       });
   });
 

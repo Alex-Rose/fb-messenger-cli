@@ -205,7 +205,7 @@ Messenger.prototype.getThreads = function(callback) {
       'accept': '*/*',
       'cache-control': 'max-age=0',
       'authority': 'www.messenger.com',
-      'cookie': messenger.cookie,
+      'cookie': '',
       'referer': messenger.baseUrl
     },
     formData: {
@@ -225,10 +225,23 @@ Messenger.prototype.getThreads = function(callback) {
     gzip: true,
   };
 
-  request.post(options, function(err, response, body){
+  request.post(options, function(err, response, body){    
+    if (err) {
+      callback(err);
+    }
+    
     if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
 
     json = JSON.parse(body);
+    if (json.error !== undefined) {
+      if (json.errorSummary !== undefined) {
+        callback(new Error('Error happened getting resource. Inner message : ' + json.errorSummary));
+      } else {
+        callback(new Error('An unknown error happened while getting resource'));
+      }
+      return;
+    }
+    
     participants = json['payload']['participants'];
     threads = json['payload']['threads'];
 
@@ -245,7 +258,7 @@ Messenger.prototype.getThreads = function(callback) {
       }
     }
 
-    callback(data);
+    callback(undefined, data);
   });
 
 };
