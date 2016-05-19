@@ -62,10 +62,23 @@ describe('Messenger', function() {
   });
   
   it('Create Messenger', function() {
-      messenger = new Messenger(json.cookie, json.c_user, json.fb_dtsg);
+    messenger = new Messenger(json.cookie, json.c_user, json.fb_dtsg);
   });
   
   it('Send message', function(done) {
-      messenger.sendMessage('ar.alexandre.rose', '731419306', 'Running tests - Send message', done);
+    // Allow more time for network calls
+    this.timeout(5000);
+    
+    messenger.sendMessage('ar.alexandre.rose', '731419306', 'Running tests - Send message', done);
+  });
+  
+  it('GetLastMessage', function(done) {
+    // Allow more time for network calls
+    this.timeout(5000);
+    
+    messenger.getLastMessage('ar.alexandre.rose', '731419306', 10, function(err, messages) {
+      expect(messages.length).is.equal(10);
+      done();
+    });
   });
 });

@@ -24,7 +24,7 @@ var getInitialThreadMessagesListener = function(nb) {
   var id = options[nb];
   var user = messenger.users[id];
 
-  messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(messages) {
+  messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
     threadHistory = [];
     util.refreshConsole();

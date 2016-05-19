@@ -136,7 +136,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
             data.push(obj);
         }
 
-        callback(data);
+        callback(err, data);
     });
 
   // rp(options)
