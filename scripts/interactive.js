@@ -133,7 +133,7 @@ var handler = function(choice) {
 };
 
 InteractiveCli.prototype.run = function(){
-    crypt.load(function(data) {
+    crypt.load(function(err, data) {
       json = JSON.parse(data);
       var cookie = json.cookie;
       var fbdtsg = json.fb_dtsg;

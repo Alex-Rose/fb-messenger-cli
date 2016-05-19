@@ -52,15 +52,16 @@ Crypt.prototype.load = function(cb){
       fs.readFile(crypt.filename, function(err, data) {
           if(err) { 
               console.log(err); 
+              cb(err);
           }
           else { 
               decrypted = crypt.decrypt(data.toString());
               crypt.data = decrypted;
-              cb(decrypted) ;
+              cb(undefined, decrypted) ;
           }
       });
     } else {
-      cb(crypt.data)
+      cb(undefined, crypt.data)
     }
 };
 

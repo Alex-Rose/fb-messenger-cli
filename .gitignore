@@ -1,3 +1,4 @@
 node_modules/
 .kryptonite
 phantomjs.exe
+.kryptonite_test

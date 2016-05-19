@@ -19,7 +19,7 @@ Pull.prototype.execute = function() {
   var pull = this;
   var crypt = Crypt.getInstance();
 
-  crypt.load(function(data) {
+  crypt.load(function(err, data) {
     json = JSON.parse(data);
     pull.cookie = json.cookie;
     pull.fbdtsg = json.fb_dtsg;
@@ -86,7 +86,7 @@ Pull.prototype.sendRequest = function() {
     
     try {
       if (data.length > 0) {
-        // console.log(data);
+        console.log(data);
         json = JSON.parse(data);
         
         if (!Array.isArray(json)) {
@@ -107,10 +107,20 @@ Pull.prototype.sendRequest = function() {
             for (var j in message.ms) {
               var ms = message.ms[j];
               // console.log(ms.type);
-              if (ms.type == 'delta' && ms.delta !== undefined && ms.delta.body !== undefined) {
-                // console.log(ms.delta.body);
-                pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body, 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
-                // console.log(ms.delta.messageMetadata.threadKey.otherUserFbId);
+              if (ms.type == 'delta' && ms.delta !== undefined) {
+                if (ms.delta.body !== undefined) {
+                  // console.log(ms.delta.body);
+                  pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body, 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
+                  // console.log(ms.delta.messageMetadata.threadKey.otherUserFbId);
+                  }
+              } else if (ms.delta.attachements !== undefined) {
+                var delta = ms.delta;
+                if (delta.attachements[0] !== undefined) {
+                  var att = delta.attachements[0];
+                  if (att.type == 'sticker') {
+                    pull.emit('message', {'author': delta.messageMetadata.actorFbId, 'body' : 'sent a sticker', 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
+                  }
+                } 
               }
               else if (ms.type == 'typ') {
                 if (ms.st == '1') {
@@ -152,8 +162,8 @@ Pull.prototype.sendRequest = function() {
   
 };
 
-// pull = new Pull();
-// pull.execute(function () {console.log('ssssssss')});
+pull = new Pull();
+pull.execute(function () {console.log('ssssssss')});
 
 // pull.on('message', function(message) {
   // console.log('message : ' + message);
