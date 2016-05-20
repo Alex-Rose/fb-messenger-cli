@@ -205,7 +205,7 @@ Messenger.prototype.getThreads = function(callback) {
       'accept': '*/*',
       'cache-control': 'max-age=0',
       'authority': 'www.messenger.com',
-      'cookie': '',
+      'cookie': messenger.cookie,
       'referer': messenger.baseUrl
     },
     formData: {

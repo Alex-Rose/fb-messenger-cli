@@ -52,7 +52,7 @@ var getInitialThreadMessagesListener = function(nb) {
 };
 
 var getConversationsListener = function() {
-  messenger.getThreads(function(threads) {
+  messenger.getThreads(function(err,threads) {
     util.refreshConsole();
     options = {};
     for (i = 0; i < threads.length; ++i) {

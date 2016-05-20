@@ -37,6 +37,7 @@ function launchApp(err) {
     executeCompleteLogin(launchApp);
   } else {
     console.log('launching app');
+    require('./interactive.js');
   }
 }
 
