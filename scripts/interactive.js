@@ -56,7 +56,7 @@ var getConversationsListener = function() {
     util.refreshConsole();
     options = {};
     for (i = 0; i < threads.length; ++i) {
-        console.log('[' + i + '] ' + threads[i].name + ' : ' + threads[i].snippet);
+        console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
         options[i] = threads[i].thread_fbid;
     }
 
@@ -90,14 +90,33 @@ var receiveMessageListener = function(message) {
 var threadHistory = [];
 var printThread = function(){
   util.refreshConsole();
-  var x = 0;
-  if (threadHistory.length > process.stdout.rows) {
-    x = threadHistory.length + 1 - process.stdout.rows;
-  }
+  // var x = 0;
+  // if (threadHistory.length > process.stdout.rows) {
+    // x = threadHistory.length + 1 - process.stdout.rows;
+  // }
   // var x = Math.min(0, process.stdout.rows - 1 - threadHistory.length);
   
-  for(; x < threadHistory.length; x++){
-    console.log(threadHistory[x]);
+  // for(; x < threadHistory.length; x++){
+    // console.log(threadHistory[x]);
+  // }
+  
+  var w = process.stdout.columns - 1;
+  var lines = [];
+  
+  for (var i = 0; i < threadHistory.length; ++i) {
+    var ln = threadHistory[i].match(new RegExp('.{1,' + w + '}', 'g'));
+    for (var j in ln) {
+      lines.push(ln[j]);
+    }
+  }
+  
+  var x = 0;
+  if (lines.length > process.stdout.rows) {
+    x = lines.length + 1 - process.stdout.rows;
+  }
+  
+  for (; x < lines.length; ++x) {
+    console.log(lines[x]);
   }
 };
 
