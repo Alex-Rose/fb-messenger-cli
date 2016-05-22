@@ -29,7 +29,7 @@ Crypt.prototype.encrypt = function (text){
   crypted += cipher.final('hex');
   return crypted;
 };
- 
+
 Crypt.prototype.decrypt = function (text){
   crypt = this;
   var decipher = crypto.createDecipher(crypt.algorithm, crypt.password);
@@ -41,23 +41,24 @@ Crypt.prototype.decrypt = function (text){
 Crypt.prototype.save = function(data){
   crypt = this;
   encrypted = crypt.encrypt(data);
-  
+
   fs.writeFileSync(crypt.filename, encrypted);
 };
 
 Crypt.prototype.load = function(cb){
     crypt = this;
-    
-    if (crypt.data === undefined) {    
+
+    if (crypt.data === undefined) {
       fs.readFile(crypt.filename, function(err, data) {
-          if(err) { 
-              console.log(err); 
-              cb(err);
+          if(err) {
+            // Unessecairy console.log, we know the file is missing.
+            //console.log(err);
+            cb(err);
           }
-          else { 
-              decrypted = crypt.decrypt(data.toString());
-              crypt.data = decrypted;
-              cb(undefined, decrypted) ;
+          else {
+            decrypted = crypt.decrypt(data.toString());
+            crypt.data = decrypted;
+            cb(undefined, decrypted) ;
           }
       });
     } else {
