@@ -18,7 +18,7 @@ function InteractiveCli(){
   this.pull = new Pull();
   this.pull.on('message', receiveMessageListener);
   this.pull.execute();
-};
+}
 
 var getInitialThreadMessagesListener = function(nb) {
   var id = options[nb];
@@ -73,7 +73,7 @@ var sendMessageListener = function(m) {
 var receiveMessageListener = function(message) {
   var author = messenger.users[message.author];
 
-  if (author === undefined || message.threadId != recipientId || action == 0) return;
+  if (author === undefined || message.threadId != recipientId || action === 0) return;
 
   var msg = '';
   if (author.id != messenger.userId) {
@@ -132,9 +132,11 @@ var handler = function(choice) {
   }
 
   if(value.toLowerCase() === '/exit'){
-    console.log('Thanks for using fb-messenger-cli'.cyan);
-    console.log('Bye!'.cyan);
-    process.exit(0);
+    exit();
+  }
+
+  if(value.toLowerCase() === '/logout'){
+    exit(true);
   }
 
   if(action === 0) {
@@ -149,6 +151,16 @@ var handler = function(choice) {
       // emitter.emit('getMessages', convoChoice);
     // }, 500);
   }
+};
+
+var exit = function(logout){
+  if(logout){
+    crypt.flush();
+    console.log('Logged out!'.cyan);
+  }
+  console.log('Thanks for using fb-messenger-cli'.cyan);
+  console.log('Bye!'.cyan);
+  process.exit(0);
 };
 
 InteractiveCli.prototype.run = function(){

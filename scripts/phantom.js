@@ -20,30 +20,17 @@ page.onLoadFinished = function() {
 };
 
 page.onResourceRequested = function(requestData, networkRequest) {
-  // console.log('Request (#' + requestData.id + '): ' + JSON.stringify(requestData));
-  if (requestData.postData != undefined) {
-      post = requestData.postData.split('&');
-      search = 'fb_dtsg=';
-      for (i = 0; i < post.length; ++i) {
-          if (post[i].indexOf(search) == 0) {
-              foundValue = true;
-              fb_value = decodeURIComponent(post[i].substr(search.length));
-          }
+  //console.log('Request (#' + requestData.id + '): ' + JSON.stringify(requestData));
+  if (requestData.postData !== undefined) {
+    post = requestData.postData.split('&');
+    search = 'fb_dtsg=';
+    for (i = 0; i < post.length; ++i) {
+      if (post[i].indexOf(search) === 0) {
+          foundValue = true;
+          fb_value = decodeURIComponent(post[i].substr(search.length));
       }
+    }
   }
-  
-  if (requestData.url != undefined) {
-      url = requestData.url.split('&');
-      search = 'fb_dtsg=';
-      
-      for (i = 0; i < url.length; ++i) {
-          if (url[i].indexOf(search) == 0) {
-              foundValue = true;
-              fb_value = decodeURIComponent(post[i].substr(search.length));
-          }
-      }
-  }
-  
 };
 
 var steps = [
@@ -58,7 +45,7 @@ var steps = [
         document.getElementById("pass").value = pass;
         return;
     }, user, pass);
-  }, 
+  },
   function() {
     //Login
     page.evaluate(function() {
@@ -66,11 +53,11 @@ var steps = [
         btn.click();
         return;
     });
-  }, 
+  },
   function() {
     // Evaluate messenger home page
     page.evaluate(function() {
-      
+
     });
   }
 ];
@@ -82,7 +69,7 @@ interval = setInterval(function() {
       testindex++;
     }
     if (typeof steps[testindex] != "function") {
-        
+
         // Wait until we capture our secret value
         if (foundValue) {
             // Give it a little break, then quit.
@@ -93,9 +80,9 @@ interval = setInterval(function() {
                     if (i > 0) {
                         cookie += '; ';
                     }
-                    
+
                     cookie += phantom.cookies[i].name + "=" + phantom.cookies[i].value;
-                    
+
                     if (phantom.cookies[i].name == 'c_user') {
                         json['c_user'] = phantom.cookies[i].value;
                     }
@@ -106,7 +93,7 @@ interval = setInterval(function() {
                 phantom.exit();
             }, 2000);
         }
-        
+
         if (timeout === undefined) {
             // Allow max 15 seconds to get data
             timeout = window.setTimeout(function(){

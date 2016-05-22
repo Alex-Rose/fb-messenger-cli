@@ -9,7 +9,7 @@ Crypt = function(password) {
     this.algorithm = 'aes-256-ctr';
     this.password = password;
     this.filename = '.kryptonite';
-    this.data;
+    this.data = undefined;
     if (unlock === true) {
         this.password = 'password';
     }
@@ -62,8 +62,14 @@ Crypt.prototype.load = function(cb){
           }
       });
     } else {
-      cb(undefined, crypt.data)
+      cb(undefined, crypt.data);
     }
+};
+
+Crypt.prototype.flush = function() {
+  crypt = this;
+  crypt.data = undefined;
+  fs.unlink(crypt.filename);
 };
 
 module.exports = Crypt;
