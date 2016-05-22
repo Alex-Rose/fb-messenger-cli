@@ -21,20 +21,23 @@ Login.prototype.execute = function(callback) {
   prompt.start();
 
   prompt.get(schema, function (err, result) {
-      var command = 'phantomjs';
-      var arguments = ['phantom.js', result.email, result.password];
-      
-      phantom = new login.run_cmd( command, arguments, function () { 
-        var Messenger = require('./messenger.js');
+    var command = 'phantomjs';
+    var arguments = ['phantom.js', result.email, result.password];
 
+    phantom = new login.run_cmd( command, arguments, function () {
+      var Messenger = require('./messenger.js');
+
+      if(phantom.data){
         // Save data in the vault
         crypt = new Crypt(result.password);
         crypt.save(phantom.data);
-        
-        callback(undefined, result);
-      });
+        callback(false, result);
+      } else {
+        console.log('Bad Facebook Login');
+        callback(true, null);
+      }
+    });
   });
-
 };
 
 Login.prototype.run_cmd = function(cmd, args, cb) {
@@ -42,12 +45,12 @@ Login.prototype.run_cmd = function(cmd, args, cb) {
     var child = spawn(cmd, args);
     var me = this;
     var data = '';
-    
-    child.stdout.on('data', function (buffer) { 
-        if (me.data === undefined) { 
+
+    child.stdout.on('data', function (buffer) {
+        if (me.data === undefined) {
             me.data = buffer.toString();
         } else {
-            me.data += buffer.toString(); 
+            me.data += buffer.toString();
         }
     });
     child.stdout.on('end', cb);

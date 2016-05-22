@@ -54,18 +54,28 @@ var steps = [
         return;
     });
   },
-  function() {
+  function(cb) {
     // Evaluate messenger home page
-    page.evaluate(function() {
-
+    var err = page.evaluate(function() {
+      var returnUrl = document.URL;
+      if(returnUrl.indexOf('login') != -1){
+        // We didn't get redirected to messenger.com
+        // So we had an invalid login
+        return new Error('Facebook login failed!');
+      }
+      return;
     });
+    cb(err);
   }
 ];
 
 timeout = undefined;
 interval = setInterval(function() {
     if (!loadInProgress && typeof steps[testindex] == "function") {
-      steps[testindex]();
+      steps[testindex](function(err){
+        if(err)
+          phantom.exit(1);
+      });
       testindex++;
     }
     if (typeof steps[testindex] != "function") {
