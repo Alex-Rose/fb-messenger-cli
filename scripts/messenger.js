@@ -1,5 +1,4 @@
 var request = require('request'); // For making HTTP requests
-var rp = require('request-promise');
 var vm = require('vm');
 
 var Messenger = function(cookie, userId, fbdtsg) {
@@ -138,56 +137,6 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
 
         callback(err, data);
     });
-
-  // rp(options)
-    // .then(function(body){
-        // console.log(body);
-        // if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
-
-        // json = JSON.parse(body);
-        // console.log(json);
-      // // jsonpSandbox = vm.createContext({callback: function(r){return r;}});
-      // // parsedBody = vm.runInContext(body,jsonpSandbox);
-      // // callback(false, parsedBody);
-    // })
-    // .catch(function(err){
-      // callback("Error happened in vm : " + err);
-    // });
-
-  // request.post('https://www.facebook.com/ajax/mercury/thread_info.php?dpr=1', {
-  //   headers: {
-  //     'origin': 'https://www.messenger.com',
-  //     'accept-encoding': 'gzip, deflate',
-  //     'x-msgr-region': 'ATN',
-  //     'accept-language': 'en-US,en;q=0.8',
-  //     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-  //     'content-type': 'application/x-www-form-urlencoded',
-  //     'accept': '*/*',
-  //     'referer': messenger.recipientUrl,
-  //     'cookie': messenger.cookie,
-  //     'authority': 'www.messenger.com'
-  //   },
-  //   formData: {
-  //     offSetString : '1',
-  //     limitString : '20',
-  //     'client':'mercury',
-  //     '__user':'512556997',
-  //     '__a':'1',
-  //     '__dyn':'7AzkXh8Z398jgDxKy1l0BwRyaF3oyfJLFwgoqwWhEoyUnwgU9GGEcVovkwy3eE99XDG4UiwExW14DwPxSFEW2O7EOEixu1jyoCcyUW',
-  //     '__req':'5',
-  //     '__be':'0',
-  //     '__pc':'EXP1:messengerdotcom_pkg',
-  //     'fb_dtsg':'AQG6Jrs1CKiJ:AQF6DSaM1AMk',
-  //     'ttstamp':'2658171547411411549677510574586581705468839777496577107',
-  //     '__rev':'2335772'
-  //   },
-  //   gzip: true
-  // }, function(err, response, body) {
-  //   if (err) {
-  //     callback(err);
-  //   }
-  //   callback(false, body);
-  // });
 };
 
 Messenger.prototype.getThreads = function(callback) {
@@ -225,11 +174,11 @@ Messenger.prototype.getThreads = function(callback) {
     gzip: true,
   };
 
-  request.post(options, function(err, response, body){    
+  request.post(options, function(err, response, body){
     if (err) {
       callback(err);
     }
-    
+
     if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
 
     json = JSON.parse(body);
@@ -241,7 +190,7 @@ Messenger.prototype.getThreads = function(callback) {
       }
       return;
     }
-    
+
     participants = json['payload']['participants'];
     threads = json['payload']['threads'];
 
