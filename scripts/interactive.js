@@ -95,26 +95,26 @@ var printThread = function(){
     // x = threadHistory.length + 1 - process.stdout.rows;
   // }
   // var x = Math.min(0, process.stdout.rows - 1 - threadHistory.length);
-  
+
   // for(; x < threadHistory.length; x++){
     // console.log(threadHistory[x]);
   // }
-  
+
   var w = process.stdout.columns - 1;
   var lines = [];
-  
+
   for (var i = 0; i < threadHistory.length; ++i) {
     var ln = threadHistory[i].match(new RegExp('.{1,' + w + '}', 'g'));
     for (var j in ln) {
       lines.push(ln[j]);
     }
   }
-  
+
   var x = 0;
   if (lines.length > process.stdout.rows) {
     x = lines.length + 1 - process.stdout.rows;
   }
-  
+
   for (; x < lines.length; ++x) {
     console.log(lines[x]);
   }
@@ -131,7 +131,7 @@ var handler = function(choice) {
     return;
   }
 
-  if(value.toLowerCase() === 'exit'){
+  if(value.toLowerCase() === '/exit'){
     console.log('Thanks for using fb-messenger-cli'.cyan);
     console.log('Bye!'.cyan);
     process.exit(0);
