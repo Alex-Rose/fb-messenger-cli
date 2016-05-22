@@ -7,7 +7,8 @@ function executeCompleteLogin(callback) {
   var login = new Login();
   login.execute(function(err, creds) {
     var crypt = Crypt.getInstance();
-    console.log('we be good');
+    // Return callback with no error
+    callback(false);
   });
 }
 
