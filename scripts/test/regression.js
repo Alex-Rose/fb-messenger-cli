@@ -51,7 +51,7 @@ describe('Messenger', function() {
     
     crypt.load(function(err, result) {
       
-      expect(function(){JSON.parse(result)}).not.throw(Error);
+      expect(function(){JSON.parse(result);}).not.throw(Error);
       
       json = JSON.parse(result);
       expect(json.cookie).to.not.equal.undefined;

@@ -11,6 +11,7 @@ var emitter = new events.EventEmitter();
 var crypt = new Crypt('password');
 var options = {};
 var recipientId = '';
+var heading = {};
 // 0 is select conversation, 1 is send message
 var action = 0;
 
@@ -58,6 +59,7 @@ var getConversationsListener = function() {
     for (i = 0; i < threads.length; ++i) {
         console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
         options[i] = threads[i].thread_fbid;
+        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name};
     }
 
     stdout.write("Select conversation : ");
@@ -112,8 +114,23 @@ var printThread = function(){
 
   var x = 0;
   if (lines.length > process.stdout.rows) {
-    x = lines.length + 1 - process.stdout.rows;
+    x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
   }
+
+  // Write header  
+  var head = '';
+  for (var i = 0; i < 3; ++i) {
+    if (i != 0) {
+      head += ' - ';
+    }
+    head += '[' + i + '] ' + heading[i].name;
+  }
+  
+  for (var i = head.length; i < w; ++i) {
+    head += ' ';
+  }
+  
+  console.log(head.bgBlue);
 
   for (; x < lines.length; ++x) {
     console.log(lines[x]);

@@ -7,6 +7,27 @@ var Messenger = function(cookie, userId, fbdtsg) {
   this.userId = userId; // Your userID;
   this.fbdtsg = fbdtsg;
   this.users = {};
+  this.headers = {
+    'origin': this.baseUrl,
+    'accept-encoding': 'gzip, deflate',
+    'x-msgr-region': 'ATN',
+    'accept-language': 'en-US,en;q=0.8',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+    'content-type': 'application/x-www-form-urlencoded',
+    'accept': '*/*',
+    'cache-control': 'max-age=0',
+    'authority': 'www.messenger.com',
+    'cookie': this.cookie,
+    'referer': this.baseUrl
+  };
+};
+
+Messenger.prototype.cleanJson = function (body) {
+  if (body.indexOf('for (;;);') === 0) {
+    body = body.substr('for (;;);'.length);
+  }
+  
+  return body;
 };
 
 Messenger.prototype.sendMessage = function(recipient, recipientId, body, callback) {
@@ -82,19 +103,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
 
   var options = {
     url: 'https://www.messenger.com/ajax/mercury/thread_info.php?dpr=1',
-    headers: {
-      'origin': 'https://www.messenger.com',
-      'accept-encoding': 'gzip, deflate',
-      'x-msgr-region': 'ATN',
-      'accept-language': 'en-US,en;q=0.8',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-      'content-type': 'application/x-www-form-urlencoded',
-      'accept': '*/*',
-      'cache-control': 'max-age=0',
-      'authority': 'www.messenger.com',
-      'cookie': messenger.cookie,
-      'referer': recipientUrl
-    },
+    headers: messenger.headers,
     formData: {
       'client':'mercury',
       '__user':messenger.userId,
@@ -109,13 +118,13 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
     },
     gzip: true,
   };
-
+  
+  options.headers.referer = recipientUrl;
   options.formData[offSetString] = '0';
   options.formData[limitString] = count;
 
   request.post(options, function(err, response, body){
-        if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
-
+        body = messenger.cleanJson(body);
         json = JSON.parse(body);
         msg = json['payload']['actions'];
 
@@ -130,7 +139,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
                 'thread_fbid': m['thread_fbid'],
                 'timestamp': m['timestamp'],
                 'timestamp_datetime': m['timestamp_datetime']
-            }
+            };
 
             data.push(obj);
         }
@@ -144,19 +153,7 @@ Messenger.prototype.getThreads = function(callback) {
 
   var options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
-    headers: {
-      'origin': messenger.baseUrl,
-      'accept-encoding': 'gzip, deflate',
-      'x-msgr-region': 'ATN',
-      'accept-language': 'en-US,en;q=0.8',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-      'content-type': 'application/x-www-form-urlencoded',
-      'accept': '*/*',
-      'cache-control': 'max-age=0',
-      'authority': 'www.messenger.com',
-      'cookie': messenger.cookie,
-      'referer': messenger.baseUrl
-    },
+    headers: messenger.headers,
     formData: {
       'inbox[offset]': '0',
       'inbox[filter]' : '',
@@ -179,7 +176,7 @@ Messenger.prototype.getThreads = function(callback) {
       callback(err);
     }
 
-    if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+    body = messenger.cleanJson(body);
 
     json = JSON.parse(body);
     if (json.error !== undefined) {
@@ -217,19 +214,7 @@ Messenger.prototype.getFriends = function(callback) {
 
   var options = {
     url: 'https://www.messenger.com/chat/user_info_all/?viewer=' + messenger.userId + '&dpr=1',
-    headers: {
-      'origin': messenger.baseUrl,
-      'accept-encoding': 'gzip, deflate',
-      'x-msgr-region': 'ATN',
-      'accept-language': 'en-US,en;q=0.8',
-      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
-      'content-type': 'application/x-www-form-urlencoded',
-      'accept': '*/*',
-      'cache-control': 'max-age=0',
-      'authority': 'www.messenger.com',
-      'cookie': messenger.cookie,
-      'referer': messenger.baseUrl
-    },
+    headers: messenger.headers,
     formData: {
       '__user':messenger.userId,
       '__a':'1',
@@ -244,11 +229,11 @@ Messenger.prototype.getFriends = function(callback) {
   };
 
   request.post(options, function(err, response, body){
-    if (body.indexOf('for (;;);') == 0) {body = body.substr('for (;;);'.length)};
+    body = messenger.cleanJson(body);
     json = JSON.parse(body);
     users = json['payload'];
 
-    for (id in users) {
+    for (var id in users) {
       var entry = {};
       var user = users[id];
 

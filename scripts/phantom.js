@@ -85,7 +85,7 @@ interval = setInterval(function() {
             // Give it a little break, then quit.
             window.setTimeout(function(){
                 json = {'fb_dtsg': fb_value};
-                cookie = ''
+                cookie = '';
                 for (i = 0; i < phantom.cookies.length; ++i){
                     if (i > 0) {
                         cookie += '; ';
