@@ -77,6 +77,7 @@ var sendMessageListener = function(m) {
 };
 
 var receiveMessageListener = function(message) {
+  console.log('GOT MESSAGE 1');
   var author = messenger.users[message.author];
 
   if (author === undefined || message.threadId != recipientId || action === 0) return;
@@ -123,9 +124,8 @@ var printThread = function(){
 
   // Write header  
   var head = '';
-  var i = 0;
   var roomLeft = true;
-  while(head.length < w && roomLeft) {
+  for (var i in heading) {
     var entry = '';
     if (i != 0) {
       entry += ' - ';
@@ -134,9 +134,8 @@ var printThread = function(){
     if (head.length + entry.length < w) {
       head += entry;
     } else {
-      roomLeft = false;
+      break;
     }
-    i++;
   }
   
   for (var i = head.length; i < w; ++i) {

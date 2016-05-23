@@ -8,9 +8,11 @@ Pull = function() {
   this.seq = 1;
   // var clientId = 'a737aed';
   this.hadIncrement = false;
-  this.clientId = '474aed';
+  this.clientId = '484aed';
   this.msgRecv = 0;
   this.connection = undefined;
+  this.sticky = '66';
+  this.stickyPool = 'atn1c09_chat-proxy';
 };
 
 util.inherits(Pull, EventEmitter);
@@ -51,8 +53,8 @@ Pull.prototype.sendRequest = function() {
   url += '&msgs_recv=0';
   url += '&uid=' + pull.userId;
   url += '&viewer_uid' + pull.userId;
-  url += '&sticky_token=54';
-  url += '&sticky_pool=ash3c07_chat-proxy';
+  url += '&sticky_token=' + pull.sticky; // At some point, this gets invalidated and a message is sent to reset value
+  url += '&sticky_pool=' + pull.stickyPool; // At some point, this gets invalidated and a message is sent to reset value
   url += '&state=offline';
   url += '&mode=stream';
   url += '&format=json';
@@ -86,7 +88,6 @@ Pull.prototype.sendRequest = function() {
     
     try {
       if (data.length > 0) {
-        // console.log(data);
         json = JSON.parse(data);
         
         if (!Array.isArray(json)) {
@@ -145,6 +146,10 @@ Pull.prototype.sendRequest = function() {
             pull.seq = message.seq;
             pull.hadIncrement = false;
             // pull.sendRequest();
+          }
+          else if (message.t == 'lb') {
+            pull.sticky = message.lb_info.sticky; 
+            pull.stickyPool = message.lb_info.pool; 
           }
         }
       }
