@@ -23,6 +23,10 @@ function InteractiveCli(){
 
 var getInitialThreadMessagesListener = function(nb) {
   var id = options[nb];
+  initializeConversationViewFromFbid(id);
+};
+
+var initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
 
   messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
@@ -119,11 +123,20 @@ var printThread = function(){
 
   // Write header  
   var head = '';
-  for (var i = 0; i < 3; ++i) {
+  var i = 0;
+  var roomLeft = true;
+  while(head.length < w && roomLeft) {
+    var entry = '';
     if (i != 0) {
-      head += ' - ';
+      entry += ' - ';
     }
-    head += '[' + i + '] ' + heading[i].name;
+    entry += '[' + i + '] ' + heading[i].name;
+    if (head.length + entry.length < w) {
+      head += entry;
+    } else {
+      roomLeft = false;
+    }
+    i++;
   }
   
   for (var i = head.length; i < w; ++i) {
@@ -138,6 +151,7 @@ var printThread = function(){
 };
 
 var convoChoice = null;
+// TODO : remove early returns, use some sort of pattern
 var handler = function(choice) {
   var value = choice.toString().trim();
 
@@ -147,6 +161,18 @@ var handler = function(choice) {
     emitter.emit('getConvos');
     return;
   }
+  
+  if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
+    var nb = value.split(' ')[1];
+    
+    if (!isNaN(nb)) {
+      nb = parseInt(nb);
+      console.log('Switching conversation...'.cyan);
+      var id = heading[nb].fbid;
+      initializeConversationViewFromFbid(id);
+    }
+    return;
+  }
 
   if(value.toLowerCase() === '/exit'){
     exit();
@@ -154,6 +180,20 @@ var handler = function(choice) {
 
   if(value.toLowerCase() === '/logout'){
     exit(true);
+  }
+  
+  if (value.indexOf('/help') === 0) {
+    console.log('/back or /menu .... Get back to conversation selection'.cyan);
+    console.log('/exit ............. Quit the application'.cyan);
+    console.log('/logout ........... Exit and flush credentials'.cyan);
+    console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
+    console.log('/help ............. Print this message'.cyan);
+    return;
+  }
+  
+  if (value.indexOf('/') === 0) {
+    console.log('Unknown command. Type /help for commands.'.cyan);
+    return;
   }
 
   if(action === 0) {
