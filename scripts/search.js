@@ -51,9 +51,15 @@ Search.prototype.filterFriends = function(searchString) {
 };
 
 Search.prototype.printChoices = function() {
-  for(var i=0; i < this.filtered.length; i++){
-    this.filtered[i].position = i;
-    console.log('[' + i.toString().cyan + '] ' + this.filtered[i].name.green);
+  if(this.filtered.length === 0) {
+    console.log('Looks like we didn\'t find anything!'.cyan);
+    console.log('Bringing you back to the friend selection screen...'.cyan);
+    console.log('Press Enter to continue'.cyan);
+  } else {
+    for(var i=0; i < this.filtered.length; i++){
+      this.filtered[i].position = i;
+      console.log('[' + i.toString().cyan + '] ' + this.filtered[i].name.green);
+    }
   }
 };
 

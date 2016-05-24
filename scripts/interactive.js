@@ -126,14 +126,18 @@ var receiveMessageListener = function(message) {
 
 var printed = false;
 var searchListener = function(searchStr, choice) {
-  if(!printed) {
+  if(!printed) { // On first loop of search print choices
     search.run(searchStr);
     printed = true;
-  } else {
+  } else { // On second loop of search select the right person
     var id = search.selectConvo(choice);
-    emitter.emit('getMessages', null, id);
+    if(id) {
+      emitter.emit('getMessages', null, id);
+      action = 1;
+    } else { // On invalid id or empty search
+      emitter.emit('getConvos');
+    }
     printed = false;
-    action = 1;
   }
 };
 
@@ -244,19 +248,22 @@ var handler = function(choice) {
     return;
   }
 
-  if (value.indexOf('/') === 0) {
-    console.log('Unknown command. Type /help for commands.'.cyan);
-    return;
-  }
-
   if(value.toLowerCase().indexOf('/search') != -1){
     // Start a new search
     action = 2;
     // Take value on first space
     var searchStr = value.substr(value.indexOf(' ')+1);
-    if(searchStr !== '/search') { // If there was no value after
-      emitter.emit('startSearch', searchStr);
+    // If there was no value after
+    if(searchStr === '/search') {
+      console.log('Try adding a search string after! (/search <query>)'.cyan);
+      return;
     }
+    emitter.emit('startSearch', searchStr);
+    return;
+  }
+
+  if (value.indexOf('/') === 0) {
+    console.log('Unknown command. Type /help for commands.'.cyan);
     return;
   }
 
