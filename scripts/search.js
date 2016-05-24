@@ -24,7 +24,6 @@ Search.prototype.selectConvo = function(choice) {
     if(search.filtered[i].position == choice.toLowerCase().trim()){
       console.log('Sending message to: ' + search.filtered[i].name);
       result = search.filtered[i].id;
-      search.filterFriends = [];
       return result;
     }
   }
@@ -34,8 +33,10 @@ Search.prototype.selectConvo = function(choice) {
 Search.prototype.parseFriendsList = function(searchString, callback) {
   var search = this;
     search.messenger.getFriends(function(friends){
-      for(var id in friends){
-        search.friends.push(friends[id]);
+      if(search.friends.length <= 0){
+        for(var id in friends){
+          search.friends.push(friends[id]);
+        }
       }
       search.filterFriends(searchString);
       callback();

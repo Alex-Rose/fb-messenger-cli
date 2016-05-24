@@ -181,7 +181,9 @@ var handler = function(choice) {
     action = 2;
     // Take value on first space
     var searchStr = value.substr(value.indexOf(' ')+1);
-    emitter.emit('startSearch', searchStr);
+    if(searchStr !== '/search') { // If there was no value after
+      emitter.emit('startSearch', searchStr);
+    }
     return;
   }
 
