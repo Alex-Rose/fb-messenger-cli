@@ -13,6 +13,7 @@ Pull = function() {
   this.connection = undefined;
   this.sticky = '66';
   this.stickyPool = 'atn1c09_chat-proxy';
+  this.retry = 0;
 };
 
 util.inherits(Pull, EventEmitter);
@@ -79,8 +80,13 @@ Pull.prototype.sendRequest = function() {
   
   // console.log('requesting seq=' + seq);
   
-  
-  pull.connection = request.get(options);
+  try {
+    pull.connection = request.get(options);
+  } catch (err) { 
+    pull.retry += 5000;
+    var delay = Math.min(pull.retry, 60000);
+    setTimeout
+  }
   pull.connection.on('data', function(chunk){
     
     var data = chunk.toString('utf8');
@@ -131,6 +137,8 @@ Pull.prototype.sendRequest = function() {
                 }
               }
             }
+            
+            pull.retry = 0;
             
           } else if (message.t == 'heartbeat') {
             // console.log('Got heartbeat... need to restart');

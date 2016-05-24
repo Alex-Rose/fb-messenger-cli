@@ -77,7 +77,6 @@ var sendMessageListener = function(m) {
 };
 
 var receiveMessageListener = function(message) {
-  console.log('GOT MESSAGE 1');
   var author = messenger.users[message.author];
 
   if (author === undefined || message.threadId != recipientId || action === 0) return;
