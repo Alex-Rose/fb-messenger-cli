@@ -2,6 +2,7 @@ var Crypt = require('./crypt.js');
 var Messenger = require('./messenger.js');
 var util = require('./util.js');
 var Pull = require('./pull.js');
+var Search = require('./search.js');
 
 var colors = require('colors');
 var events = require('events');
@@ -21,8 +22,11 @@ function InteractiveCli(){
   this.pull.execute();
 }
 
-var getInitialThreadMessagesListener = function(nb) {
+var getInitialThreadMessagesListener = function(nb, searchId) {
   var id = options[nb];
+  if(searchId){
+    id = searchId;
+  }
   var user = messenger.users[id];
 
   messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
@@ -69,6 +73,9 @@ var getConversationsListener = function() {
 
 var sendMessageListener = function(m) {
   messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
+    if(err) {
+      console.log('Message did not send properly');
+    }
   });
 };
 
@@ -87,6 +94,19 @@ var receiveMessageListener = function(message) {
   msg += " : " + message.body;
   threadHistory.push(msg);
   printThread();
+};
+
+var printed = false;
+var searchListener = function(searchStr, choice) {
+  if(!printed) {
+    search.run(searchStr);
+    printed = true;
+  } else {
+    var id = search.selectConvo(choice);
+    emitter.emit('getMessages', null, id);
+    printed = false;
+    action = 1;
+  }
 };
 
 var threadHistory = [];
@@ -117,7 +137,7 @@ var printThread = function(){
     x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
   }
 
-  // Write header  
+  // Write header
   var head = '';
   for (var i = 0; i < 3; ++i) {
     if (i != 0) {
@@ -125,11 +145,11 @@ var printThread = function(){
     }
     head += '[' + i + '] ' + heading[i].name;
   }
-  
+
   for (var i = head.length; i < w; ++i) {
     head += ' ';
   }
-  
+
   console.log(head.bgBlue);
 
   for (; x < lines.length; ++x) {
@@ -156,17 +176,23 @@ var handler = function(choice) {
     exit(true);
   }
 
+  if(value.toLowerCase().indexOf('/search') != -1){
+    // Start a new search
+    action = 2;
+    // Take value on first space
+    var searchStr = value.substr(value.indexOf(' ')+1);
+    emitter.emit('startSearch', searchStr);
+    return;
+  }
+
   if(action === 0) {
     convoChoice = value;
     emitter.emit('getMessages', value);
     action = 1;
   } else if(action === 1) {
     emitter.emit('sendMessage', value);
-
-    // // Wait a little to reprint or we won't see our own message
-    // setTimeout(function() {
-      // emitter.emit('getMessages', convoChoice);
-    // }, 500);
+  } else if(action == 2){ // search
+    emitter.emit('startSearch', null, value);
   }
 };
 
@@ -187,12 +213,16 @@ InteractiveCli.prototype.run = function(){
       var fbdtsg = json.fb_dtsg;
       var userId = json.c_user;
 
+      // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
+      search = new Search(messenger);
+
 
       // register our listeners
       emitter.on('getConvos', getConversationsListener);
       emitter.on('sendMessage', sendMessageListener);
       emitter.on('getMessages', getInitialThreadMessagesListener);
+      emitter.on('startSearch', searchListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};
