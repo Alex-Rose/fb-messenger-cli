@@ -96,10 +96,13 @@ var receiveMessageListener = function(message) {
   var author = messenger.users[message.author];
 
   if (author === undefined || message.threadId != recipientId || action === 0) {
-    for (var i in heading) {
-      if (heading[i].fbid == message.threadId) {
-        heading[i].unread++;
-        printThread();
+    // Don't warn for current user messages (from another device)
+    if (author.id != messenger.userId) {    
+      for (var i in heading) {
+        if (heading[i].fbid == message.threadId) {
+          heading[i].unread++;
+          printThread();
+        }
       }
     }
     return;

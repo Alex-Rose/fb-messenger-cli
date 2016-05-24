@@ -85,7 +85,9 @@ Pull.prototype.sendRequest = function() {
   } catch (err) { 
     pull.retry += 5000;
     var delay = Math.min(pull.retry, 60000);
-    setTimeout
+    setTimeout(function() {
+      pull.sendRequest();
+    }, delay);
   }
   pull.connection.on('data', function(chunk){
     
