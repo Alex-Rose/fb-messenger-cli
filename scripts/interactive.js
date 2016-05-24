@@ -14,6 +14,8 @@ var recipientId = '';
 var heading = {};
 // 0 is select conversation, 1 is send message
 var action = 0;
+var current_userId;
+var currentConversationId;
 
 function InteractiveCli(){
   this.pull = new Pull();
@@ -28,6 +30,14 @@ var getInitialThreadMessagesListener = function(nb) {
 
 var initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
+  currentConversationId = id;
+  
+  // Unread messages in heading
+  for (var i in heading) {
+    if (heading[i].fbid == id) {
+      heading[i].unread = 0;
+    }
+  }
 
   messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
@@ -60,10 +70,16 @@ var getConversationsListener = function() {
   messenger.getThreads(function(err,threads) {
     util.refreshConsole();
     options = {};
+    var headingNb = 1;
     for (i = 0; i < threads.length; ++i) {
         console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
         options[i] = threads[i].thread_fbid;
-        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name};
+        
+        if (threads[i].thread_fbid == current_userId) {
+          continue;
+        }
+        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
+        headingNb++;
     }
 
     stdout.write("Select conversation : ");
@@ -79,7 +95,15 @@ var sendMessageListener = function(m) {
 var receiveMessageListener = function(message) {
   var author = messenger.users[message.author];
 
-  if (author === undefined || message.threadId != recipientId || action === 0) return;
+  if (author === undefined || message.threadId != recipientId || action === 0) {
+    for (var i in heading) {
+      if (heading[i].fbid == message.threadId) {
+        heading[i].unread++;
+        printThread();
+      }
+    }
+    return;
+  }
 
   var msg = '';
   if (author.id != messenger.userId) {
@@ -124,17 +148,28 @@ var printThread = function(){
   // Write header  
   var head = '';
   var roomLeft = true;
+  var first = true;
   for (var i in heading) {
+    if (heading[i].fbid == currentConversationId) {
+      continue;
+    }
+    
     var entry = '';
-    if (i != 0) {
+    if (!first) {
       entry += ' - ';
     }
-    entry += '[' + i + '] ' + heading[i].name;
+    entry += '[' + i + '] ' + heading[i].name + (heading[i].unread > 0 ? '*' : '');
     if (head.length + entry.length < w) {
-      head += entry;
+      if (heading[i].unread > 0) {
+        head += entry.bold;
+      } else {
+        head += entry;
+      }
     } else {
       break;
     }
+    
+    first = false;
   }
   
   for (var i = head.length; i < w; ++i) {
@@ -224,6 +259,8 @@ InteractiveCli.prototype.run = function(){
       var cookie = json.cookie;
       var fbdtsg = json.fb_dtsg;
       var userId = json.c_user;
+      
+      current_userId = userId;
 
       messenger = new Messenger(cookie, userId, fbdtsg);
 
