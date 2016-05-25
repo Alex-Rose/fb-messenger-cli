@@ -2,6 +2,7 @@ var Crypt = require('./crypt.js');
 var Messenger = require('./messenger.js');
 var util = require('./util.js');
 var Pull = require('./pull.js');
+var Search = require('./search.js');
 
 var colors = require('colors');
 var events = require('events');
@@ -23,15 +24,18 @@ function InteractiveCli(){
   this.pull.execute();
 }
 
-var getInitialThreadMessagesListener = function(nb) {
+var getInitialThreadMessagesListener = function(nb, searchId) {
   var id = options[nb];
+  if(searchId){
+    id = searchId;
+  }
   initializeConversationViewFromFbid(id);
 };
 
 var initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
   currentConversationId = id;
-  
+
   // Unread messages in heading
   for (var i in heading) {
     if (heading[i].fbid == id) {
@@ -74,7 +78,7 @@ var getConversationsListener = function() {
     for (i = 0; i < threads.length; ++i) {
         console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
         options[i] = threads[i].thread_fbid;
-        
+
         if (threads[i].thread_fbid == current_userId) {
           continue;
         }
@@ -89,6 +93,9 @@ var getConversationsListener = function() {
 
 var sendMessageListener = function(m) {
   messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
+    if(err) {
+      console.log('Message did not send properly');
+    }
   });
 };
 
@@ -120,6 +127,23 @@ var receiveMessageListener = function(message) {
   printThread();
 };
 
+var printed = false;
+var searchListener = function(searchStr, choice) {
+  if(!printed) { // On first loop of search print choices
+    search.run(searchStr);
+    printed = true;
+  } else { // On second loop of search select the right person
+    var id = search.selectConvo(choice);
+    if(id) {
+      emitter.emit('getMessages', null, id);
+      action = 1;
+    } else { // On invalid id or empty search
+      emitter.emit('getConvos');
+    }
+    printed = false;
+  }
+};
+
 var threadHistory = [];
 var printThread = function(){
   util.refreshConsole();
@@ -148,7 +172,7 @@ var printThread = function(){
     x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
   }
 
-  // Write header  
+  // Write header
   var head = '';
   var roomLeft = true;
   var first = true;
@@ -156,7 +180,7 @@ var printThread = function(){
     if (heading[i].fbid == currentConversationId) {
       continue;
     }
-    
+
     var entry = '';
     if (!first) {
       entry += ' - ';
@@ -171,14 +195,14 @@ var printThread = function(){
     } else {
       break;
     }
-    
+
     first = false;
   }
-  
+
   for (var i = head.length; i < w; ++i) {
     head += ' ';
   }
-  
+
   console.log(head.bgBlue);
 
   for (; x < lines.length; ++x) {
@@ -197,10 +221,10 @@ var handler = function(choice) {
     emitter.emit('getConvos');
     return;
   }
-  
+
   if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
     var nb = value.split(' ')[1];
-    
+
     if (!isNaN(nb)) {
       nb = parseInt(nb);
       console.log('Switching conversation...'.cyan);
@@ -217,7 +241,7 @@ var handler = function(choice) {
   if(value.toLowerCase() === '/logout'){
     exit(true);
   }
-  
+
   if (value.indexOf('/help') === 0) {
     console.log('/back or /menu .... Get back to conversation selection'.cyan);
     console.log('/exit ............. Quit the application'.cyan);
@@ -226,7 +250,21 @@ var handler = function(choice) {
     console.log('/help ............. Print this message'.cyan);
     return;
   }
-  
+
+  if(value.toLowerCase().indexOf('/search') != -1){
+    // Start a new search
+    action = 2;
+    // Take value on first space
+    var searchStr = value.substr(value.indexOf(' ')+1);
+    // If there was no value after
+    if(searchStr === '/search') {
+      console.log('Try adding a search string after! (/search <query>)'.cyan);
+      return;
+    }
+    emitter.emit('startSearch', searchStr);
+    return;
+  }
+
   if (value.indexOf('/') === 0) {
     console.log('Unknown command. Type /help for commands.'.cyan);
     return;
@@ -238,11 +276,8 @@ var handler = function(choice) {
     action = 1;
   } else if(action === 1) {
     emitter.emit('sendMessage', value);
-
-    // // Wait a little to reprint or we won't see our own message
-    // setTimeout(function() {
-      // emitter.emit('getMessages', convoChoice);
-    // }, 500);
+  } else if(action == 2){ // search
+    emitter.emit('startSearch', null, value);
   }
 };
 
@@ -262,15 +297,19 @@ InteractiveCli.prototype.run = function(){
       var cookie = json.cookie;
       var fbdtsg = json.fb_dtsg;
       var userId = json.c_user;
-      
+
       current_userId = userId;
 
+      // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
+      search = new Search(messenger);
+
 
       // register our listeners
       emitter.on('getConvos', getConversationsListener);
       emitter.on('sendMessage', sendMessageListener);
       emitter.on('getMessages', getInitialThreadMessagesListener);
+      emitter.on('startSearch', searchListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};

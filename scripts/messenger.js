@@ -26,7 +26,7 @@ Messenger.prototype.cleanJson = function (body) {
   if (body.indexOf('for (;;);') === 0) {
     body = body.substr('for (;;);'.length);
   }
-  
+
   return body;
 };
 
@@ -118,7 +118,7 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
     },
     gzip: true,
   };
-  
+
   options.headers.referer = recipientUrl;
   options.formData[offSetString] = '0';
   options.formData[limitString] = count;
@@ -244,7 +244,6 @@ Messenger.prototype.getFriends = function(callback) {
 
       messenger.users[id] = entry;
     }
-
     callback(messenger.users);
   });
 
