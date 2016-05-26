@@ -1,7 +1,10 @@
+/* jshint expr: true */
+
 var chai = require('chai');
 var expect = chai.expect; // we are using the "expect" style of Chai
 var Crypt = require('../crypt.js');
 var Messenger = require('../messenger.js');
+var Settings = require('../settings.js');
 
 describe('Crypt', function() {
   it('getInstance() should create a new singleton object', function() {
@@ -26,7 +29,7 @@ describe('Crypt', function() {
   
   it('save() and load()', function(done) {
     var crypt = Crypt.getInstance();
-    var file = '.kryptonite_test';
+    var file = '.test_kryptonite';
     var data = JSON.stringify({theTest: 'data', is: 5012344});
     
     crypt.filename = file;
@@ -80,5 +83,42 @@ describe('Messenger', function() {
       expect(messages.length).is.equal(10);
       done();
     });
+  });
+  
+  it('Get threads', function(done) {
+    // Allow more time for network calls
+    this.timeout(5000);
+    
+    messenger.getThreads(done);
+  });
+});
+
+describe('Settings', function() {
+  it('getInstance() should create a new singleton object', function() {
+    var settings = Settings.getInstance();
+    expect(settings).to.not.equal(undefined);
+  });
+  
+  it('getInstance() always returns the same instance', function() {
+    var settings = Settings.getInstance();
+    settings.filename = 'test123_%';
+    settings = Settings.getInstance();
+    expect(settings.filename).to.equal('test123_%');
+  });
+  
+  it('save() and load()', function(done) {
+    var options = {'lights': 'on', 'engine': 'on', 'fuel_pump': 'on', 'running': true};
+    var settings = Settings.getInstance();
+    var file = '.test_settings';
+    
+    settings.properties = options;
+    settings.filename = file;
+    settings.save();
+
+    settings.load(function(err, result) {
+      expect(result).to.deep.equal(options);
+      done();
+    });
+    
   });
 });

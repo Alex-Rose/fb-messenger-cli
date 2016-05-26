@@ -1,3 +1,11 @@
+/* jshint sub: true */
+
+// Messenger is handling regular network calls to servers
+// for all messaging functions
+//
+// Login calls are executed differently (see login.js and phantom.js)
+// Comet style calls (receive live data) are handled in pull.js
+
 var request = require('request'); // For making HTTP requests
 var vm = require('vm');
 
@@ -22,6 +30,8 @@ var Messenger = function(cookie, userId, fbdtsg) {
   };
 };
 
+// Facebook prepend jsonp with infinite for loop. 
+// We remove it when present.
 Messenger.prototype.cleanJson = function (body) {
   if (body.indexOf('for (;;);') === 0) {
     body = body.substr('for (;;);'.length);
@@ -30,6 +40,11 @@ Messenger.prototype.cleanJson = function (body) {
   return body;
 };
 
+// Send a message in a thread
+//   recipient: Url name of recipient, also called vanity (eg: alexandre.rose)
+//   recipientId : Facebook numeric id of recipient. Can be a person or a thread
+//   body : Content of the message
+// callback(err) does not get any data
 Messenger.prototype.sendMessage = function(recipient, recipientId, body, callback) {
   var recipientUrl = this.baseUrl + "/t/" + recipient; // Your recipient;
   var messenger = this;
@@ -172,41 +187,47 @@ Messenger.prototype.getThreads = function(callback) {
   };
 
   request.post(options, function(err, response, body){
-    if (err) {
-      callback(err);
-    }
+    var data;
+    
+    if (!err) {
+      
+      body = messenger.cleanJson(body);
+      
+      var json;
+      try {
+        json = JSON.parse(body);
 
-    body = messenger.cleanJson(body);
+        if (json.error !== undefined) {
+          if (json.errorSummary !== undefined) {
+            err = new Error('Error happened getting resource. Inner message : ' + json.errorSummary);
+          } else {
+            err = new Error('An unknown error happened while getting resource');
+          }
+        } else {
+          participants = json['payload']['participants'];
+          threads = json['payload']['threads'];
 
-    json = JSON.parse(body);
-    if (json.error !== undefined) {
-      if (json.errorSummary !== undefined) {
-        callback(new Error('Error happened getting resource. Inner message : ' + json.errorSummary));
-      } else {
-        callback(new Error('An unknown error happened while getting resource'));
-      }
-      return;
-    }
+          data = [];
 
-    participants = json['payload']['participants'];
-    threads = json['payload']['threads'];
+          for (i = 0; i < participants.length; ++i) {
+            name = participants[i]['name'];
 
-    data = [];
-
-    for (i = 0; i < participants.length; ++i) {
-      name = participants[i]['name'];
-
-      for (j = 0; j < threads.length; ++j) {
-        if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
-          data.push({'name': name, 'snippet' : threads[j]['snippet'], 'thread_fbid': threads[j]['thread_fbid']});
-          break;
+            for (j = 0; j < threads.length; ++j) {
+              if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
+                data.push({'name': name, 'snippet' : threads[j]['snippet'], 'thread_fbid': threads[j]['thread_fbid']});
+                break;
+              }
+            }
+          }          
         }
+
+      } catch (except){
+        err = except;
+      } finally {
+        callback(err, data);
       }
     }
-
-    callback(undefined, data);
   });
-
 };
 
 Messenger.prototype.getFriends = function(callback) {
