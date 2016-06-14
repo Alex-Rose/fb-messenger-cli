@@ -9,6 +9,7 @@ Crypt = function(password) {
     this.algorithm = 'aes-256-ctr';
     this.password = password;
     this.filename = '.kryptonite';
+    this.timeout = 43200000; // 12hrs in ms
     this.data = undefined;
     if (unlock === true) {
         this.password = 'password';
@@ -40,7 +41,12 @@ Crypt.prototype.decrypt = function (text){
 
 Crypt.prototype.save = function(data){
   crypt = this;
-  encrypted = crypt.encrypt(data);
+
+  // Add the save time to the crypt
+  var obj = JSON.parse(data);
+  obj.saveTime = new Date().getTime();
+
+  encrypted = crypt.encrypt(JSON.stringify(obj));
 
   fs.writeFileSync(crypt.filename, encrypted);
 };
@@ -57,8 +63,19 @@ Crypt.prototype.load = function(cb){
           }
           else {
             decrypted = crypt.decrypt(data.toString());
-            crypt.data = decrypted;
-            cb(undefined, decrypted) ;
+
+            // Check if there was too much time delay between our last login
+            var json = JSON.parse(decrypted);
+            console.log('Last save time was: ' + new Date(json.saveTime));
+            var curTime = new Date().getTime();
+
+            if (json.saveTime + crypt.timeout < curTime) {
+              console.log('You need to log in again: '.cyan)
+              cb(true);
+            } else {
+              crypt.data = decrypted;
+              cb(undefined, decrypted);
+            }
           }
       });
     } else {
