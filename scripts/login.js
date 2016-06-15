@@ -30,7 +30,13 @@ Login.prototype.execute = function(callback) {
       if(phantom.data){
         // Save data in the vault
         crypt = new Crypt(result.password);
-        crypt.save(phantom.data);
+
+        // Add save time to the data
+        var objData = JSON.parse(phantom.data);
+        objData.saveTime = new Date().getTime();
+
+        crypt.save(JSON.stringify(objData));
+
         callback(false, result);
       } else {
         console.log('Bad Facebook Login');
