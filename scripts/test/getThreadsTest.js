@@ -1,9 +1,6 @@
 var Messenger = require('./messenger.js');
-var Ask = require('./ask.js');
 var Crypt = require('./crypt.js');
 
-// Ask.prototype.password(function (password) {
-    // var crypt = new Crypt(password);
     var crypt = new Crypt('password');
     crypt.load(function(data) {
         json = JSON.parse(data);
@@ -19,8 +16,4 @@ var Crypt = require('./crypt.js');
                 console.log(threads[i].name + ' : ' + threads[i].snippet);
             }
         });
-    }); 
-// });
-
-
-
+    });

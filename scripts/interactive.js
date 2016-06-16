@@ -3,45 +3,52 @@ var Messenger = require('./messenger.js');
 var util = require('./util.js');
 var Pull = require('./pull.js');
 var Search = require('./search.js');
+var Listeners = require('./listeners.js');
+var Heading = require('./heading.js');
 
 var colors = require('colors');
 var events = require('events');
 var stdin = process.openStdin();
 var stdout = process.stdout;
-var emitter = new events.EventEmitter();
 var crypt = new Crypt('password');
-var options = {};
+//var options = {};
 var recipientId = '';
-var heading = {};
+
 // 0 is select conversation, 1 is send message
 var action = 0;
 var current_userId;
-var currentConversationId;
+
+// Initialize our listeners
+var emitter = new events.EventEmitter();
+var heading = new Heading();
+var listeners = new Listeners();
 
 function InteractiveCli(){
   this.pull = new Pull();
-  this.pull.on('message', receiveMessageListener);
+  this.pull.on('message', readPullMessage);
   this.pull.execute();
 }
 
-var getInitialThreadMessagesListener = function(nb, searchId) {
-  var id = options[nb];
-  if(searchId){
-    id = searchId;
-  }
-  initializeConversationViewFromFbid(id);
-};
+// var getInitialThreadMessagesListener = function(nb, searchId) {
+//   var id = options[nb];
+//   if(searchId){
+//     id = searchId;
+//   }
+//   initializeConversationViewFromFbid(id);
+// };
 
+var currentConversationId;
 var initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
   currentConversationId = id;
 
   // Unread messages in heading
-  for (var i in heading) {
-    if (heading[i].fbid == id) {
-      heading[i].unread = 0;
-    }
-  }
+  heading.clearUnread();
+  // for (var i in heading) {
+  //   if (heading[i].fbid == id) {
+  //     heading[i].unread = 0;
+  //   }
+  // }
 
   messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
@@ -70,44 +77,46 @@ var initializeConversationViewFromFbid = function(id) {
   });
 };
 
-var getConversationsListener = function() {
-  messenger.getThreads(function(err,threads) {
-    util.refreshConsole();
-    options = {};
-    var headingNb = 1;
-    for (i = 0; i < threads.length; ++i) {
-        console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
-        options[i] = threads[i].thread_fbid;
+// var getConversationsListener = function() {
+//   messenger.getThreads(function(err,threads) {
+//     util.refreshConsole();
+//     options = {};
+//     var headingNb = 1;
+//     for (var i = 0; i < threads.length; ++i) {
+//         console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
+//         options[i] = threads[i].thread_fbid;
+//
+//         if (threads[i].thread_fbid == current_userId) {
+//           continue;
+//         }
+//         heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
+//         headingNb++;
+//     }
+//
+//     stdout.write("Select conversation : ");
+//   });
+//   action = 0;
+// };
 
-        if (threads[i].thread_fbid == current_userId) {
-          continue;
-        }
-        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
-        headingNb++;
-    }
+// var sendMessageListener = function(m) {
+//   messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
+//     if(err) {
+//       console.log('Message did not send properly');
+//     }
+//   });
+// };
 
-    stdout.write("Select conversation : ");
-  });
-  action = 0;
-};
-
-var sendMessageListener = function(m) {
-  messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
-    if(err) {
-      console.log('Message did not send properly');
-    }
-  });
-};
-
-var receiveMessageListener = function(message) {
+var readPullMessage = function(message) {
   var author = messenger.users[message.author];
 
   if (author === undefined || message.threadId != recipientId || action === 0) {
     // Don't warn for current user messages (from another device)
-    if (author.id != messenger.userId) {    
-      for (var i in heading) {
-        if (heading[i].fbid == message.threadId) {
-          heading[i].unread++;
+    if (author.id != messenger.userId) {
+      var headingData = heading.getData();
+      console.log('Heading data' + headingData);
+      for (var i in headingData) {
+        if (headingData[i].fbid == message.threadId) {
+          headingData[i].unread++;
           printThread();
         }
       }
@@ -127,36 +136,26 @@ var receiveMessageListener = function(message) {
   printThread();
 };
 
-var printed = false;
-var searchListener = function(searchStr, choice) {
-  if(!printed) { // On first loop of search print choices
-    search.run(searchStr);
-    printed = true;
-  } else { // On second loop of search select the right person
-    var id = search.selectConvo(choice);
-    if(id) {
-      emitter.emit('getMessages', null, id);
-      action = 1;
-    } else { // On invalid id or empty search
-      emitter.emit('getConvos');
-    }
-    printed = false;
-  }
-};
+// var printed = false;
+// var searchListener = function(searchStr, choice) {
+//   if(!printed) { // On first loop of search print choices
+//     search.run(searchStr);
+//     printed = true;
+//   } else { // On second loop of search select the right person
+//     var id = search.selectConvo(choice);
+//     if(id) {
+//       emitter.emit('getMessages', null, id);
+//       action = 1;
+//     } else { // On invalid id or empty search
+//       emitter.emit('getConvos');
+//     }
+//     printed = false;
+//   }
+// };
 
 var threadHistory = [];
 var printThread = function(){
   util.refreshConsole();
-  // var x = 0;
-  // if (threadHistory.length > process.stdout.rows) {
-    // x = threadHistory.length + 1 - process.stdout.rows;
-  // }
-  // var x = Math.min(0, process.stdout.rows - 1 - threadHistory.length);
-
-  // for(; x < threadHistory.length; x++){
-    // console.log(threadHistory[x]);
-  // }
-
   var w = process.stdout.columns - 1;
   var lines = [];
 
@@ -172,38 +171,8 @@ var printThread = function(){
     x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
   }
 
-  // Write header
-  var head = '';
-  var roomLeft = true;
-  var first = true;
-  for (var i in heading) {
-    if (heading[i].fbid == currentConversationId) {
-      continue;
-    }
-
-    var entry = '';
-    if (!first) {
-      entry += ' - ';
-    }
-    entry += '[' + i + '] ' + heading[i].name + (heading[i].unread > 0 ? '*' : '');
-    if (head.length + entry.length < w) {
-      if (heading[i].unread > 0) {
-        head += entry.bold;
-      } else {
-        head += entry;
-      }
-    } else {
-      break;
-    }
-
-    first = false;
-  }
-
-  for (var i = head.length; i < w; ++i) {
-    head += ' ';
-  }
-
-  console.log(head.bgBlue);
+  // Draw the header
+  heading.writeHeader(currentConversationId);
 
   for (; x < lines.length; ++x) {
     console.log(lines[x]);
@@ -218,7 +187,9 @@ var handler = function(choice) {
   // this works for now
   if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
     console.log('Bringing you back to the friend selection screen...'.cyan);
-    emitter.emit('getConvos');
+    emitter.emit('getConvos', current_userId, heading.getData(), function(a){
+      action = a;
+    });
     return;
   }
 
@@ -228,18 +199,19 @@ var handler = function(choice) {
     if (!isNaN(nb)) {
       nb = parseInt(nb);
       console.log('Switching conversation...'.cyan);
-      var id = heading[nb].fbid;
+      //var id = heading[nb].fbid;
+      var id = heading.getFbid(nb);
       initializeConversationViewFromFbid(id);
     }
     return;
   }
 
   if(value.toLowerCase() === '/exit'){
-    exit();
+    interactive.exit();
   }
 
   if(value.toLowerCase() === '/logout'){
-    exit(true);
+    interactive.exit(true);
   }
 
   if (value.indexOf('/help') === 0) {
@@ -272,23 +244,26 @@ var handler = function(choice) {
 
   if(action === 0) {
     convoChoice = value;
-    emitter.emit('getMessages', value);
+    emitter.emit('getMessages', value, null, function(id){
+      initializeConversationViewFromFbid(id);
+    });
     action = 1;
   } else if(action === 1) {
-    emitter.emit('sendMessage', value);
+    emitter.emit('sendMessage', value, recipientId);
   } else if(action == 2){ // search
-    emitter.emit('startSearch', null, value);
+    emitter.emit('startSearch', null, value, function(a, searchId){
+      if(a === 1){
+        action = 1;
+        emitter.emit('getMessages', null, searchId, function(id){
+          initializeConversationViewFromFbid(id);
+        });
+      } else {
+        emitter.emit('getConvos', heading.getData(), function(a) {
+          action = a;
+        });
+      }
+    });
   }
-};
-
-var exit = function(logout){
-  if(logout){
-    crypt.flush();
-    console.log('Logged out!'.cyan);
-  }
-  console.log('Thanks for using fb-messenger-cli'.cyan);
-  console.log('Bye!'.cyan);
-  process.exit(0);
 };
 
 InteractiveCli.prototype.run = function(){
@@ -302,14 +277,15 @@ InteractiveCli.prototype.run = function(){
 
       // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
+      //listeners.setMessenger(messenger);
       search = new Search(messenger);
 
 
       // register our listeners
-      emitter.on('getConvos', getConversationsListener);
-      emitter.on('sendMessage', sendMessageListener);
-      emitter.on('getMessages', getInitialThreadMessagesListener);
-      emitter.on('startSearch', searchListener);
+      emitter.on('getConvos', listeners.getConversationsListener);
+      emitter.on('sendMessage', listeners.sendMessageListener);
+      emitter.on('getMessages', listeners.getMessagesListener);
+      emitter.on('startSearch', listeners.searchListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};
@@ -323,11 +299,23 @@ InteractiveCli.prototype.run = function(){
       });
 
       // Print the list for the first times
-      emitter.emit('getConvos');
+      emitter.emit('getConvos', current_userId, heading.getData(), function(a){
+        action = a;
+      });
 
       stdin.addListener("data", handler);
     // });
   });
+};
+
+InteractiveCli.prototype.exit = function(logout){
+  if(logout){
+    crypt.flush();
+    console.log('Logged out!'.cyan);
+  }
+  console.log('Thanks for using fb-messenger-cli'.cyan);
+  console.log('Bye!'.cyan);
+  process.exit(0);
 };
 
 var interactive = new InteractiveCli();
