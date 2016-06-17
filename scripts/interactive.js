@@ -11,11 +11,10 @@ var events = require('events');
 var stdin = process.openStdin();
 var stdout = process.stdout;
 var crypt = new Crypt('password');
-//var options = {};
-var recipientId = '';
 
 // 0 is select conversation, 1 is send message
 var action = 0;
+var recipientId = '';
 var current_userId;
 
 // Initialize our listeners
@@ -25,34 +24,23 @@ var listeners = new Listeners();
 
 function InteractiveCli(){
   this.pull = new Pull();
-  this.pull.on('message', readPullMessage);
+  this.pull.on('message', this.readPullMessage);
   this.pull.execute();
+
+  this.threadHistory = [];
+  this.currentConversationId = undefined;
 }
 
-// var getInitialThreadMessagesListener = function(nb, searchId) {
-//   var id = options[nb];
-//   if(searchId){
-//     id = searchId;
-//   }
-//   initializeConversationViewFromFbid(id);
-// };
-
-var currentConversationId;
-var initializeConversationViewFromFbid = function(id) {
+InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
-  currentConversationId = id;
+  this.currentConversationId = id;
 
   // Unread messages in heading
   heading.clearUnread();
-  // for (var i in heading) {
-  //   if (heading[i].fbid == id) {
-  //     heading[i].unread = 0;
-  //   }
-  // }
 
   messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
-    threadHistory = [];
+    interactive.threadHistory = [];
     util.refreshConsole();
     for (var i in messages) {
       var message = messages[i];
@@ -71,42 +59,13 @@ var initializeConversationViewFromFbid = function(id) {
       }
 
       msg += " : " + message.body;
-      threadHistory.push(msg);
+      interactive.threadHistory.push(msg);
     }
-    printThread();
+    interactive.printThread();
   });
 };
 
-// var getConversationsListener = function() {
-//   messenger.getThreads(function(err,threads) {
-//     util.refreshConsole();
-//     options = {};
-//     var headingNb = 1;
-//     for (var i = 0; i < threads.length; ++i) {
-//         console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
-//         options[i] = threads[i].thread_fbid;
-//
-//         if (threads[i].thread_fbid == current_userId) {
-//           continue;
-//         }
-//         heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
-//         headingNb++;
-//     }
-//
-//     stdout.write("Select conversation : ");
-//   });
-//   action = 0;
-// };
-
-// var sendMessageListener = function(m) {
-//   messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
-//     if(err) {
-//       console.log('Message did not send properly');
-//     }
-//   });
-// };
-
-var readPullMessage = function(message) {
+InteractiveCli.prototype.readPullMessage = function(message) {
   var author = messenger.users[message.author];
 
   if (author === undefined || message.threadId != recipientId || action === 0) {
@@ -117,7 +76,7 @@ var readPullMessage = function(message) {
       for (var i in headingData) {
         if (headingData[i].fbid == message.threadId) {
           headingData[i].unread++;
-          printThread();
+          interactive.printThread();
         }
       }
     }
@@ -132,35 +91,17 @@ var readPullMessage = function(message) {
   }
 
   msg += " : " + message.body;
-  threadHistory.push(msg);
-  printThread();
+  interacive.threadHistory.push(msg);
+  interactive.printThread();
 };
 
-// var printed = false;
-// var searchListener = function(searchStr, choice) {
-//   if(!printed) { // On first loop of search print choices
-//     search.run(searchStr);
-//     printed = true;
-//   } else { // On second loop of search select the right person
-//     var id = search.selectConvo(choice);
-//     if(id) {
-//       emitter.emit('getMessages', null, id);
-//       action = 1;
-//     } else { // On invalid id or empty search
-//       emitter.emit('getConvos');
-//     }
-//     printed = false;
-//   }
-// };
-
-var threadHistory = [];
-var printThread = function(){
+InteractiveCli.prototype.printThread = function(){
   util.refreshConsole();
   var w = process.stdout.columns - 1;
   var lines = [];
 
-  for (var i = 0; i < threadHistory.length; ++i) {
-    var ln = threadHistory[i].match(new RegExp('.{1,' + w + '}', 'g'));
+  for (var i = 0; i < interactive.threadHistory.length; ++i) {
+    var ln = interactive.threadHistory[i].match(new RegExp('.{1,' + w + '}', 'g'));
     for (var j in ln) {
       lines.push(ln[j]);
     }
@@ -172,17 +113,17 @@ var printThread = function(){
   }
 
   // Draw the header
-  heading.writeHeader(currentConversationId);
+  heading.writeHeader(this.currentConversationId);
 
   for (; x < lines.length; ++x) {
     console.log(lines[x]);
   }
 };
 
-var convoChoice = null;
 // TODO : remove early returns, use some sort of pattern
-var handler = function(choice) {
+InteractiveCli.prototype.handler = function(choice) {
   var value = choice.toString().trim();
+  var convoChoice = null;
 
   // this works for now
   if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
@@ -201,7 +142,7 @@ var handler = function(choice) {
       console.log('Switching conversation...'.cyan);
       //var id = heading[nb].fbid;
       var id = heading.getFbid(nb);
-      initializeConversationViewFromFbid(id);
+      interactive.initializeConversationViewFromFbid(id);
     }
     return;
   }
@@ -245,7 +186,7 @@ var handler = function(choice) {
   if(action === 0) {
     convoChoice = value;
     emitter.emit('getMessages', value, null, function(id){
-      initializeConversationViewFromFbid(id);
+      interactive.initializeConversationViewFromFbid(id);
     });
     action = 1;
   } else if(action === 1) {
@@ -255,7 +196,7 @@ var handler = function(choice) {
       if(a === 1){
         action = 1;
         emitter.emit('getMessages', null, searchId, function(id){
-          initializeConversationViewFromFbid(id);
+          interactive.initializeConversationViewFromFbid(id);
         });
       } else {
         emitter.emit('getConvos', heading.getData(), function(a) {
@@ -277,9 +218,7 @@ InteractiveCli.prototype.run = function(){
 
       // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
-      //listeners.setMessenger(messenger);
       search = new Search(messenger);
-
 
       // register our listeners
       emitter.on('getConvos', listeners.getConversationsListener);
@@ -290,7 +229,6 @@ InteractiveCli.prototype.run = function(){
       messenger.getFriends(function(friends) {
         var entry = {};
 
-        // My linter was complaining that this wasn't dot notation... sorry
         entry.id = userId;
         entry.firstName = "Me";
         entry.name = "Me";
@@ -303,8 +241,7 @@ InteractiveCli.prototype.run = function(){
         action = a;
       });
 
-      stdin.addListener("data", handler);
-    // });
+      stdin.addListener("data", interactive.handler);
   });
 };
 
