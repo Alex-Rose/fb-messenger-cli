@@ -29,11 +29,11 @@ Pull.prototype.execute = function() {
     pull.userId = json.c_user;
 
     pull.sendRequest();
-    
+
       // function(err, response, body){
         // console.log(body);
       // });
-  }); 
+  });
 
 };
 
@@ -77,12 +77,12 @@ Pull.prototype.sendRequest = function() {
     },
     gzip: true,
   };
-  
+
   // console.log('requesting seq=' + seq);
-  
+
   try {
     pull.connection = request.get(options);
-  } catch (err) { 
+  } catch (err) {
     pull.retry += 5000;
     var delay = Math.min(pull.retry, 60000);
     setTimeout(function() {
@@ -90,21 +90,21 @@ Pull.prototype.sendRequest = function() {
     }, delay);
   }
   pull.connection.on('data', function(chunk){
-    
+
     var data = chunk.toString('utf8');
     if (data.indexOf('for (;;);') === 0) {data = data.substr('for (;;);'.length);}
-    
+
     try {
       if (data.length > 0) {
         json = JSON.parse(data);
-        
+
         if (!Array.isArray(json)) {
           json = [json];
         }
-        
+
         for (var i in json) {
           var message = json[i];
-          
+
           if (message.t == 'msg') {
             // if (message.seq > pull.seq + 1) {
               // console.log('missing a message current :' + pull.seq + ' vs message ' + message.seq);
@@ -112,7 +112,7 @@ Pull.prototype.sendRequest = function() {
             pull.seq = message.seq;
             pull.hadIncrement = true;
             // console.log('Got seq ' + message.seq);
-            
+
             for (var j in message.ms) {
               var ms = message.ms[j];
               // console.log(ms.type);
@@ -129,7 +129,7 @@ Pull.prototype.sendRequest = function() {
                   if (att.type == 'sticker') {
                     pull.emit('message', {'author': delta.messageMetadata.actorFbId, 'body' : 'sent a sticker', 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
                   }
-                } 
+                }
               }
               else if (ms.type == 'typ') {
                 if (ms.st == '1') {
@@ -139,9 +139,9 @@ Pull.prototype.sendRequest = function() {
                 }
               }
             }
-            
+
             pull.retry = 0;
-            
+
           } else if (message.t == 'heartbeat') {
             // console.log('Got heartbeat... need to restart');
             if (hadIncrement) {
@@ -149,7 +149,7 @@ Pull.prototype.sendRequest = function() {
               pull.hadIncrement = false;
             }
             // pull.sendRequest();
-            
+
           }
           else if (message.t == 'fullReload') {
             // console.log('full reload at ' + message.seq + ' vs current (' + pull.seq +')');
@@ -158,8 +158,8 @@ Pull.prototype.sendRequest = function() {
             // pull.sendRequest();
           }
           else if (message.t == 'lb') {
-            pull.sticky = message.lb_info.sticky; 
-            pull.stickyPool = message.lb_info.pool; 
+            pull.sticky = message.lb_info.sticky;
+            pull.stickyPool = message.lb_info.pool;
           }
         }
       }
@@ -168,13 +168,13 @@ Pull.prototype.sendRequest = function() {
       // console.log('Chunk was : ' + chunk);
     }
   });
-  
-  
+
+
   pull.connection.on('end', function() {
     // console.log('CONNECTION HAS ENDED!!!');
       pull.sendRequest();
   });
-  
+
 };
 
 // pull = new Pull();

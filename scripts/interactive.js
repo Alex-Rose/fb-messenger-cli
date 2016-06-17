@@ -91,7 +91,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
   }
 
   msg += " : " + message.body;
-  interacive.threadHistory.push(msg);
+  interactive.threadHistory.push(msg);
   interactive.printThread();
 };
 

@@ -1,7 +1,7 @@
-var Login = require('./login.js');
-var Crypt = require('./crypt.js');
-var Messenger = require('./messenger.js');
-var Settings = require('./settings.js');
+var Login = require('./scripts/login.js');
+var Crypt = require('./scripts/crypt.js');
+var Messenger = require('./scripts/messenger.js');
+var Settings = require('./scripts/settings.js');
 var colors = require('colors');
 
 function executeCompleteLogin(callback) {
@@ -71,7 +71,7 @@ function launchApp(err) {
 
       setTimeout(function() {
         console.log('Launching app...'.cyan);
-        require('./interactive.js');
+        require('./scripts/interactive.js');
       }, delay);
     });
   }
