@@ -30,7 +30,7 @@ var Messenger = function(cookie, userId, fbdtsg) {
   };
 };
 
-// Facebook prepend jsonp with infinite for loop. 
+// Facebook prepend jsonp with infinite for loop.
 // We remove it when present.
 Messenger.prototype.cleanJson = function (body) {
   if (body.indexOf('for (;;);') === 0) {
@@ -145,18 +145,20 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
 
         data = [];
 
-        for (i = 0; i < msg.length; ++i) {
-            m = msg[i];
-            obj = {
-                'author': m['author'],
-                'body': m['body'],
-                'other_user_fbid': m['other_user_fbid'],
-                'thread_fbid': m['thread_fbid'],
-                'timestamp': m['timestamp'],
-                'timestamp_datetime': m['timestamp_datetime']
-            };
+        if(msg !== undefined) {
+          for (i = 0; i < msg.length; ++i) {
+              m = msg[i];
+              obj = {
+                  'author': m['author'],
+                  'body': m['body'],
+                  'other_user_fbid': m['other_user_fbid'],
+                  'thread_fbid': m['thread_fbid'],
+                  'timestamp': m['timestamp'],
+                  'timestamp_datetime': m['timestamp_datetime']
+              };
 
-            data.push(obj);
+              data.push(obj);
+          }
         }
 
         callback(err, data);
@@ -188,11 +190,11 @@ Messenger.prototype.getThreads = function(callback) {
 
   request.post(options, function(err, response, body){
     var data;
-    
+
     if (!err) {
-      
+
       body = messenger.cleanJson(body);
-      
+
       var json;
       try {
         json = JSON.parse(body);
@@ -218,7 +220,7 @@ Messenger.prototype.getThreads = function(callback) {
                 break;
               }
             }
-          }          
+          }
         }
 
       } catch (except){
