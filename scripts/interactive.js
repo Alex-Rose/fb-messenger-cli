@@ -147,7 +147,7 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  if(value.toLowerCase() === '/exit'){
+  if(value.toLowerCase() === '/exit' || value.toLowerCase() === '/q'){
     interactive.exit();
   }
 
