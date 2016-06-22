@@ -15,6 +15,10 @@
     "request": "^2.72.0",
     "system": "^1.0.4"
   },
+  "devDependencies": {
+    "mocha": "2.4.x",
+    "chai": "3.5.x"
+  },
   "main": "cli.js",
   "directories": {
     "test": "test"
