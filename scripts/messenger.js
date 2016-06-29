@@ -40,6 +40,25 @@ Messenger.prototype.cleanJson = function (body) {
   return body;
 };
 
+// Parses a list of conversation participants into users
+// Useful for adding users that are not "friends" to our database
+Messenger.prototype.parseParticipants = function (participants) {
+  for (var i=0; i < participants.length; i++) {
+    // Add only the ones we don't already have
+    if(participants[i].is_friend != 'true') {
+      var entry = {};
+      var user = participants[i];
+
+      entry['id'] = user.fbid;
+      entry['firstName'] = user.short_name;
+      entry['name'] = user.name;
+      entry['vanity'] = user.vanity;
+
+      messenger.users[user.fbid] = entry;
+    }
+  }
+};
+
 // Send a message in a thread
 //   recipient: Url name of recipient, also called vanity (eg: alexandre.rose)
 //   recipientId : Facebook numeric id of recipient. Can be a person or a thread
@@ -112,9 +131,18 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
 Messenger.prototype.getLastMessage = function(recipient, recipientId, count, callback) {
   var messenger = this;
   var recipientUrl = this.baseUrl + "/t/" + recipient;
-  var offSetString = 'messages[user_ids][' + recipientId + '][offset]';
-  var limitString = 'messages[user_ids][' + recipientId + '][limit]';
-  var timestampString = 'messages[user_ids][' + recipientId + '][timestamp]';
+  var offSetString, limitString, timestampString;
+
+  // If recipient == id, then we're chatting to a group
+  if (recipient === recipientId) {
+    offSetString = 'messages[thread_fbids][' + recipientId + '][offset]';
+    limitString = 'messages[thread_fbids][' + recipientId + '][limit]';
+    timestampString = 'messages[thread_fbids][' + recipientId + '][timestamp]';
+  } else {
+    offSetString = 'messages[user_ids][' + recipientId + '][offset]';
+    limitString = 'messages[user_ids][' + recipientId + '][limit]';
+    timestampString = 'messages[user_ids][' + recipientId + '][timestamp]';
+  }
 
   var options = {
     url: 'https://www.messenger.com/ajax/mercury/thread_info.php?dpr=1',
@@ -149,12 +177,12 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
           for (i = 0; i < msg.length; ++i) {
               m = msg[i];
               obj = {
-                  'author': m['author'],
-                  'body': m['body'],
-                  'other_user_fbid': m['other_user_fbid'],
-                  'thread_fbid': m['thread_fbid'],
-                  'timestamp': m['timestamp'],
-                  'timestamp_datetime': m['timestamp_datetime']
+                  'author': m.author,
+                  'body': m.body,
+                  'other_user_fbid': m.other_user_fbid,
+                  'thread_fbid': m.thread_fbid,
+                  'timestamp': m.timestamp,
+                  'timestamp_datetime': m.timestamp_datetime
               };
 
               data.push(obj);
@@ -231,6 +259,100 @@ Messenger.prototype.getThreads = function(callback) {
     }
   });
 };
+
+Messenger.prototype.getGroupThreads = function(callback) {
+  var messenger = this;
+
+  var options = {
+    url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
+    headers: messenger.headers,
+    formData: {
+      'inbox[offset]': '0',
+      'inbox[filter]' : '',
+      'inbox[limit]' : '25',
+      'client':'mercury',
+      '__user':messenger.userId,
+      '__a':'1',
+      '__req':'8',
+      '__be':'0',
+      '__pc':'EXP1:messengerdotcom_pkg',
+      'ttstamp':'2658170878850518911395104515865817183457873106120677266',
+      'fb_dtsg': messenger.fbdtsg,
+      '__rev':'2338802'
+    },
+    gzip: true,
+  };
+
+  request.post(options, function(err, response, body){
+    var data;
+
+    if (!err) {
+
+      body = messenger.cleanJson(body);
+
+      var json;
+      try {
+        json = JSON.parse(body);
+
+        if (json.error !== undefined) {
+          if (json.errorSummary !== undefined) {
+            err = new Error('Error happened getting resource. Inner message : ' + json.errorSummary);
+          } else {
+            err = new Error('An unknown error happened while getting resource');
+          }
+        } else {
+          participants = json['payload']['participants'];
+          threads = json['payload']['threads'];
+
+          messenger.parseParticipants(participants);
+
+          var groupThreads = [];
+          for (var k=0; k < threads.length; k++) {
+            if (threads[k].other_user_fbid === null){
+              groupThreads.push(threads[k]);
+            }
+          }
+
+          data = [];
+
+          for (var l=0; l < groupThreads.length; l++) {
+            if (groupThreads[l].name !== ''){
+              data.push({'name': groupThreads[l].name, 'snippet': groupThreads[l].snippet, 'thread_fbid': groupThreads[l].thread_fbid});
+
+            } else {
+              // Get name from convo participants
+              var count = 0;
+              var name = '';
+              for (var m=0; m < groupThreads[l].participants.length; m++) {
+                var gParticipants = groupThreads[l].participants;
+                for (var n=0; n < participants.length; n++) {
+                  if (gParticipants[m].substring('fbid:'.length) == participants[n].fbid) {
+                    // Only show name of first 2 participants
+                    if (count < 2) {
+                      name += participants[n].name + ', ';
+                    }
+                    count++;
+                    }
+                    if (count > 3 ) { break; }
+                }
+              }
+              name = name.slice(0, -2).trim();
+              // You are included in participants
+              if ( count > 3) { name += ' + others...'; }
+              data.push({'name': name, 'snippet': groupThreads[l].snippet, 'thread_fbid': groupThreads[l].thread_fbid});
+            }
+          }
+        }
+
+      } catch (except){
+        err = except;
+      } finally {
+        callback(err, data);
+      }
+    }
+  });
+};
+
 
 Messenger.prototype.getFriends = function(callback) {
   var messenger = this;

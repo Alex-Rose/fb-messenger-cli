@@ -16,6 +16,7 @@ var crypt = new Crypt('password');
 var action = 0;
 var recipientId = '';
 var current_userId;
+var group = false;
 
 // Initialize our listeners
 var emitter = new events.EventEmitter();
@@ -38,7 +39,10 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   // Unread messages in heading
   heading.clearUnread();
 
-  messenger.getLastMessage(user.vanity, id, process.stdout.rows - 1, function(err, messages) {
+  var recipientUrl;
+  if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
+
+  messenger.getLastMessage(recipientUrl, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
     interactive.threadHistory = [];
     util.refreshConsole();
@@ -62,6 +66,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
       interactive.threadHistory.push(msg);
     }
     interactive.printThread();
+    group = false;
   });
 };
 
@@ -134,6 +139,15 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
+  if(value.indexOf('/group') === 0) {
+    console.log('Showing you group conversations...'.cyan);
+    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(a) {
+      action = a;
+      group = true;
+    });
+    return;
+  }
+
   if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
     var nb = value.split(' ')[1];
 
@@ -199,7 +213,7 @@ InteractiveCli.prototype.handler = function(choice) {
           interactive.initializeConversationViewFromFbid(id);
         });
       } else {
-        emitter.emit('getConvos', heading.getData(), function(a) {
+        emitter.emit('getConvos', current_userId, heading.getData(), function(a) {
           action = a;
         });
       }
@@ -222,6 +236,7 @@ InteractiveCli.prototype.run = function(){
 
       // register our listeners
       emitter.on('getConvos', listeners.getConversationsListener);
+      emitter.on('getGroupConvos', listeners.getGroupConversationsListener);
       emitter.on('sendMessage', listeners.sendMessageListener);
       emitter.on('getMessages', listeners.getMessagesListener);
       emitter.on('startSearch', listeners.searchListener);

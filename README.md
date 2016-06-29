@@ -7,6 +7,7 @@ Use your Facebook account to chat with your friends sneakily in the command line
 * Ability to search for your friends and initiate conversations
 * A header showing unread messages in recent convos
 * Easy switching between conversations
+* Support for group convos
 
 ### Install instructions
 1. Make sure Node is installed

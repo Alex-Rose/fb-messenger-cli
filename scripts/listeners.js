@@ -32,6 +32,27 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
   cb(0);
 };
 
+Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb) {
+    messenger.getGroupThreads(function(err,threads) {
+    util.refreshConsole();
+    options = {};
+    for (var i = 0; i < threads.length; ++i) {
+        console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
+        options[i] = threads[i].thread_fbid;
+
+        if (threads[i].thread_fbid == userId) {
+          continue;
+        }
+        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
+    }
+
+    process.stdout.write("Select conversation : ");
+  });
+
+  // Change state (action) in the callback
+  cb(0);
+};
+
 Listeners.prototype.sendMessageListener = function(m, recipientId) {
   messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
     if(err) {
