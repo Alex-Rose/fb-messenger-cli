@@ -173,7 +173,9 @@ InteractiveCli.prototype.handler = function(choice) {
     console.log('/back or /menu .... Get back to conversation selection'.cyan);
     console.log('/exit ............. Quit the application'.cyan);
     console.log('/logout ........... Exit and flush credentials'.cyan);
+    console.log('/groups ........... Bring up your goup conversations'.cyan);
     console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
+    console.log('/search [query] ... Search your friends to chat'.cyan);
     console.log('/help ............. Print this message'.cyan);
     return;
   }

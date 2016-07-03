@@ -27,6 +27,8 @@ Search.prototype.selectConvo = function(choice) {
       return result;
     }
   }
+  console.log('No conversation has that number'.cyan);
+  console.log('Bringing you back to friend selection screen...'.cyan);
   return null;
 };
 
