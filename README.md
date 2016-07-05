@@ -22,4 +22,3 @@ Use your Facebook account to chat with your friends sneakily in the command line
 
 ** Make sure you've logged in to the cli at least once before running the tests. Regression.js uses your log-in to test the sending and receiving features
 
-[![master](https://orion.aep.polymtl.ca/~alexrose/spp/tests-current.svg?maxAge=60)]()
