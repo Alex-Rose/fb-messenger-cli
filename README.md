@@ -2,6 +2,15 @@
 #### A command line messenger tool
 Use your Facebook account to chat with your friends sneakily in the command line, it's as easy as logging in, choosing a convo and chatting away.
 
+### Choose a friend
+![Selection](http://puu.sh/pSNkL/7d82e4d9f2.png)
+
+### Chat away
+![Chat](http://puu.sh/pSNNb/e7e08ca16e.png)
+
+### Helpful options
+![Options](http://puu.sh/pSNRM/07c6c51fff.png)
+
 ### Features:
 * Real time refreshing on new messages
 * Ability to search for your friends and initiate conversations
