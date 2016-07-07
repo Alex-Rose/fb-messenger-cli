@@ -15,7 +15,10 @@ Heading.prototype.clearUnread = function (id) {
 };
 
 Heading.prototype.getFbid = function(nb) {
-  return this.data[nb].fbid;
+  var item = this.data[nb];
+  if (item !== undefined)
+    return this.data[nb].fbid;
+  else return -1;
 };
 
 Heading.prototype.writeHeader = function (convoId) {

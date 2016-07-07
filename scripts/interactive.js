@@ -153,11 +153,15 @@ InteractiveCli.prototype.handler = function(choice) {
 
     if (!isNaN(nb)) {
       nb = parseInt(nb);
-      console.log('Switching conversation...'.cyan);
       //var id = heading[nb].fbid;
       var id = heading.getFbid(nb);
-      interactive.initializeConversationViewFromFbid(id);
+      if (id !== -1) {
+        console.log('Switching conversation...'.cyan);
+        interactive.initializeConversationViewFromFbid(id);
+        return;
+      }
     }
+    console.log('Invalid switch, please try again'.cyan);
     return;
   }
 
