@@ -1,7 +1,6 @@
 var Messenger = require('./messenger.js');
 var util = require('./util.js');
 
-var prompt = require('prompt');
 var colors = require('colors');
 
 var Search = function(messenger){
