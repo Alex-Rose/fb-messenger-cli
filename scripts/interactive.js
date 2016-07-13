@@ -11,6 +11,8 @@ var events = require('events');
 var stdin = process.openStdin();
 var stdout = process.stdout;
 var crypt = new Crypt('password');
+const path = require('path');
+const notifier = require('node-notifier');
 
 // 0 is select conversation, 1 is send message
 var action = 0;
@@ -72,6 +74,18 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
 
 InteractiveCli.prototype.readPullMessage = function(message) {
   var author = messenger.users[message.author];
+
+  try {
+    if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
+      notifier.notify({
+        title: author.name,
+        message: message.body,
+        icon: path.join(__dirname, '../resources/logo.png')
+      });
+    }
+  } catch (err) {
+    // Don't break over notifications
+  }
 
   if (author === undefined || message.threadId != recipientId || action === 0) {
     // Don't warn for current user messages (from another device)
