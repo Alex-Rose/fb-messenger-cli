@@ -5,6 +5,7 @@ var expect = chai.expect; // we are using the "expect" style of Chai
 var Crypt = require('../crypt.js');
 var Messenger = require('../messenger.js');
 var Settings = require('../settings.js');
+var path = require('path');
 
 describe('Crypt', function() {
   it('getInstance() should create a new singleton object', function() {
@@ -50,7 +51,7 @@ describe('Messenger', function() {
   it('Load cookie', function(done){
     // Reset crypt
     var crypt = new Crypt();
-    crypt.filename = '../../.kryptonite';
+    crypt.filename = '.kryptonite';
 
     crypt.load(function(err, result) {
 
