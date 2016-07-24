@@ -23,12 +23,14 @@ Pull.prototype.execute = function() {
   var crypt = Crypt.getInstance();
 
   crypt.load(function(err, data) {
-    json = JSON.parse(data);
-    pull.cookie = json.cookie;
-    pull.fbdtsg = json.fb_dtsg;
-    pull.userId = json.c_user;
+    if(!err) {
+      json = JSON.parse(data);
+      pull.cookie = json.cookie;
+      pull.fbdtsg = json.fb_dtsg;
+      pull.userId = json.c_user;
 
-    pull.sendRequest();
+      pull.sendRequest();
+    }
 
       // function(err, response, body){
         // console.log(body);

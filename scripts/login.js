@@ -1,6 +1,7 @@
 var Crypt = require('./crypt.js');
 var prompt = require('prompt');
 var phantomjs = require('phantomjs-prebuilt');
+var path = require('path');
 var phantom;
 
 Login = function() { };
@@ -22,10 +23,9 @@ Login.prototype.execute = function(callback) {
   prompt.start();
 
   prompt.get(schema, function (err, result) {
-    var path = phantomjs.path; // Path where npm install the prebuilt .exe
-    var arguments = ['scripts/phantom.js', result.email, result.password];
+    var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
 
-    phantom = new login.run_cmd( path, arguments, function () {
+    phantom = new login.run_cmd( phantomjs.path, arguments, function () {
       var Messenger = require('./messenger.js');
 
       if(phantom.data){

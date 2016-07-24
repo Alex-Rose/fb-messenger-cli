@@ -1,6 +1,6 @@
 {
   "name": "fb-messenger-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An interface for facebook communications through the cli",
   "author": "Alexandre Rose and Samuel Bergeron",
   "license": "MIT",
@@ -20,11 +20,7 @@
     "mocha": "2.4.x",
     "chai": "3.5.x"
   },
-  "main": "cli.js",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "test": "mocha test/regression.js"
+  "bin": {
+      "fb-messenger": "cli.js"
   }
 }

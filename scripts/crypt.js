@@ -1,5 +1,6 @@
 var crypto = require('crypto');
 var fs = require('fs');
+var path = require('path');
 
 var unlock = true;
 var instance;
@@ -41,17 +42,18 @@ Crypt.prototype.decrypt = function (text){
 Crypt.prototype.save = function(data){
   crypt = this;
   encrypted = crypt.encrypt(data);
-  fs.writeFileSync(crypt.filename, encrypted);
+  var savePath = path.resolve(__dirname, '../', crypt.filename);
+  fs.writeFileSync(savePath, encrypted);
 };
 
 Crypt.prototype.load = function(cb){
     crypt = this;
 
     if (crypt.data === undefined) {
-      fs.readFile(crypt.filename, function(err, data) {
+      fs.readFile(path.resolve(__dirname, '../', crypt.filename), function(err, data) {
           if(err) {
             // Unessecairy console.log, we know the file is missing.
-            //console.log(err);
+            console.log('Can\'t find the .kryptonite file, we\'ll make a new one');
             cb(err);
           }
           else {
@@ -68,7 +70,7 @@ Crypt.prototype.load = function(cb){
 Crypt.prototype.flush = function() {
   crypt = this;
   crypt.data = undefined;
-  fs.unlink(crypt.filename);
+  fs.unlink(path.resolve(__dirname, '../', crypt.filename));
 };
 
 module.exports = Crypt;
