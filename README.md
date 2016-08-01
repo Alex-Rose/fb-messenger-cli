@@ -2,6 +2,10 @@
 #### A command line messenger tool
 Use your Facebook account to chat with your friends sneakily in the command line, it's as easy as logging in, choosing a convo and chatting away.
 
+#### Now on npm
+``npm install -g fb-messenger``
+Then ``fb-messenger`` from anywhere
+
 ### Choose a friend
 ![Selection](http://puu.sh/pSNkL/7d82e4d9f2.png)
 
@@ -18,11 +22,10 @@ Use your Facebook account to chat with your friends sneakily in the command line
 * Easy switching between conversations
 * Support for group convos
 
-### Install instructions
-1. Make sure Node is installed
-2. Run ``npm install``
+### Dev install instructions
+1. Run ``npm install`` for dependencies
 3. Run ``node cli``
-4. Chat away
+4. Develop away
 
 ### Running tests
 1. ``cd`` into the test directory
