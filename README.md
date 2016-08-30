@@ -3,8 +3,8 @@
 Use your Facebook account to chat with your friends sneakily in the command line, it's as easy as logging in, choosing a convo and chatting away.
 
 #### Now on npm
-``npm install -g fb-messenger``
-Then ``fb-messenger`` from anywhere
+``npm install -g fb-messenger-cli``
+Then ``fb-messenger-cli`` from anywhere
 
 ### Choose a friend
 ![Selection](http://puu.sh/pSNkL/7d82e4d9f2.png)
