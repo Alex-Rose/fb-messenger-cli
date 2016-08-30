@@ -21,6 +21,6 @@
     "chai": "3.5.x"
   },
   "bin": {
-    "fb-messenger": "cli.js"
+    "fb-messenger-cli": "cli.js"
   }
 }
