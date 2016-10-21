@@ -129,6 +129,54 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
   });
 };
 
+Messenger.prototype.sendGroupMessage =  function (recipientId, body, callback) {
+  var recipientUrl = this.baseUrl + "/t/" + recipientId; // Your recipient;
+  var messenger = this;
+  var utcTimestamp = new Date().getTime();
+  var localTime = new Date().toLocaleTimeString().replace(/\s+/g, '').toLowerCase();
+  var messageId = Math.floor(Math.random() *  Number.MAX_SAFE_INTEGER);
+
+  request.post("https://www.messenger.com/messaging/send/?dpr=1", {
+    headers: {
+      'origin': 'https://www.messenger.com',
+      'accept-encoding': 'gzip, deflate',
+      'x-msgr-region': 'ATN',
+      'accept-language': 'en-US,en;q=0.8',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': '*/*',
+      'referer': recipientUrl,
+      'cookie': messenger.cookie,
+      'authority': 'www.messenger.com'
+    },
+    formData: {
+      'action_type':'ma-type:user-generated-message',
+      'author':'fbid:' + messenger.userId,
+      'timestamp': utcTimestamp,
+      'source':'source:messenger:web',
+      'body': body,
+      'has_attachment':'false',
+      'status':'0',
+      'offline_threading_id': messageId,
+      'message_id': messageId,
+      'thread_fbid': recipientId,
+      '__user': messenger.userId,
+      '__a':'1',
+      '__req':'2q',
+      '__be':'0',
+      '__pc':'EXP1:messengerdotcom_pkg',
+      'fb_dtsg': messenger.fbdtsg,
+      'ttstamp':'265817073691196867855211811758658172458277511215256110114',
+      '__rev':'2335431'
+    }
+  }, function(err, httpResponse, body) {
+    if (err) {
+      callback(err);
+    }
+    callback();
+  });
+}
+
 Messenger.prototype.getLastMessage = function(recipient, recipientId, count, callback) {
   var messenger = this;
   var recipientUrl = this.baseUrl + "/t/" + recipient;

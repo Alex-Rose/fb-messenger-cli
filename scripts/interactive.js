@@ -52,8 +52,8 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
       var message = messages[i];
       var authorString = message.author;
 
-      if (authorString.indexOf('fbid:') === 0) authorString = authorString.substr('fbid:'.length);
-
+      if (authorString.indexOf('fbid:') === 0)
+        authorString = authorString.substr('fbid:'.length);
 
       var author = messenger.users[authorString];
 
@@ -68,7 +68,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
       interactive.threadHistory.push(msg);
     }
     interactive.printThread();
-    group = false;
+    //group = false;
   });
 };
 
@@ -87,20 +87,27 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     // Don't break over notifications
   }
 
-  if (author === undefined || message.threadId != recipientId || action === 0) {
-    // Don't warn for current user messages (from another device)
-    if (author.id != messenger.userId) {
-      var headingData = heading.getData();
-      console.log('Heading data' + headingData);
-      for (var i in headingData) {
-        if (headingData[i].fbid == message.threadId) {
-          headingData[i].unread++;
-          interactive.printThread();
+  if (author === undefined || message.otherUserId != recipientId || action === 0) {
+    // Extra check for groups
+    if (message.threadId != recipientId) {
+      // Don't warn for current user messages (from another device)
+      if (author.id != messenger.userId) {
+        var headingData = heading.getData();
+        console.log('Heading data' + headingData);
+        for (var i in headingData) {
+          // Doesn't work when it's a group
+          if (headingData[i].fbid == message.otherUserId || headingData[i].fbid == message.threadId) {
+            headingData[i].unread++;
+          }
         }
+        // Moved this out of the for, in case we get a message from someone
+        // not in the heading, we still need to refresh
+        interactive.printThread();
       }
+      return;
     }
-    return;
   }
+
 
   var msg = '';
   if (author.id != messenger.userId) {
@@ -144,16 +151,25 @@ InteractiveCli.prototype.handler = function(choice) {
   var value = choice.toString().trim();
   var convoChoice = null;
 
-  // this works for now
-  if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
-    console.log('Bringing you back to the friend selection screen...'.cyan);
-    emitter.emit('getConvos', current_userId, heading.getData(), function(a){
+  if(value.toLowerCase() === '/back' && group) {
+    console.log('Back to group conversations...'.cyan);
+    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(a) {
       action = a;
     });
     return;
   }
 
-  if(value.indexOf('/group') === 0) {
+  // this works for now
+  else if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
+    console.log('Bringing you back to the friend selection screen...'.cyan);
+    emitter.emit('getConvos', current_userId, heading.getData(), function(a){
+      action = a;
+    });
+    group = false;
+    return;
+  }
+
+  else if(value.indexOf('/group') === 0 ) {
     console.log('Showing you group conversations...'.cyan);
     emitter.emit('getGroupConvos', current_userId, heading.getData(), function(a) {
       action = a;
@@ -162,7 +178,7 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
+  else if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
     var nb = value.split(' ')[1];
 
     if (!isNaN(nb)) {
@@ -179,17 +195,17 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  if(value.toLowerCase() === '/exit' || value.toLowerCase() === '/q'){
+  else if(value.toLowerCase() === '/exit' || value.indexOf('/q') === 0){
     interactive.exit();
   }
 
-  if(value.toLowerCase() === '/logout'){
+  else if(value.toLowerCase() === '/logout'){
     interactive.exit(true);
   }
 
-  if (value.indexOf('/help') === 0) {
+  else if (value.indexOf('/help') === 0) {
     console.log('/back or /menu .... Get back to conversation selection'.cyan);
-    console.log('/exit ............. Quit the application'.cyan);
+    console.log('/exit or /quit .... Quit the application'.cyan);
     console.log('/logout ........... Exit and flush credentials'.cyan);
     console.log('/groups ........... Bring up your goup conversations'.cyan);
     console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
@@ -198,7 +214,7 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  if(value.toLowerCase().indexOf('/search') != -1){
+  else if(value.toLowerCase().indexOf('/search') != -1){
     // Start a new search
     action = 2;
     // Take value on first space
@@ -212,7 +228,7 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  if (value.indexOf('/') === 0) {
+  else if (value.indexOf('/') === 0) {
     console.log('Unknown command. Type /help for commands.'.cyan);
     return;
   }

@@ -54,11 +54,23 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
 };
 
 Listeners.prototype.sendMessageListener = function(m, recipientId) {
-  messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
-    if(err) {
-      console.log('Message did not send properly');
-    }
-  });
+  if(messenger.users[recipientId] !== undefined) {
+    messenger.sendMessage(messenger.users[recipientId].vanity, recipientId, m, function(err) {
+      if(err) {
+        console.log('Message did not send properly');
+      }
+    });
+  } else {
+    // This is a group and not a single user
+    messenger.sendGroupMessage(recipientId, m, function(err) {
+      if(err) {
+        console.log('Message did not send properly');
+      }
+    });
+  }
+
+
+
 };
 
 var printed = false;

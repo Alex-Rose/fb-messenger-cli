@@ -121,8 +121,10 @@ Pull.prototype.sendRequest = function() {
               if (ms.type == 'delta' && ms.delta !== undefined) {
                 if (ms.delta.body !== undefined) {
                   // console.log(ms.delta.body);
-                  pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId, 'body' : ms.delta.body, 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
-                  // console.log(ms.delta.messageMetadata.threadKey.otherUserFbId);
+                  pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId,
+                                        'body' : ms.delta.body,
+                                        'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                        'threadId' : ms.delta.messageMetadata.threadKey.threadFbId});
                   }
               } else if (ms.delta.attachements !== undefined) {
                 var delta = ms.delta;
