@@ -4,4 +4,4 @@ phantomjs.exe
 .kryptonite_test
 .settings
 .test_*
-.idea
+.idea/
