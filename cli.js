@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 (function () {
   var Login = require('./scripts/login.js');
   var Crypt = require('./scripts/crypt.js');
