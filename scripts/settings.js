@@ -3,57 +3,64 @@
 // with save function
 
 var fs = require('fs');
+var path = require('path');
 
 var instance;
 
-Settings = function() {
+Settings = function () {
     instance = this;
     this.filename = '.settings';
-    this.properties = {};
+    this.properties = {
+        disableColors: false
+    };
 };
 
 // Get singleton instance
-Settings.getInstance = function (){
-  if (instance === undefined) {
-    instance = new Settings();
-  }
-  return instance;
+Settings.getInstance = function () {
+    if (instance === undefined) {
+        instance = new Settings();
+    }
+    return instance;
 };
 
 // Save the current properties dictionary on disk
 // This method is synchronous
-Settings.prototype.save = function(){
-  var settings = this;
-
-  fs.writeFileSync(settings.filename, JSON.stringify(settings.properties));
+Settings.prototype.save = function () {
+    var settings = this;
+    var savePath = path.resolve(__dirname, '../', settings.filename);
+    fs.writeFileSync(savePath, JSON.stringify(settings.properties));
 };
 
 // Load previously saved properties from disk
 // callback(error, properties), where properties is a dictionary
-Settings.prototype.load = function(callback){
+Settings.prototype.load = function (callback) {
     var settings = this;
-    
-    if (Object.keys(settings.properties).length === 0) {
-      fs.readFile(settings.filename, function(err, data) {
-          if(!err) {
+
+    fs.readFile(path.resolve(__dirname, '../', settings.filename), function (err, data) {
+        if (!err) {
             try {
-              settings.properties = JSON.parse(data.toString());  
+                settings.properties = JSON.parse(data.toString());
             } catch (except) {
-              err = except;
+                err = except;
             }
-          }
-          callback(err, settings.properties);
-      });
-    } else {
-      callback(undefined, settings.properties);
-    }
+        } else {
+            console.log('Warning : settings not found, lets try to create default'.yellow);
+            try {
+                settings.save();
+                err = undefined;
+            } catch (Exception) {
+                err = Exception;
+            }
+        }
+        callback(err, settings.properties);
+    });
 };
 
 // Delete properties from disk and wipe dictionary in memory
-Settings.prototype.flush = function() {
-  var settings = this;
-  fs.unlink(settings.filename);
-  settings.properties = {};
+Settings.prototype.flush = function () {
+    var settings = this;
+    fs.unlink(settings.filename);
+    settings.properties = {};
 };
 
 module.exports = Settings;
