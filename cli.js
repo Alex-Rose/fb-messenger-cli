@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 (function () {
   var Login = require('./scripts/login.js');
   var Crypt = require('./scripts/crypt.js');
@@ -16,12 +17,8 @@
     });
   }
 
-  function askPassword(callback) {
-
-  }
-
-  function verifyLogon(password, callback) {
-    var crypt = Crypt.getInstance(password);
+    function verifyLogon(password, callback) {
+        var crypt = Crypt.getInstance(password);
 
     crypt.load(function(err, data) {
 
@@ -66,7 +63,6 @@
             colors.enabled = false;
           }
         } else {
-          console.log(err);
           delay = 2000;
           console.log('Warning : settings can\'t be read'.yellow);
         }
