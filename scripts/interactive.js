@@ -41,8 +41,12 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   // Unread messages in heading
   heading.clearUnread();
 
-  var recipientUrl;
-  if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
+    var recipientUrl;
+    if (group) {
+        recipientUrl = id;
+    } else {
+        if (user) recipientUrl = user.vanity;
+    }
 
   messenger.getLastMessage(recipientUrl, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
