@@ -11,18 +11,33 @@ Listeners.prototype.getMessagesListener = function(nb, searchId, callback) {
   callback(id);
 };
 
+function printThreadSnippet(thread, idx) {
+  var line = '[' + idx.toString().cyan + '] ' + thread.name.green + ' : ';
+  if (thread.snippet !== '')
+    line += thread.snippet + ' ';
+
+  for(var j = 0; j < thread.attachments.length; j++) {
+    var a = thread.attachments[j];
+    line += '[ '.red + a.attach_type + ' ]'.red;
+  }
+
+  console.log(line);
+}
+
 Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
     messenger.getThreads(function(err,threads) {
     util.refreshConsole();
     options = {};
     for (var i = 0; i < threads.length; ++i) {
-        console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
-        options[i] = threads[i].thread_fbid;
+        var thread = threads[i];
+        printThreadSnippet(thread, i);
 
-        if (threads[i].thread_fbid == userId) {
+        options[i] = thread.thread_fbid;
+
+        if (thread.thread_fbid == userId) {
           continue;
         }
-        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
+        heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
     }
 
     process.stdout.write("Select conversation : ");
@@ -37,13 +52,15 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
     util.refreshConsole();
     options = {};
     for (var i = 0; i < threads.length; ++i) {
-        console.log('[' + i.toString().cyan + '] ' + threads[i].name.green + ' : ' + threads[i].snippet);
-        options[i] = threads[i].thread_fbid;
+        var thread = threads[i];
+        printThreadSnippet(thread, i);
 
-        if (threads[i].thread_fbid == userId) {
+        options[i] = thread.thread_fbid;
+
+        if (thread.thread_fbid == userId) {
           continue;
         }
-        heading[i] = {fbid: threads[i].thread_fbid, name: threads[i].name, unread: 0};
+        heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
     }
 
     process.stdout.write("Select conversation : ");
