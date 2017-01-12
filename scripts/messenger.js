@@ -232,9 +232,12 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
                   'thread_fbid': m.thread_fbid,
                   'timestamp': m.timestamp,
                   'timestamp_datetime': m.timestamp_datetime
-              };
+              }
 
-              data.push(obj);
+              if (m.has_attachment)
+                obj.attachments = m.attachments;
+
+               data.push(obj);
           }
         }
 
@@ -293,7 +296,12 @@ Messenger.prototype.getThreads = function(callback) {
 
             for (j = 0; j < threads.length; ++j) {
               if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
-                data.push({'name': name, 'snippet' : threads[j]['snippet'], 'thread_fbid': threads[j]['thread_fbid']});
+                data.push({
+                  'name': name,
+                  'snippet': threads[j]['snippet'],
+                  'attachments': threads[j]['snippet_attachments'],
+                  'thread_fbid': threads[j]['thread_fbid']
+                });
                 break;
               }
             }

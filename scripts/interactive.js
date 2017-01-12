@@ -34,6 +34,30 @@ function InteractiveCli(){
   this.currentConversationId = undefined;
 }
 
+function renderMessage(userId, author, message) {
+  var msg;
+
+  if (author.id != messenger.userId) {
+    msg = author.name.green;
+  } else {
+    msg = author.name;
+  }
+
+  msg += " : "
+
+  if (message.body !== "")
+    msg += message.body + " ";
+
+  if (message.attachments) {
+    for (var i = 0; i < message.attachments.length; i++) {
+      var a = message.attachments[i];
+      msg += '[ '.red + a.attach_type + ' ]'.red;
+    }
+  }
+
+  return msg;
+}
+
 InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   var user = messenger.users[id];
   this.currentConversationId = id;
@@ -56,15 +80,8 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
         authorString = authorString.substr('fbid:'.length);
 
       var author = messenger.users[authorString];
+      var msg = renderMessage(messenger.userId, author, message);
 
-      var msg = '';
-      if (author.id != messenger.userId) {
-        msg = author.name.green;
-      } else {
-        msg = author.name;
-      }
-
-      msg += " : " + message.body;
       interactive.threadHistory.push(msg);
     }
     interactive.printThread();
@@ -108,15 +125,8 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     }
   }
 
+  var msg = renderMessage(messenger.userId, author, message);
 
-  var msg = '';
-  if (author.id != messenger.userId) {
-    msg = author.name.green;
-  } else {
-    msg = author.name;
-  }
-
-  msg += " : " + message.body;
   interactive.threadHistory.push(msg);
   interactive.printThread();
 };
