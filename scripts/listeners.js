@@ -11,14 +11,16 @@ Listeners.prototype.getMessagesListener = function(nb, searchId, callback) {
   callback(id);
 };
 
-function printThreadSnippet(thread, idx) {
+function printThreadSnippet(thread, idx, isGroup) {
   var line = '[' + idx.toString().cyan + '] ' + thread.name.green + ' : ';
   if (thread.snippet !== '')
     line += thread.snippet + ' ';
 
-  for(var j = 0; j < thread.attachments.length; j++) {
-    var a = thread.attachments[j];
-    line += '[ '.red + a.attach_type + ' ]'.red;
+  if (!isGroup) { 	
+    for(var j = 0; j < thread.attachments.length; j++) {
+      var a = thread.attachments[j];
+      line += '[ '.red + a.attach_type + ' ]'.red;
+    }
   }
 
   console.log(line);
@@ -53,7 +55,7 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
     options = {};
     for (var i = 0; i < threads.length; ++i) {
         var thread = threads[i];
-        printThreadSnippet(thread, i);
+        printThreadSnippet(thread, i, true);
 
         options[i] = thread.thread_fbid;
 
