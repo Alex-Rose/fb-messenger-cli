@@ -1,8 +1,9 @@
 # fb-messenger-cli
-#### A command line messenger tool
+## Facebook Messenger Command line client
 Use your Facebook account to chat with your friends sneakily in the command line, it's as easy as logging in, choosing a convo and chatting away.
 
-#### Now on npm
+![npm](https://nodei.co/npm/fb-messenger-cli.png?downloads=true)
+#### Install
 ``npm install -g fb-messenger-cli``
 Then ``fb-messenger-cli`` from anywhere
 
