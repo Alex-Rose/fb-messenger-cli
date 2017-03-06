@@ -5,6 +5,7 @@ var Pull = require('./pull.js');
 var Search = require('./search.js');
 var Listeners = require('./listeners.js');
 var Heading = require('./heading.js');
+var open = require('open');
 
 var colors = require('colors');
 var events = require('events');
@@ -24,6 +25,9 @@ var group = false;
 var emitter = new events.EventEmitter();
 var heading = new Heading();
 var listeners = new Listeners();
+
+var atts = 0;
+var attsNo = [];
 
 function InteractiveCli(){
   this.pull = new Pull();
@@ -51,7 +55,34 @@ function renderMessage(userId, author, message) {
   if (message.attachments) {
     for (var i = 0; i < message.attachments.length; i++) {
       var a = message.attachments[i];
-      msg += '[ '.red + a.attach_type + ' ]'.red;
+      var attType;
+      if (a.attach_type == 'sticker' || a.attach_type == 'video') {
+        atts[attsNo] = a.url;
+        attType = a.attach_type;
+      }
+      else if (a.attach_type == 'share') {
+        atts[attsNo] = a.share.uri;
+        attType = a.attach_type;
+      }
+      else if (a.attach_type == 'photo') {
+        atts[attsNo] = a.large_preview_url;
+        attType = a.attach_type;
+      }
+      else if (a.attach_type == 'animated_image') {
+        atts[attsNo] = a.preview_url;
+        attType = 'gif'
+      }
+      else if (a.attach_type == 'file') {
+        atts[attsNo] = a.url;
+        if (a.name.startsWith("audioclip")) {
+          attType = 'audio clip'
+        } else {
+          attType = 'file'
+        }
+      }
+      x = '' + attsNo
+      msg += '[ '.red + attType + " " + x.cyan + ' ]'.red;
+      attsNo++;
     }
   }
 
@@ -72,6 +103,8 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
     recipientId = id;
     interactive.threadHistory = [];
     util.refreshConsole();
+    attsNo = 0;
+    atts = [];
     for (var i in messages) {
       var message = messages[i];
       var authorString = message.author;
@@ -205,6 +238,22 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
+  else if (value.indexOf('/view') === 0){
+    var nb = value.split(' ')[1];
+
+    if (!isNaN(nb)) {
+      nb = parseInt(nb);
+      if (nb >= 0 && nb < attsNo) {
+        var url = atts[nb];
+        console.log('Attachment now open in browser');
+        open(url);
+        return;
+      }
+    }
+    console.log('Invalid attachment number, please try again'.cyan);
+    return;
+  }
+
   else if(value.toLowerCase() === '/exit' || value.indexOf('/q') === 0){
     interactive.exit();
   }
@@ -220,6 +269,7 @@ InteractiveCli.prototype.handler = function(choice) {
     console.log('/groups ........... Bring up your goup conversations'.cyan);
     console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
     console.log('/search [query] ... Search your friends to chat'.cyan);
+    console.log('/view # ........... View the attachment by the number given after the type'.cyan);
     console.log('/help ............. Print this message'.cyan);
     return;
   }
