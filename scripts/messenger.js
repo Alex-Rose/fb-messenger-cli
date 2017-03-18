@@ -218,7 +218,11 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
   request.post(options, function(err, response, body){
         body = messenger.cleanJson(body);
         json = JSON.parse(body);
-        msg = json['payload']['actions'];
+        payload = json['payload'];
+        msg = undefined;
+        if(payload !== undefined) {
+          msg = payload['actions'];
+        }
 
         data = [];
 
