@@ -75,8 +75,23 @@
     }
   }
 
+  function initSignalListeners(){
+    process.on("SIGINT", function () {
+      console.log('Thanks for using fb-messenger-cli'.cyan);
+      console.log('Bye!'.cyan);
+      process.exit(0);
+    });
+
+    process.on("SIGTERM", function () {
+      console.log('Thanks for using fb-messenger-cli'.cyan);
+      console.log('Bye!'.cyan);
+      process.exit(0);
+    });
+  }
+
   // First check if current cookie is still valid
   try {
+    initSignalListeners();
     verifyLogon('pass', launchApp);
   } catch (err) {
     console.log('You need to logon');

@@ -17,6 +17,7 @@ const notifier = require('node-notifier');
 
 // 0 is select conversation, 1 is send message
 var action = 0;
+var currentThreadCount = 0;
 var recipientId = '';
 var current_userId;
 var group = false;
@@ -196,8 +197,9 @@ InteractiveCli.prototype.handler = function(choice) {
 
   if(value.toLowerCase() === '/back' && group) {
     console.log('Back to group conversations...'.cyan);
-    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(a) {
-      action = a;
+    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
+      action = data.action;
+      currentThreadCount = data.threadCount;
     });
     return;
   }
@@ -205,8 +207,9 @@ InteractiveCli.prototype.handler = function(choice) {
   // this works for now
   else if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
     console.log('Bringing you back to the friend selection screen...'.cyan);
-    emitter.emit('getConvos', current_userId, heading.getData(), function(a){
-      action = a;
+    emitter.emit('getConvos', current_userId, heading.getData(), function(data){
+      action = data.action;
+      currentThreadCount = data.threadCount;
     });
     group = false;
     return;
@@ -214,8 +217,9 @@ InteractiveCli.prototype.handler = function(choice) {
 
   else if(value.indexOf('/group') === 0 ) {
     console.log('Showing you group conversations...'.cyan);
-    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(a) {
-      action = a;
+    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
+      action = data.action
+      currentThreadCount = data.threadCount;
       group = true;
     });
     return;
@@ -294,11 +298,20 @@ InteractiveCli.prototype.handler = function(choice) {
   }
 
   if(action === 0) {
-    convoChoice = value;
-    emitter.emit('getMessages', value, null, function(id){
-      interactive.initializeConversationViewFromFbid(id);
-    });
-    action = 1;
+    if(isNaN(value)) {
+      console.log('Warning: Input is not a valid number'.yellow);
+    } else {
+      if(value >= 0 && value < currentThreadCount) {
+        emitter.emit('getMessages', value, null, function(id){
+          interactive.initializeConversationViewFromFbid(id);
+        });
+        action = 1;
+      }
+      else {
+        // Value is out of bounds
+        console.log('Warning: Input is out of bounds'.yellow);
+      }
+    }
   } else if(action === 1) {
     emitter.emit('sendMessage', value, recipientId);
   } else if(action == 2){ // search
@@ -309,8 +322,9 @@ InteractiveCli.prototype.handler = function(choice) {
           interactive.initializeConversationViewFromFbid(id);
         });
       } else {
-        emitter.emit('getConvos', current_userId, heading.getData(), function(a) {
-          action = a;
+        emitter.emit('getConvos', current_userId, heading.getData(), function(data) {
+          action = data.action;
+          currentThreadCount = data.threadCount;
         });
       }
     });
@@ -348,8 +362,9 @@ InteractiveCli.prototype.run = function(){
       });
 
       // Print the list for the first times
-      emitter.emit('getConvos', current_userId, heading.getData(), function(a){
-        action = a;
+      emitter.emit('getConvos', current_userId, heading.getData(), function(data){
+        action = data.action;
+        currentThreadCount = data.threadCount;
       });
 
       stdin.addListener("data", interactive.handler);

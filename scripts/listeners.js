@@ -27,7 +27,8 @@ function printThreadSnippet(thread, idx, isGroup) {
 }
 
 Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
-    messenger.getThreads(function(err,threads) {
+
+  messenger.getThreads(function(err,threads) {
     util.refreshConsole();
     options = {};
     for (var i = 0; i < threads.length; ++i) {
@@ -42,11 +43,14 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
         heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
     }
 
-    process.stdout.write("Select conversation : ");
-  });
+    var data = {
+      action: 0,
+      threadCount: threads.length
+    };
 
-  // Change state (action) in the callback
-  cb(0);
+    process.stdout.write("Select conversation : ");
+    cb(data);
+  });
 };
 
 Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb) {
@@ -66,10 +70,16 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
     }
 
     process.stdout.write("Select conversation : ");
+
+    var data = {
+      action: 0,
+      threadCount: threads.length
+    };
+
+    // Change state (action) in the callback
+    cb(data);
   });
 
-  // Change state (action) in the callback
-  cb(0);
 };
 
 Listeners.prototype.sendMessageListener = function(m, recipientId) {
