@@ -1,5 +1,5 @@
 var Crypt = require('./crypt.js');
-var prompt = require('prompt');
+var readlineSync = require('readline-sync');
 var phantomjs = require('phantomjs-prebuilt');
 var path = require('path');
 var phantom;
@@ -8,42 +8,29 @@ Login = function() { };
 
 Login.prototype.execute = function(callback) {
   var login = this;
-  var schema = {
-      properties: {
-        email: {
-          required: true
-        },
-        password: {
-          hidden: true
-        }
-      }
-    };
+  var result = {};
 
+  result.email = readlineSync.question('Email: ');
+  result.password = readlineSync.question('Password: ', {hideEchoBack: true});
 
-  prompt.start();
+  var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
 
-  prompt.get(schema, function (err, result) {
-    var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
+  phantom = new login.run_cmd( phantomjs.path, arguments, function () {
+    if(phantom.data){
+      // Save data in the vault
+      crypt = new Crypt(result.password);
 
-    phantom = new login.run_cmd( phantomjs.path, arguments, function () {
-      var Messenger = require('./messenger.js');
+      // Add save time to the data
+      var objData = JSON.parse(phantom.data);
+      objData.saveTime = new Date().getTime();
 
-      if(phantom.data){
-        // Save data in the vault
-        crypt = new Crypt(result.password);
+      crypt.save(JSON.stringify(objData));
 
-        // Add save time to the data
-        var objData = JSON.parse(phantom.data);
-        objData.saveTime = new Date().getTime();
-
-        crypt.save(JSON.stringify(objData));
-
-        callback(false, result);
-      } else {
-        console.log('Bad Facebook Login');
-        callback(true, null);
-      }
-    });
+      callback(false, result);
+    } else {
+      console.log('Bad Facebook Login');
+      callback(true, null);
+    }
   });
 };
 

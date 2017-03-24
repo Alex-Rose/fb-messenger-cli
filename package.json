@@ -13,7 +13,7 @@
     "node-notifier": "^1.0.0",
     "open": "0.0.5",
     "phantomjs-prebuilt": "^2.1.7",
-    "prompt": "^1.0.0",
+    "readline-sync": "^1.4.7",
     "request": "^2.72.0",
     "system": "^1.0.4"
   },
