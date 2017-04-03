@@ -5,6 +5,7 @@ var Pull = require('./pull.js');
 var Search = require('./search.js');
 var Listeners = require('./listeners.js');
 var Heading = require('./heading.js');
+var Settings = require('./settings.js');
 var open = require('open');
 
 var colors = require('colors');
@@ -189,12 +190,15 @@ InteractiveCli.prototype.printThread = function(){
   // Draw the header
   heading.writeHeader(this.currentConversationId);
 
-  console.log(
-    lines
-      .slice(x) // just show most recent visible lines
-      .map(ln => "\x1b[K" + ln) // erase content on the line from before
-      .join("\n")
-  );
+  // just show most recent visible lines
+  var linesToWrite = lines.slice(x);
+
+  if (!Settings.getInstance().properties['disableColors']) {
+    // erase content on the line from before
+    linesToWrite = linesToWrite.map(ln => "\x1b[K" + ln)
+  }
+
+  console.log(linesToWrite.join('\n'));
   rlInterface.prompt(true);
 };
 
