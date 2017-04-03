@@ -8,10 +8,10 @@ Util.refreshConsole = function(){
 };
 
 Util.overwriteConsole = function(){
-  if (Settings.getInstance().properties['disableColors']) {
-    process.stdout.write('\033c');
-  } else {
+  if (Settings.getInstance().properties['preventMessageFlicker']) {
     readline.cursorTo(process.stdout, 0, 0);
+  } else {
+    process.stdout.write('\033c');
   }
 };
 

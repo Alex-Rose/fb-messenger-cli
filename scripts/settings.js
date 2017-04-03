@@ -11,7 +11,8 @@ Settings = function() {
     instance = this;
     this.filename = '.settings';
     this.properties = {
-        disableColors: false
+        disableColors: false,
+        preventMessageFlicker: true
     };
 };
 
