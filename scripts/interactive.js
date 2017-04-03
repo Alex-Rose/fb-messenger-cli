@@ -152,7 +152,6 @@ InteractiveCli.prototype.readPullMessage = function(message) {
       // Don't warn for current user messages (from another device)
       if (author.id != messenger.userId) {
         var headingData = heading.getData();
-        console.log('Heading data' + headingData);
         for (var i in headingData) {
           // Doesn't work when it's a group
           if (headingData[i].fbid == message.otherUserId || headingData[i].fbid == message.threadId) {
@@ -161,7 +160,10 @@ InteractiveCli.prototype.readPullMessage = function(message) {
         }
         // Moved this out of the for, in case we get a message from someone
         // not in the heading, we still need to refresh
-        interactive.printThread();
+        // ...but don't refresh if in the menu
+        if (recipientId != '') {
+          interactive.printThread();
+        }
       }
       return;
     }
@@ -213,6 +215,7 @@ InteractiveCli.prototype.handler = function(choice) {
       action = data.action;
       currentThreadCount = data.threadCount;
       rlInterface.prompt(true);
+      recipientId = '';
     });
     return;
   }
@@ -224,6 +227,7 @@ InteractiveCli.prototype.handler = function(choice) {
       action = data.action;
       currentThreadCount = data.threadCount;
       rlInterface.prompt(true);
+      recipientId = '';
     });
     group = false;
     return;
@@ -236,6 +240,7 @@ InteractiveCli.prototype.handler = function(choice) {
       currentThreadCount = data.threadCount;
       group = true;
       rlInterface.prompt(true);
+      recipientId = '';
     });
     return;
   }
