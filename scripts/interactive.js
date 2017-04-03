@@ -110,7 +110,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   messenger.getLastMessage(recipientUrl, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
     interactive.threadHistory = [];
-    util.refreshConsole();
+    util.overwriteConsole();
     attsNo = 0;
     atts = [];
     for (var i in messages) {
@@ -173,7 +173,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
 };
 
 InteractiveCli.prototype.printThread = function(){
-  util.refreshConsole();
+  util.overwriteConsole();
   var w = process.stdout.columns - 1;
   var lines = [];
 
@@ -184,17 +184,17 @@ InteractiveCli.prototype.printThread = function(){
     }
   }
 
-  var x = 0;
-  if (lines.length > process.stdout.rows) {
-    x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
-  }
+  var x = Math.max(0, lines.length - process.stdout.rows + 4);
 
   // Draw the header
   heading.writeHeader(this.currentConversationId);
 
-  for (; x < lines.length; ++x) {
-    console.log(lines[x]);
-  }
+  console.log(
+    lines
+      .slice(x) // just show most recent visible lines
+      .map(ln => "\x1b[K" + ln) // erase content on the line from before
+      .join("\n")
+  );
   rlInterface.prompt(true);
 };
 
