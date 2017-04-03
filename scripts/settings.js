@@ -12,7 +12,7 @@ Settings = function() {
     this.filename = '.settings';
     this.properties = {
         disableColors: false,
-        preventMessageFlicker: true
+        preventMessageFlicker: false
     };
 };
 
