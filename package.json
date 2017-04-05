@@ -11,7 +11,7 @@
     "events": "^1.1.0",
     "fs": "0.0.2",
     "imgcat": "^2.3.0",
-    "node-notifier": "^1.0.0",
+    "node-notifier": "^5.1.2",
     "open": "0.0.5",
     "phantomjs-prebuilt": "^2.1.7",
     "readline-sync": "^1.4.7",
