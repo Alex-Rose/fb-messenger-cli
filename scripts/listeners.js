@@ -48,7 +48,7 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
       threadCount: threads.length
     };
 
-    process.stdout.write("Select conversation : ");
+    console.log("Select conversation :");
     cb(data);
   });
 };
@@ -69,7 +69,7 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
         heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
     }
 
-    process.stdout.write("Select conversation : ");
+    console.log("Select conversation :");
 
     var data = {
       action: 0,

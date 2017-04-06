@@ -5,6 +5,7 @@ var Pull = require('./pull.js');
 var Search = require('./search.js');
 var Listeners = require('./listeners.js');
 var Heading = require('./heading.js');
+var Settings = require('./settings.js');
 var open = require('open');
 
 var colors = require('colors');
@@ -15,6 +16,7 @@ var crypt = new Crypt('password');
 const path = require('path');
 const notifier = require('node-notifier');
 const imgcat = require('imgcat');
+const readline = require('readline');
 
 // 0 is select conversation, 1 is send message
 var action = 0;
@@ -30,6 +32,12 @@ var listeners = new Listeners();
 
 var atts = [];
 var attsNo = 0;
+
+const rlInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  prompt: '> '
+});
 
 function InteractiveCli(){
   this.pull = new Pull();
@@ -109,7 +117,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   messenger.getLastMessage(recipientUrl, id, process.stdout.rows - 1, function(err, messages) {
     recipientId = id;
     interactive.threadHistory = [];
-    util.refreshConsole();
+    util.overwriteConsole();
     attsNo = 0;
     atts = [];
     for (var i in messages) {
@@ -174,7 +182,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
 };
 
 InteractiveCli.prototype.printThread = function(){
-  util.refreshConsole();
+  util.overwriteConsole();
   var w = process.stdout.columns - 1;
   var lines = [];
 
@@ -185,17 +193,21 @@ InteractiveCli.prototype.printThread = function(){
     }
   }
 
-  var x = 0;
-  if (lines.length > process.stdout.rows) {
-    x = lines.length + 1 + 1 /*header*/ + 3 /*some space*/ - process.stdout.rows;
-  }
+  var x = Math.max(0, lines.length - process.stdout.rows + 4);
 
   // Draw the header
   heading.writeHeader(this.currentConversationId);
 
-  for (; x < lines.length; ++x) {
-    console.log(lines[x]);
+  // just show most recent visible lines
+  var linesToWrite = lines.slice(x);
+
+  if (Settings.getInstance().properties['preventMessageFlicker']) {
+    // erase content on the line from before
+    linesToWrite = linesToWrite.map(ln => "\x1b[K" + ln)
   }
+
+  console.log(linesToWrite.join('\n'));
+  rlInterface.prompt(true);
 };
 
 // TODO : remove early returns, use some sort of pattern
@@ -208,6 +220,7 @@ InteractiveCli.prototype.handler = function(choice) {
     emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
       action = data.action;
       currentThreadCount = data.threadCount;
+      rlInterface.prompt(true);
       recipientId = '';
     });
     return;
@@ -219,6 +232,7 @@ InteractiveCli.prototype.handler = function(choice) {
     emitter.emit('getConvos', current_userId, heading.getData(), function(data){
       action = data.action;
       currentThreadCount = data.threadCount;
+      rlInterface.prompt(true);
       recipientId = '';
     });
     group = false;
@@ -231,6 +245,7 @@ InteractiveCli.prototype.handler = function(choice) {
       action = data.action
       currentThreadCount = data.threadCount;
       group = true;
+      rlInterface.prompt(true);
       recipientId = '';
     });
     return;
@@ -347,6 +362,7 @@ InteractiveCli.prototype.handler = function(choice) {
         emitter.emit('getConvos', current_userId, heading.getData(), function(data) {
           action = data.action;
           currentThreadCount = data.threadCount;
+          rlInterface.prompt(true);
         });
       }
     });
@@ -387,9 +403,12 @@ InteractiveCli.prototype.run = function(){
       emitter.emit('getConvos', current_userId, heading.getData(), function(data){
         action = data.action;
         currentThreadCount = data.threadCount;
+        rlInterface.prompt(true);
       });
 
-      stdin.addListener("data", interactive.handler);
+      rlInterface.on("line", interactive.handler);
+      rlInterface.on("close", interactive.exit);
+      rlInterface.prompt(true);
   });
 };
 
