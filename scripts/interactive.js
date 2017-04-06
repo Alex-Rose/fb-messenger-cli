@@ -318,11 +318,10 @@ InteractiveCli.prototype.handler = function(choice) {
   }
 
   if(action === 0) {
-    if(isNaN(value)) {
-      console.log('Warning: Input is not a valid number'.yellow);
-    } else {
-      if(value >= 0 && value < currentThreadCount) {
-        emitter.emit('getMessages', value, null, function(id){
+    var selection = parseInt(value);
+    if(!isNaN(selection)) {
+      if(selection >= 0 && selection < currentThreadCount) {
+        emitter.emit('getMessages', selection, null, function(id){
           interactive.initializeConversationViewFromFbid(id);
         });
         action = 1;
@@ -331,6 +330,8 @@ InteractiveCli.prototype.handler = function(choice) {
         // Value is out of bounds
         console.log('Warning: Input is out of bounds'.yellow);
       }
+    } else {
+      console.log('Warning: Input is not a valid number'.yellow);
     }
   } else if(action === 1) {
     emitter.emit('sendMessage', value, recipientId);
