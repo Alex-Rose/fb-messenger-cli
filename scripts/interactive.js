@@ -103,7 +103,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   this.currentConversationId = id;
 
   // Unread messages in heading
-  heading.clearUnread();
+  heading.clearUnread(id);
 
   var recipientUrl;
   if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
