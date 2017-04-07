@@ -12,7 +12,8 @@ Settings = function() {
     this.filename = '.settings';
     this.properties = {
         disableColors: false,
-        preventMessageFlicker: false
+        preventMessageFlicker: false,
+        desktopNotifications: false
     };
 };
 
@@ -29,7 +30,7 @@ Settings.getInstance = function (){
 Settings.prototype.save = function(){
   var settings = this;
   var savePath = path.resolve(__dirname, '../', settings.filename);
-  fs.writeFileSync(savePath, JSON.stringify(settings.properties));
+  fs.writeFileSync(savePath, JSON.stringify(settings.properties, null, '  '));
 };
 
 // Load previously saved properties from disk

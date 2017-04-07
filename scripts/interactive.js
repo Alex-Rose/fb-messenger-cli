@@ -134,16 +134,18 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
 InteractiveCli.prototype.readPullMessage = function(message) {
   var author = messenger.users[message.author];
 
-  try {
-    if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
-      notifier.notify({
-        title: author.name,
-        message: message.body,
-        icon: path.join(__dirname, '../resources/logo.png')
-      });
+  if (Settings.getInstance().properties['desktopNotifications']) {
+    try {
+      if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
+        notifier.notify({
+          title: author.name,
+          message: message.body,
+          icon: path.join(__dirname, '../resources/logo.png')
+        });
+      }
+    } catch (err) {
+      // Don't break over notifications
     }
-  } catch (err) {
-    // Don't break over notifications
   }
 
   if (author === undefined || message.otherUserId != recipientId || action === 0) {
