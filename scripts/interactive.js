@@ -296,11 +296,12 @@ InteractiveCli.prototype.handler = function(choice) {
     console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
     console.log('/search [query] ... Search your friends to chat'.cyan);
     console.log('/view # ........... View the attachment by the number given after the type'.cyan);
+    console.log('/read ............. Send a read receipt for this thread'.cyan);
     console.log('/help ............. Print this message'.cyan);
     return;
   }
 
-  else if(value.toLowerCase().indexOf('/search') != -1){
+  else if(value.toLowerCase().indexOf('/search') === 0){
     // Start a new search
     action = 2;
     // Take value on first space
@@ -313,6 +314,11 @@ InteractiveCli.prototype.handler = function(choice) {
     emitter.emit('startSearch', searchStr);
     return;
   }
+
+  else if (value.toLowerCase().indexOf('/read') === 0 && recipientId != '') {
+    emitter.emit('sendRead', recipientId);
+    return;
+  } 
 
   else if (value.indexOf('/') === 0) {
     console.log('Unknown command. Type /help for commands.'.cyan);
@@ -374,6 +380,7 @@ InteractiveCli.prototype.run = function(){
       emitter.on('sendMessage', listeners.sendMessageListener);
       emitter.on('getMessages', listeners.getMessagesListener);
       emitter.on('startSearch', listeners.searchListener);
+      emitter.on('sendRead', listeners.readListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};

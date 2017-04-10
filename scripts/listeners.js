@@ -102,6 +102,16 @@ Listeners.prototype.sendMessageListener = function(m, recipientId) {
 
 };
 
+Listeners.prototype.readListener = function(recipientId) {
+  messenger.markRead(recipientId, function(err) {
+    if(err) {
+      console.log('Read receipt did not send properly');
+    } else {
+      console.log('Marked conversation as read');
+    }
+  });
+}
+
 var printed = false;
 Listeners.prototype.searchListener = function(searchStr, choice, callback) {
   if(!printed) { // On first loop of search print choices
