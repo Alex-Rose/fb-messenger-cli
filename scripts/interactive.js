@@ -15,6 +15,7 @@ var stdout = process.stdout;
 var crypt = new Crypt('password');
 const path = require('path');
 const notifier = require('node-notifier');
+const imgcat = require('imgcat');
 const readline = require('readline');
 
 // 0 is select conversation, 1 is send message
@@ -29,8 +30,8 @@ var emitter = new events.EventEmitter();
 var heading = new Heading();
 var listeners = new Listeners();
 
-var atts = 0;
-var attsNo = [];
+var atts = [];
+var attsNo = 0;
 
 const rlInterface = readline.createInterface({
   input: process.stdin,
@@ -65,33 +66,38 @@ function renderMessage(userId, author, message) {
     for (var i = 0; i < message.attachments.length; i++) {
       var a = message.attachments[i];
       var attType;
+      var attURL;
       if (a.attach_type == 'sticker' || a.attach_type == 'video') {
-        atts[attsNo] = a.url;
+        attURL = a.url;
         attType = a.attach_type;
       }
       else if (a.attach_type == 'share') {
-        atts[attsNo] = a.share.uri;
+        attURL = a.share.uri;
         attType = a.attach_type;
       }
       else if (a.attach_type == 'photo') {
-        atts[attsNo] = a.large_preview_url;
+        attURL = a.large_preview_url;
         attType = a.attach_type;
       }
       else if (a.attach_type == 'animated_image') {
-        atts[attsNo] = a.preview_url;
+        attURL = a.preview_url;
         attType = 'gif'
       }
       else if (a.attach_type == 'file') {
-        atts[attsNo] = a.url;
+        attURL = a.url;
         if (a.name.startsWith("audioclip")) {
           attType = 'audio clip'
         } else {
           attType = 'file'
         }
       }
-      x = '' + attsNo
-      msg += '[ '.red + attType + " " + x.cyan + ' ]'.red;
-      attsNo++;
+
+      if (attURL && attType) {
+        atts[attsNo] = {url: attURL, type: attType};
+        x = '' + attsNo
+        msg += '[ '.red + attType + " " + x.cyan + ' ]'.red;
+        attsNo++;
+      }
     }
   }
 
@@ -270,10 +276,21 @@ InteractiveCli.prototype.handler = function(choice) {
     if (!isNaN(nb)) {
       nb = parseInt(nb);
       if (nb >= 0 && nb < attsNo) {
-        var url = atts[nb];
-        console.log('Attachment now open in browser');
-        open(url);
-        return;
+        const url = atts[nb].url;
+        const openInBrowser = () => {
+          console.log('Attachment now open in browser');
+          open(url);
+        }
+        if (atts[nb].type == 'photo') {
+          imgcat(url, {
+            log: true,
+            fallback: openInBrowser
+          });
+          return;
+        }
+        else {
+          return openInBrowser();
+        }
       }
     }
     console.log('Invalid attachment number, please try again'.cyan);
