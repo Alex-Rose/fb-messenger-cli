@@ -1,5 +1,4 @@
 var util = require('./util.js');
-var Messenger = require('./messenger.js');
 
 Listeners = function() {};
 
@@ -32,15 +31,15 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
     util.refreshConsole();
     options = {};
     for (var i = 0; i < threads.length; ++i) {
-        var thread = threads[i];
-        printThreadSnippet(thread, i);
+      var thread = threads[i];
+      printThreadSnippet(thread, i);
 
-        options[i] = thread.thread_fbid;
+      options[i] = thread.thread_fbid;
 
-        if (thread.thread_fbid == userId) {
-          continue;
-        }
-        heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
+      if (thread.thread_fbid == userId) {
+        continue;
+      }
+      heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
     }
 
     var data = {
@@ -54,32 +53,31 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
 };
 
 Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb) {
-    messenger.getGroupThreads(function(err,threads) {
-    util.refreshConsole();
-    options = {};
-    for (var i = 0; i < threads.length; ++i) {
-        var thread = threads[i];
-        printThreadSnippet(thread, i, true);
+  messenger.getGroupThreads(function(err,threads) {
+  util.refreshConsole();
+  options = {};
+  for (var i = 0; i < threads.length; ++i) {
+    var thread = threads[i];
+    printThreadSnippet(thread, i, true);
 
-        options[i] = thread.thread_fbid;
+    options[i] = thread.thread_fbid;
 
-        if (thread.thread_fbid == userId) {
-          continue;
-        }
-        heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
+    if (thread.thread_fbid == userId) {
+      continue;
     }
+    heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
+  }
 
-    console.log("Select conversation :");
+  console.log("Select conversation :");
 
-    var data = {
-      action: 0,
-      threadCount: threads.length
-    };
+  var data = {
+    action: 0,
+    threadCount: threads.length
+  };
 
     // Change state (action) in the callback
     cb(data);
   });
-
 };
 
 Listeners.prototype.sendMessageListener = function(m, recipientId) {
@@ -97,25 +95,26 @@ Listeners.prototype.sendMessageListener = function(m, recipientId) {
       }
     });
   }
-
-
-
 };
 
-var printed = false;
-Listeners.prototype.searchListener = function(searchStr, choice, callback) {
-  if(!printed) { // On first loop of search print choices
-    search.run(searchStr);
-    printed = true;
-  } else { // On second loop of search select the right person
-    var id = search.selectConvo(choice);
-    if(id) {
+Listeners.prototype.searchListener = function(searchStr, callback) {
+  var parts =  searchStr.split(' ');
+
+  // If there was no value after
+  if (parts.length === 1 && parts[0].toLowerCase() === '/search') {
+    console.log('Try adding a search string after! (/search <query>)'.cyan);
+  } else if (parts.length > 1 && parts[0].toLowerCase() === '/search') {
+    parts.shift();
+    search.run(parts.join(' '));
+  } else {
+    // On conversation selection
+    var id = search.selectConvo(searchStr);
+    if (id) {
       // Return the action and the id we found with our search
       callback(1, id);
     } else { // On invalid id or empty search
       callback(-1);
     }
-    printed = false;
   }
 };
 

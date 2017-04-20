@@ -300,17 +300,11 @@ InteractiveCli.prototype.handler = function(choice) {
     return;
   }
 
-  else if(value.toLowerCase().indexOf('/search') != -1){
+  else if(value.toLowerCase().indexOf('/search') === 0){
     // Start a new search
     action = 2;
-    // Take value on first space
-    var searchStr = value.substr(value.indexOf(' ')+1);
-    // If there was no value after
-    if(searchStr === '/search') {
-      console.log('Try adding a search string after! (/search <query>)'.cyan);
-      return;
-    }
-    emitter.emit('startSearch', searchStr);
+    // Start the search with the entire string
+    emitter.emit('startSearch', value);
     return;
   }
 
@@ -338,7 +332,7 @@ InteractiveCli.prototype.handler = function(choice) {
   } else if(action === 1) {
     emitter.emit('sendMessage', value, recipientId);
   } else if(action == 2){ // search
-    emitter.emit('startSearch', null, value, function(a, searchId){
+    emitter.emit('startSearch', value, function(a, searchId){
       if(a === 1){
         action = 1;
         emitter.emit('getMessages', null, searchId, function(id){
