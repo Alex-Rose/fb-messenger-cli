@@ -1,21 +1,22 @@
-var Crypt = require('./crypt.js');
-var Messenger = require('./messenger.js');
-var util = require('./util.js');
-var Pull = require('./pull.js');
-var Search = require('./search.js');
-var Listeners = require('./listeners.js');
-var Heading = require('./heading.js');
-var Settings = require('./settings.js');
-var open = require('open');
+const Crypt = require('./crypt.js');
+const Messenger = require('./messenger.js');
+const util = require('./util.js');
+const Pull = require('./pull.js');
+const Search = require('./search.js');
+const Listeners = require('./listeners.js');
+const Heading = require('./heading.js');
+const Settings = require('./settings.js');
+const open = require('open');
 
-var colors = require('colors');
-var events = require('events');
-var stdin = process.openStdin();
-var stdout = process.stdout;
-var crypt = new Crypt('password');
+const colors = require('colors');
+const events = require('events');
+const crypt = new Crypt('password');
 const path = require('path');
 const notifier = require('node-notifier');
 const readline = require('readline');
+
+const stdin = process.openStdin();
+const stdout = process.stdout;
 
 // 0 is select conversation, 1 is send message
 var action = 0;
@@ -56,7 +57,7 @@ function renderMessage(userId, author, message) {
     msg = author.name;
   }
 
-  msg += " : "
+  msg += " : ";
 
   if (message.body !== "")
     msg += message.body + " ";
@@ -206,146 +207,145 @@ InteractiveCli.prototype.printThread = function(){
   rlInterface.prompt(true);
 };
 
-// TODO : remove early returns, use some sort of pattern
-InteractiveCli.prototype.handler = function(choice) {
-  var value = choice.toString().trim();
-  var convoChoice = null;
+InteractiveCli.prototype.handleCommands = function(command) {
+  command = command.toLowerCase().trim();
+  let options = command.split(' ');
 
-  if(value.toLowerCase() === '/back' && group) {
-    console.log('Back to group conversations...'.cyan);
-    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
-      action = data.action;
-      currentThreadCount = data.threadCount;
-      rlInterface.prompt(true);
-      recipientId = '';
-    });
-    return;
-  }
-
-  // this works for now
-  else if(value.toLowerCase() === '/menu' || value.toLowerCase() === '/back'){
-    console.log('Bringing you back to the friend selection screen...'.cyan);
-    emitter.emit('getConvos', current_userId, heading.getData(), function(data){
-      action = data.action;
-      currentThreadCount = data.threadCount;
-      rlInterface.prompt(true);
-      recipientId = '';
-    });
-    group = false;
-    return;
-  }
-
-  else if(value.indexOf('/group') === 0 ) {
-    console.log('Showing you group conversations...'.cyan);
-    emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
-      action = data.action
-      currentThreadCount = data.threadCount;
-      group = true;
-      rlInterface.prompt(true);
-      recipientId = '';
-    });
-    return;
-  }
-
-  else if(value.indexOf('/s ') === 0 || value.indexOf('/switch ') === 0){
-    var nb = value.split(' ')[1];
-
-    if (!isNaN(nb)) {
-      nb = parseInt(nb);
-      //var id = heading[nb].fbid;
-      var id = heading.getFbid(nb);
-      if (id !== -1) {
-        console.log('Switching conversation...'.cyan);
-        interactive.initializeConversationViewFromFbid(id);
-        return;
-      }
-    }
-    console.log('Invalid switch, please try again'.cyan);
-    return;
-  }
-
-  else if (value.indexOf('/view') === 0){
-    var nb = value.split(' ')[1];
-
-    if (!isNaN(nb)) {
-      nb = parseInt(nb);
-      if (nb >= 0 && nb < attsNo) {
-        var url = atts[nb];
-        console.log('Attachment now open in browser');
-        open(url);
-        return;
-      }
-    }
-    console.log('Invalid attachment number, please try again'.cyan);
-    return;
-  }
-
-  else if(value.toLowerCase() === '/exit' || value.indexOf('/q') === 0){
-    interactive.exit();
-  }
-
-  else if(value.toLowerCase() === '/logout'){
-    interactive.exit(true);
-  }
-
-  else if (value.indexOf('/help') === 0) {
-    console.log('/back or /menu .... Get back to conversation selection'.cyan);
-    console.log('/exit or /quit .... Quit the application'.cyan);
-    console.log('/logout ........... Exit and flush credentials'.cyan);
-    console.log('/groups ........... Bring up your goup conversations'.cyan);
-    console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
-    console.log('/search [query] ... Search your friends to chat'.cyan);
-    console.log('/view # ........... View the attachment by the number given after the type'.cyan);
-    console.log('/help ............. Print this message'.cyan);
-    return;
-  }
-
-  else if(value.toLowerCase().indexOf('/search') === 0){
-    // Start a new search
-    action = 2;
-    // Start the search with the entire string
-    emitter.emit('startSearch', value);
-    return;
-  }
-
-  else if (value.indexOf('/') === 0) {
-    console.log('Unknown command. Type /help for commands.'.cyan);
-    return;
-  }
-
-  if(action === 0) {
-    var selection = parseInt(value);
-    if(!isNaN(selection)) {
-      if(selection >= 0 && selection < currentThreadCount) {
-        emitter.emit('getMessages', selection, null, function(id){
-          interactive.initializeConversationViewFromFbid(id);
-        });
-        action = 1;
-      }
-      else {
-        // Value is out of bounds
-        console.log('Warning: Input is out of bounds'.yellow);
-      }
-    } else {
-      console.log('Warning: Input is not a valid number'.yellow);
-    }
-  } else if(action === 1) {
-    emitter.emit('sendMessage', value, recipientId);
-  } else if(action == 2){ // search
-    emitter.emit('startSearch', value, function(a, searchId){
-      if(a === 1){
-        action = 1;
-        emitter.emit('getMessages', null, searchId, function(id){
-          interactive.initializeConversationViewFromFbid(id);
-        });
+  switch (options[0]) {
+    case '/menu':
+      group = false;
+    // Fallthrough
+    case '/back':
+      let listener;
+      if (group) {
+        console.log('Back to group conversations...'.cyan);
+        listener = 'getGroupConvos';
       } else {
-        emitter.emit('getConvos', current_userId, heading.getData(), function(data) {
-          action = data.action;
-          currentThreadCount = data.threadCount;
-          rlInterface.prompt(true);
-        });
+        console.log('Bringing you back to the friend selection screen...'.cyan);
+        listener = 'getConvos';
       }
-    });
+      emitter.emit(listener, current_userId, heading.getData(), function(data){
+        action = data.action;
+        currentThreadCount = data.threadCount;
+        rlInterface.prompt(true);
+        recipientId = '';
+      });
+      break;
+
+    case '/group':
+    case '/groups':
+      console.log('Showing you group conversations...'.cyan);
+      emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
+        action = data.action;
+        currentThreadCount = data.threadCount;
+        group = true;
+        rlInterface.prompt(true);
+        recipientId = '';
+      });
+      break;
+
+    case '/s':
+    case '/switch':
+      let convo = options[1];
+
+      if (!isNaN(convo)) {
+        convo = parseInt(convo);
+        let id = heading.getFbid(convo);
+        if (id !== -1) {
+          console.log('Switching conversation...'.cyan);
+          interactive.initializeConversationViewFromFbid(id);
+          return;
+        }
+      }
+      console.log('Invalid switch, please try again'.cyan);
+      break;
+
+    case '/view':
+      let att = options[1];
+
+      if (!isNaN(att)) {
+        att = parseInt(att);
+        if (att >= 0 && att < attsNo) {
+          let url = atts[att];
+          console.log('Attachment now open in browser');
+          open(url);
+          return;
+        }
+      }
+      console.log('Invalid attachment number, please try again'.cyan);
+      break;
+
+    case '/logout':
+      interactive.exit(true);
+      break;
+
+    case '/q':
+    case '/quit':
+    case '/exit':
+      interactive.exit();
+      break;
+
+    case '/help':
+      console.log('/back or /menu .... Get back to conversation selection'.cyan);
+      console.log('/exit or /quit .... Quit the application'.cyan);
+      console.log('/logout ........... Exit and flush credentials'.cyan);
+      console.log('/groups ........... Bring up your goup conversations'.cyan);
+      console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
+      console.log('/search [query] ... Search your friends to chat'.cyan);
+      console.log('/view # ........... View the attachment by the number given after the type'.cyan);
+      console.log('/help ............. Print this message'.cyan);
+      break;
+
+    case '/search':
+      // Start a new search
+      action = 2;
+      // Start the search with the entire string
+      emitter.emit('startSearch', command);
+      break;
+
+    default:
+      console.log('Unknown command. Type /help for commands.'.cyan);
+  }
+};
+
+InteractiveCli.prototype.handler = function(choice) {
+  let value = choice.toString().toLowerCase().trim();
+
+  if (value.indexOf('/') === 0) {
+    interactive.handleCommands(value);
+  } else {
+    if (action === 0) {
+      var selection = parseInt(value);
+      if (!isNaN(selection)) {
+        if (selection >= 0 && selection < currentThreadCount) {
+          emitter.emit('getMessages', selection, null, function (id) {
+            interactive.initializeConversationViewFromFbid(id);
+          });
+          action = 1;
+        } else {
+          console.log('Warning: Input is out of bounds'.yellow);
+        }
+      } else {
+        console.log('Warning: Input is not a valid number'.yellow);
+      }
+    } else if (action === 1) {
+      emitter.emit('sendMessage', value, recipientId);
+    } else if (action == 2) { // search
+      emitter.emit('startSearch', value, function (a, searchId) {
+        if (a === 1) {
+          action = 1;
+          emitter.emit('getMessages', null, searchId, function (id) {
+            interactive.initializeConversationViewFromFbid(id);
+          });
+        } else {
+          emitter.emit('getConvos', current_userId, heading.getData(), function (data) {
+            action = data.action;
+            currentThreadCount = data.threadCount;
+            rlInterface.prompt(true);
+          });
+        }
+      });
+    }
   }
 };
 
