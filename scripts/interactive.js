@@ -308,14 +308,15 @@ InteractiveCli.prototype.handleCommands = function(command) {
   }
 };
 
-InteractiveCli.prototype.handler = function(choice) {
-  let value = choice.toString().toLowerCase().trim();
+InteractiveCli.prototype.handler = function(value) {
+  let text = value.toString();
+  value = value.toLowerCase().trim();
 
   if (value.indexOf('/') === 0) {
-    interactive.handleCommands(value);
+    interactive.handleCommands(text);
   } else {
     if (action === 0) {
-      var selection = parseInt(value);
+      let selection = parseInt(value);
       if (!isNaN(selection)) {
         if (selection >= 0 && selection < currentThreadCount) {
           emitter.emit('getMessages', selection, null, function (id) {
@@ -329,7 +330,7 @@ InteractiveCli.prototype.handler = function(choice) {
         console.log('Warning: Input is not a valid number'.yellow);
       }
     } else if (action === 1) {
-      emitter.emit('sendMessage', value, recipientId);
+      emitter.emit('sendMessage', text, recipientId);
     } else if (action == 2) { // search
       emitter.emit('startSearch', value, function (a, searchId) {
         if (a === 1) {
