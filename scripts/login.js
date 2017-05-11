@@ -21,8 +21,16 @@ Login.prototype.execute = function(callback) {
       crypt = new Crypt(result.password);
 
       // Add save time to the data
-      var objData = JSON.parse(phantom.data);
-      objData.saveTime = new Date().getTime();
+      try {
+        var objData = JSON.parse(phantom.data);
+        objData.saveTime = new Date().getTime();
+      } catch (err) {
+	console.log('Warning: Errors caught in return data'.yellow);
+	if (phantom.data.indexOf('{') !== -1) {
+	  let trimmed = phantom.data.substring(phantom.data.indexOf('{'));
+	  objData = JSON.parse(trimmed);	  
+	}
+      }
 
       crypt.save(JSON.stringify(objData));
 
