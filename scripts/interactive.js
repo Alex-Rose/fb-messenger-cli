@@ -293,6 +293,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
       console.log('/search [query] ... Search your friends to chat'.cyan);
       console.log('/view # ........... View the attachment by the number given after the type'.cyan);
+      console.log('/read ............. Send a read receipt for this thread'.cyan);
       console.log('/help ............. Print this message'.cyan);
       break;
 
@@ -301,6 +302,10 @@ InteractiveCli.prototype.handleCommands = function(command) {
       action = 2;
       // Start the search with the entire string
       emitter.emit('startSearch', command);
+      break;
+      
+    case '/read':
+      emitter.emit('sendRead', recipientId);
       break;
 
     default:
@@ -369,6 +374,7 @@ InteractiveCli.prototype.run = function(){
       emitter.on('sendMessage', listeners.sendMessageListener);
       emitter.on('getMessages', listeners.getMessagesListener);
       emitter.on('startSearch', listeners.searchListener);
+      emitter.on('sendRead', listeners.readListener);
 
       messenger.getFriends(function(friends) {
         var entry = {};

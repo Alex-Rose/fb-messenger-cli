@@ -97,6 +97,16 @@ Listeners.prototype.sendMessageListener = function(m, recipientId) {
   }
 };
 
+Listeners.prototype.readListener = function(recipientId) {
+  messenger.markRead(recipientId, function(err) {
+    if(err) {
+      console.log('Read receipt did not send properly');
+    } else {
+      console.log('Marked conversation as read');
+    }
+  });
+}
+
 Listeners.prototype.searchListener = function(searchStr, callback) {
   var parts =  searchStr.split(' ');
 

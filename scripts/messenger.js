@@ -177,6 +177,50 @@ Messenger.prototype.sendGroupMessage =  function (recipientId, body, callback) {
   });
 }
 
+// Mark a thread as read
+//   recipientId : Facebook numeric id of recipient. Can be a person or a thread
+// callback(err) does not get any data
+Messenger.prototype.markRead = function(recipientId, callback) {
+  const readURL = this.baseUrl + "/ajax/mercury/change_read_status.php?dpr=1";
+  const messenger = this;
+  const utcTimestamp = new Date().getTime();
+
+  request.post(readURL, {
+    headers: {
+      'origin': 'https://www.messenger.com',
+      'accept-encoding': 'gzip, deflate',
+      'x-msgr-region': 'ATN',
+      'accept-language': 'en-US,en;q=0.8',
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36',
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': '*/*',
+      'referer': readURL,
+      'cookie': messenger.cookie,
+      'authority': 'www.messenger.com'
+    },
+    formData: {
+      'watermarkTimestamp': utcTimestamp,
+      'shouldSendReadReceipt': 'true',
+      'commerce_last_message_type': '',
+      [`ids[${recipientId}]`]: 'true',
+      '__a':'1',
+      '__af':'iw',
+      '__req':'19',
+      '__be':'-1',
+      '__pc':'PHASED:messengerdotcom_pkg',
+      'fb_dtsg': messenger.fbdtsg,
+      'ttstamp':'265817010265545710511657711165865817157112577010611183120110',
+      '__rev':'2947488'
+    }
+  }, function(err, httpResponse, body) {
+    if (err) {
+      callback(err);
+    } else {
+      callback();
+    }
+  });
+};
+
 Messenger.prototype.getLastMessage = function(recipient, recipientId, count, callback) {
   var messenger = this;
   var recipientUrl = this.baseUrl + "/t/" + recipient;
