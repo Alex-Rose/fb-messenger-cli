@@ -69,7 +69,7 @@ Messenger.prototype.sendMessage = function(recipient, recipientId, body, callbac
   var messenger = this;
   var utcTimestamp = new Date().getTime();
   var localTime = new Date().toLocaleTimeString().replace(/\s+/g, '').toLowerCase();
-  var messageId = Math.floor(Math.random() *  Number.MAX_SAFE_INTEGER);
+  var messageId = Math.floor(Math.random() *  (Math.pow(2, 53) - 1));
 
   request.post("https://www.messenger.com/messaging/send/?dpr=1", {
     headers: {
