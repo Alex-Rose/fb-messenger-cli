@@ -60,7 +60,7 @@ function renderMessage(userId, author, message) {
   if (Settings.getInstance().properties['showTimestamps']) {
     var locale = Settings.getInstance().properties['timestampLocale'];
     var options = Settings.getInstance().properties['timestampOptions'];
-    var dateString = new Date(message.timestamp).toLocaleTimeString(locale, options); 
+    var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
     msg = `${dateString} - ${msg}`
   }
 
@@ -301,6 +301,10 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/help ............. Print this message'.cyan);
       break;
 
+    case '/refresh':
+      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      break;
+
     case '/search':
       // Start a new search
       action = 2;
@@ -313,6 +317,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       var toggle = Settings.getInstance().properties['showTimestamps'];
       Settings.getInstance().properties.showTimestamps = !toggle;
       Settings.getInstance().save();
+      interactive.initializeConversationViewFromFbid(this.currentConversationId);
       break;     
 
     default:
