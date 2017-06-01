@@ -52,15 +52,20 @@ function renderMessage(userId, author, message) {
   var msg;
 
   if (author.id != messenger.userId) {
-    msg = author.name.green;
+    msg = `${author.name.green}: `;
   } else {
-    msg = author.name;
+    msg = `${author.name}: `;
   }
 
-  msg += " : ";
+  if (Settings.getInstance().properties['showTimestamps']) {
+    var locale = Settings.getInstance().properties['timestampLocale'];
+    var options = Settings.getInstance().properties['timestampOptions'];
+    var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    msg = `${dateString} - ${msg}`
+  }
 
   if (message.body !== "")
-    msg += message.body + " ";
+    msg += message.body;
 
   if (message.attachments) {
     for (var i = 0; i < message.attachments.length; i++) {
@@ -296,12 +301,24 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/help ............. Print this message'.cyan);
       break;
 
+    case '/refresh':
+      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      break;
+
     case '/search':
       // Start a new search
       action = 2;
       // Start the search with the entire string
       emitter.emit('startSearch', command);
       break;
+    
+    case '/timestamp':
+    case '/timestamps':
+      var toggle = Settings.getInstance().properties['showTimestamps'];
+      Settings.getInstance().properties.showTimestamps = !toggle;
+      Settings.getInstance().save();
+      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      break;     
 
     default:
       console.log('Unknown command. Type /help for commands.'.cyan);

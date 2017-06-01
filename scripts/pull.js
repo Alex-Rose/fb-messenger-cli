@@ -120,11 +120,12 @@ Pull.prototype.sendRequest = function() {
               // console.log(ms.type);
               if (ms.type == 'delta' && ms.delta !== undefined) {
                 if (ms.delta.body !== undefined) {
-                  // console.log(ms.delta.body);
+                  // console.log(JSON.stringify(ms.delta));
                   pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId,
                                         'body' : ms.delta.body,
                                         'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
-                                        'threadId' : ms.delta.messageMetadata.threadKey.threadFbId});
+                                        'threadId' : ms.delta.messageMetadata.threadKey.threadFbId,
+                                        'timestamp' : ms.delta.messageMetadata.timestamp});
                   }
               } else if (ms.delta.attachements !== undefined) {
                 var delta = ms.delta;

@@ -13,7 +13,10 @@ Settings = function() {
     this.properties = {
         disableColors: false,
         preventMessageFlicker: false,
-        desktopNotifications: false
+        desktopNotifications: false,
+        showTimestamps: false,
+        timestampLocale: "en-US",
+        timestampOptions: {}
     };
 };
 
@@ -26,11 +29,16 @@ Settings.getInstance = function (){
 };
 
 // Save the current properties dictionary on disk
-// This method is synchronous
 Settings.prototype.save = function(){
   var settings = this;
   var savePath = path.resolve(__dirname, '../', settings.filename);
-  fs.writeFileSync(savePath, JSON.stringify(settings.properties, null, '  '));
+  fs.writeFile(savePath, JSON.stringify(settings.properties, null, '  '), (err, res) => {
+    if (!err) {
+      console.log('Settings have been saved'); 
+    } else {
+      console.log('Error saving .settings file');
+    }
+  });
 };
 
 // Load previously saved properties from disk
