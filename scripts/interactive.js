@@ -220,6 +220,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
     case '/menu':
       group = false;
     // Fallthrough
+    case '/b':
     case '/back':
       let listener;
       if (group) {
