@@ -23,15 +23,15 @@ Login.prototype.execute = function(callback) {
       // Add save time to the data
       try {
         var objData = JSON.parse(phantom.data);
-        objData.saveTime = new Date().getTime();
       } catch (err) {
-	console.log('Warning: Errors caught in return data'.yellow);
-	if (phantom.data.indexOf('{') !== -1) {
-	  let trimmed = phantom.data.substring(phantom.data.indexOf('{'));
-	  objData = JSON.parse(trimmed);	  
-	}
+        console.log('Warning: Errors caught in return data'.yellow);
+        if (phantom.data.indexOf('{') !== -1) {
+          let trimmed = phantom.data.substring(phantom.data.indexOf('{'));
+          objData = JSON.parse(trimmed);
+        }
       }
 
+      objData.saveTime = new Date().getTime();
       crypt.save(JSON.stringify(objData));
 
       callback(false, result);
