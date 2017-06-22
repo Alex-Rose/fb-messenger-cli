@@ -307,7 +307,7 @@ Messenger.prototype.getMessagesGraphQl = function(recipient, recipientId, count,
 
         let obj = {
           'author': m.message_sender.id,
-          'body': m.message.text || m.snippet,
+          'body': m.message ? m.message.text : m.snippet,
           'other_user_fbid': thread.thread_key.other_user_fbid,
           'thread_fbid': thread.thread_key.thread_fbid,
           'timestamp': m.timestamp_precise
