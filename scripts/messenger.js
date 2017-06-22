@@ -40,6 +40,18 @@ Messenger.prototype.cleanJson = function (body) {
   return body;
 };
 
+Messenger.prototype.cleanGraphQl = function (body) {
+  // Response contains two json objects, we want the first one only
+  let pos = body.indexOf('}}}}') + 4;
+  body = body.substr(0, pos);
+
+  try {
+    return JSON.parse(body);
+  } catch (e) {
+    return {};
+  }
+};
+
 // Parses a list of conversation participants into users
 // Useful for adding users that are not "friends" to our database
 Messenger.prototype.parseParticipants = function (participants) {
@@ -177,7 +189,7 @@ Messenger.prototype.sendGroupMessage =  function (recipientId, body, callback) {
   });
 }
 
-Messenger.prototype.getLastMessage = function(recipient, recipientId, count, callback) {
+Messenger.prototype.getMessages = function(recipient, recipientId, count, callback) {
   var messenger = this;
   var recipientUrl = this.baseUrl + "/t/" + recipient;
   var offSetString, limitString, timestampString;
@@ -217,29 +229,29 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
 
   request.post(options, function(err, response, body){
         body = messenger.cleanJson(body);
-        json = JSON.parse(body);
-        payload = json['payload'];
-        msg = undefined;
+        let json = JSON.parse(body);
+        let payload = json['payload'];
+        let msg;
         if(payload !== undefined) {
           msg = payload['actions'];
         }
 
-        data = [];
+        let data = [];
 
         if(msg !== undefined) {
-          for (i = 0; i < msg.length; ++i) {
-              m = msg[i];
-              obj = {
+          for (let i = 0; i < msg.length; ++i) {
+              let m = msg[i];
+              let obj = {
                   'author': m.author,
                   'body': m.body,
                   'other_user_fbid': m.other_user_fbid,
                   'thread_fbid': m.thread_fbid,
                   'timestamp': m.timestamp,
                   'timestamp_datetime': m.timestamp_datetime
-              }
+              };
 
               if (m.has_attachment)
-                obj.attachments = m.attachments;
+                obj.attachmentsLegacy = m.attachments;
 
                data.push(obj);
           }
@@ -247,6 +259,73 @@ Messenger.prototype.getLastMessage = function(recipient, recipientId, count, cal
 
         callback(err, data);
     });
+};
+
+Messenger.prototype.getMessagesGraphQl = function(recipient, recipientId, count, callback) {
+
+  let queries = {
+    "o0": {
+      "doc_id": "1619982624699019",
+      "query_params": {
+        "id": recipientId,
+        "message_limit": count,
+        "load_messages": 1,
+        "load_read_receipts": false,
+        "before": null
+      }
+    }
+  };
+
+  let options = {
+    url: 'https://www.messenger.com/api/graphqlbatch/',
+    headers: messenger.headers,
+    formData: {
+      '__user':512556997,
+      '__a':1,
+      '__dyn':'7AgNeS-aF34UjgDxKy1l0BwRAKGgS8zXrWo466EeAq2i5U4e2CGwEyFojyR88wPGi7VXDG4XzEa8iyU4ium2S4oK9zEkxu7EOEixu1tyrhUaUhxGbwYUmC-Ujyk6ErK2q267EmyE9VQ7827Dx6qUpCzpoiGm8xC1vzVolyoK2y5ubxy',
+      '__af':'iw',
+      '__req':'q',
+      '__be':-1,
+      '__pc':'PHASED:messengerdotcom_pkg',
+      '__rev':3105978,
+      'fb_dtsg':messenger.fbdtsg,
+      'jazoest':265817088869867988410911111258658171711011025683521076783,
+      'queries': JSON.stringify(queries)
+    },
+    gzip: true
+  };
+
+  request.post(options, function(err, response, body){
+    let results = messenger.cleanGraphQl(body);
+    let thread = results.o0.data.message_thread;
+    let messages = thread.messages.nodes;
+
+    let data = [];
+    if (messages !== undefined) {
+      for (let message in messages) {
+        let m = messages[message];
+
+        let obj = {
+          'author': m.message_sender.id,
+          'body': m.message.text || m.snippet,
+          'other_user_fbid': thread.thread_key.other_user_fbid,
+          'thread_fbid': thread.thread_key.thread_fbid,
+          'timestamp': m.timestamp_precise
+        };
+
+        if (m.extensible_attachment)
+          obj.storyAttachment = m.extensible_attachment.story_attachment;
+
+        if (m.blob_attachments) {
+          obj.attachment = m.blob_attachments[0];
+        }
+
+        data.push(obj);
+      }
+    }
+
+    callback(err, data);
+  });
 };
 
 Messenger.prototype.getThreads = function(callback) {
@@ -413,7 +492,6 @@ Messenger.prototype.getGroupThreads = function(callback) {
     }
   });
 };
-
 
 Messenger.prototype.getFriends = function(callback) {
   var messenger = this;

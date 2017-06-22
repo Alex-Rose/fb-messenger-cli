@@ -80,7 +80,7 @@ describe('Messenger', function() {
     // Allow more time for network calls
     this.timeout(5000);
 
-    messenger.getLastMessage('ar.alexandre.rose', '731419306', 10, function(err, messages) {
+    messenger.getMessages('ar.alexandre.rose', '731419306', 10, function(err, messages) {
       expect(messages.length).is.equal(10);
       done();
     });

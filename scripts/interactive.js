@@ -30,8 +30,8 @@ var emitter = new events.EventEmitter();
 var heading = new Heading();
 var listeners = new Listeners();
 
-var atts = 0;
-var attsNo = [];
+var atts = [];
+var attsNo = 0;
 
 const rlInterface = readline.createInterface({
   input: process.stdin,
@@ -67,7 +67,7 @@ function renderMessage(userId, author, message) {
   if (message.body !== "")
     msg += message.body;
 
-  if (message.attachments) {
+  if (message.attachmentsLegacy) {
     for (var i = 0; i < message.attachments.length; i++) {
       var a = message.attachments[i];
       var attType;
@@ -95,10 +95,29 @@ function renderMessage(userId, author, message) {
           attType = 'file'
         }
       }
-      x = '' + attsNo
+      let x = `${attsNo}`;
       msg += '[ '.red + attType + " " + x.cyan + ' ]'.red;
       attsNo++;
     }
+  }
+
+  // New GraphQl call attachements
+  if (message.attachment) {
+    let a = message.attachment;
+    atts[attsNo] = a.preview.uri;
+
+    let x = `${attsNo}`;
+    msg += '[ '.red + 'link' + " " + x.cyan + ' ]'.red;
+    attsNo++;
+  }
+
+  if (message.storyAttachment) {
+    let a = message.storyAttachment;
+    atts[attsNo] = a.url;
+
+    let x = `${attsNo}`;
+    msg += '[ '.red + 'preview' + " " + x.cyan + ' ]'.red;
+    attsNo++;
   }
 
   return msg;
@@ -114,7 +133,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   var recipientUrl;
   if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
 
-  messenger.getLastMessage(recipientUrl, id, process.stdout.rows - 1, function(err, messages) {
+  let printMessages = messages => {
     recipientId = id;
     interactive.threadHistory = [];
     util.overwriteConsole();
@@ -133,7 +152,18 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
       interactive.threadHistory.push(msg);
     }
     interactive.printThread();
-    //group = false;
+  };
+
+  messenger.getMessages(recipientUrl, id, process.stdout.rows - 1, (err, messages) => {
+    // TODO: deal with errors
+    if (messages.length > 0)
+      printMessages(messages);
+    else {
+      // Nothing found, must be using GraphQl
+      messenger.getMessagesGraphQl(recipientUrl, id, process.stdout.rows - 1, (err2, qlMessages) => {
+        printMessages(qlMessages);
+      });
+    }
   });
 };
 
