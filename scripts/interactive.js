@@ -68,8 +68,8 @@ function renderMessage(userId, author, message) {
     msg += message.body;
 
   if (message.attachmentsLegacy) {
-    for (var i = 0; i < message.attachments.length; i++) {
-      var a = message.attachments[i];
+    for (var i = 0; i < message.attachmentsLegacy.length; i++) {
+      var a = message.attachmentsLegacy[i];
       var attType;
       if (a.attach_type == 'sticker' || a.attach_type == 'video') {
         atts[attsNo] = a.url;
