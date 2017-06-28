@@ -33,6 +33,9 @@ var listeners = new Listeners();
 var atts = [];
 var attsNo = 0;
 
+// Milliseconds in a day
+var msInADay = 86400000; // 60 * 60 * 24 * 1000
+
 const rlInterface = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -58,9 +61,27 @@ function renderMessage(userId, author, message) {
   }
 
   if (Settings.getInstance().properties['showTimestamps']) {
-    var locale = Settings.getInstance().properties['timestampLocale'];
-    var options = Settings.getInstance().properties['timestampOptions'];
-    var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    var now = new Date();
+    var currentTimestamp = now.getTime() - (now.getTimezoneOffset() * 60000); // Timezone offset in minutes
+
+    // message timestamp is already in user's local time
+    var timeDifference = currentTimestamp - message.timestamp;
+    if (timeDifference > msInADay) {
+      // Older than a day, show date
+      if (timeDifference < (2 * msInADay)) {
+        var dateString = "Yesterday";
+      }
+      else {
+         var days = Math.ceil(timeDifference / msInADay);
+         var dateString = days + " days ago";
+      }
+    } else {
+      // Less than a day, show time
+      var locale = Settings.getInstance().properties['timestampLocale'];
+      var options = Settings.getInstance().properties['timestampOptions'];
+      var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    }
+
     msg = `${dateString} - ${msg}`
   }
 
@@ -342,14 +363,14 @@ InteractiveCli.prototype.handleCommands = function(command) {
       // Start the search with the entire string
       emitter.emit('startSearch', command);
       break;
-    
+
     case '/timestamp':
     case '/timestamps':
       var toggle = Settings.getInstance().properties['showTimestamps'];
       Settings.getInstance().properties.showTimestamps = !toggle;
       Settings.getInstance().save();
       interactive.initializeConversationViewFromFbid(this.currentConversationId);
-      break;     
+      break;
 
     default:
       console.log('Unknown command. Type /help for commands.'.cyan);
