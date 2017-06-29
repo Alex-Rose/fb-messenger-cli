@@ -343,6 +343,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
       console.log('/search [query] ... Search your friends to chat'.cyan);
       console.log('/view # ........... View the attachment by the number given after the type'.cyan);
+      console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
       console.log('/help ............. Print this message'.cyan);
       break;
 
@@ -362,7 +363,13 @@ InteractiveCli.prototype.handleCommands = function(command) {
       var toggle = Settings.getInstance().properties['showTimestamps'];
       Settings.getInstance().properties.showTimestamps = !toggle;
       Settings.getInstance().save();
-      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      console.log('Changed the timestamp settings!'.cyan);
+
+      if (this.currentConversationId) {
+        interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      } else {
+        interactive.handleCommands("/back");
+      }
       break;
 
     default:
