@@ -61,25 +61,18 @@ function renderMessage(userId, author, message) {
   }
 
   if (Settings.getInstance().properties['showTimestamps']) {
-    var now = new Date();
-    var currentTimestamp = now.getTime() - (now.getTimezoneOffset() * 60000); // Timezone offset in minutes
-
-    // message timestamp is already in user's local time
-    var timeDifference = currentTimestamp - message.timestamp;
-    if (timeDifference > msInADay) {
-      // Older than a day, show date
-      if (timeDifference < (2 * msInADay)) {
-        var dateString = "Yesterday";
-      }
-      else {
-         var days = Math.ceil(timeDifference / msInADay);
-         var dateString = days + " days ago";
-      }
-    } else {
+    var timeDifference = Date.now() - message.timestamp;
+    var daysAgo = Math.ceil(timeDifference / msInADay);
+    if (daysAgo <= 1) {
       // Less than a day, show time
       var locale = Settings.getInstance().properties['timestampLocale'];
       var options = Settings.getInstance().properties['timestampOptions'];
       var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    } else if (daysAgo == 2) {
+        var dateString = "Yesterday";
+    }
+    else {
+      var dateString = daysAgo + " days ago";
     }
 
     msg = `${dateString} - ${msg}`
