@@ -30,6 +30,11 @@ Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
   messenger.getThreads(function(err,threads) {
     util.refreshConsole();
     options = {};
+
+    threads.sort((a, b) => {
+      return b.timestamp - a.timestamp;
+    });
+
     for (var i = 0; i < threads.length; ++i) {
       var thread = threads[i];
       printThreadSnippet(thread, i);
@@ -56,6 +61,11 @@ Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb
   messenger.getGroupThreads(function(err,threads) {
   util.refreshConsole();
   options = {};
+
+  threads.sort((a, b) => {
+    return b.timestamp - a.timestamp;
+  });
+
   for (var i = 0; i < threads.length; ++i) {
     var thread = threads[i];
     printThreadSnippet(thread, i, true);

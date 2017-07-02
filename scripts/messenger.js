@@ -383,7 +383,8 @@ Messenger.prototype.getThreads = function(callback) {
                   'name': name,
                   'snippet': threads[j]['snippet'],
                   'attachments': threads[j]['snippet_attachments'],
-                  'thread_fbid': threads[j]['thread_fbid']
+                  'thread_fbid': threads[j]['thread_fbid'],
+                  'timestamp': threads[j].last_message_timestamp
                 });
                 break;
               }
@@ -479,7 +480,12 @@ Messenger.prototype.getGroupThreads = function(callback) {
               name = name.slice(0, -2).trim();
               // You are included in participants
               if ( count > 3) { name += ' + others...'; }
-              data.push({'name': name, 'snippet': groupThreads[l].snippet, 'thread_fbid': groupThreads[l].thread_fbid});
+              data.push({
+                'name': name,
+                'snippet': groupThreads[l].snippet,
+                'thread_fbid': groupThreads[l].thread_fbid,
+                'timestamp': groupThreads[l].last_message_timestamp
+              });
             }
           }
         }
