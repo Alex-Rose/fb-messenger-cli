@@ -9,11 +9,15 @@ class Settings {
   constructor () {
     this.filename = '.settings';
     this.path = path.resolve(__dirname, '../', this.filename);
+    // These are the properties that are customizable by the user. Add new properties
+    // here and set their default values
     this.properties = {
       disableColors: false,
       conversationsToLoad: 15,
       preventMessageFlicker: false,
       desktopNotifications: false,
+      senderInMenuColor: 'red',
+      showSenderInMenu: true,
       showTimestamps: false,
       useCustomNicknames: true,
       timestampLocale: "en-US",

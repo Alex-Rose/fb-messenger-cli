@@ -1,5 +1,6 @@
 const { refreshConsole } = require('./util');
 const heading = require('./heading');
+const Settings = require('./settings');
 
 const messageLimit = 75;
 
@@ -17,11 +18,16 @@ Listeners.prototype.getMessagesListener = function(nb, searchId, callback) {
 };
 
 function printThreadSnippet(thread, idx, isGroup) {
-  var line = '[' + idx.toString().cyan + '] ' + thread.name.green + ' : ';
-  
+  var line = '[' + idx.toString().cyan + '] ' + thread.name.green + ': ';
+
   if (thread.snippet.length > messageLimit) {
     thread.snippet = thread.snippet.substr(0, messageLimit) + '...';
   }
+
+  // Indicate that the message was sent by the user
+  if (Settings.properties.showSenderInMenu && thread.sent_by_me) {
+    line += 'Me'[Settings.properties.senderInMenuColor] + ': ';
+  } 
 
   if (thread.snippet !== '')
     line += thread.snippet + ' ';
