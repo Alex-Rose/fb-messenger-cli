@@ -247,7 +247,9 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
                   'other_user_fbid': m.other_user_fbid,
                   'thread_fbid': m.thread_fbid,
                   'timestamp': m.timestamp,
-                  'timestamp_datetime': m.timestamp_datetime
+                  'timestamp_datetime': m.timestamp_datetime,
+                  'action_type' : m.action_type,
+                  'log_message_body' : m.log_message_body
               };
 
               if (m.has_attachment)

@@ -78,7 +78,7 @@ function renderMessage(userId, author, message) {
     msg = `${dateString} - ${msg}`
   }
 
-  if (message.body !== "")
+  if (message.body !== undefined && message.body !== "")
     msg += message.body;
 
   if (message.attachmentsLegacy) {
@@ -90,8 +90,18 @@ function renderMessage(userId, author, message) {
         attType = a.attach_type;
       }
       else if (a.attach_type == 'share') {
+        if (a.share.target !== undefined && a.share.target.live_location_id !== undefined) {
+          if (a.share.target.is_expired) {
+            msg += 'shared a live location (expired)';
+            continue;
+          } else {
+            atts[attsNo] = a.share.uri;
+            attType = 'live location - ' + a.share.description;
+          }
+        } else {
         atts[attsNo] = a.share.uri;
         attType = a.attach_type;
+        }
       }
       else if (a.attach_type == 'photo') {
         atts[attsNo] = a.large_preview_url;
@@ -132,6 +142,12 @@ function renderMessage(userId, author, message) {
     let x = `${attsNo}`;
     msg += '[ '.red + 'preview' + " " + x.cyan + ' ]'.red;
     attsNo++;
+  }
+
+  if (message.action_type == 'ma-type:log-message') {
+    if (message.log_message_body !== undefined) {
+      msg += message.log_message_body;
+    }
   }
 
   return msg;
