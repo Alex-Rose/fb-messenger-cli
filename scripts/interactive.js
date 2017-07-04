@@ -90,9 +90,9 @@ function renderMessage(userId, author, message) {
         attType = a.attach_type;
       }
       else if (a.attach_type == 'share') {
-        if (a.share.target !== undefined && a.share.target.live_location_id !== undefined) {
+        if (a.share.target != undefined && a.share.target.live_location_id != undefined) {
           if (a.share.target.is_expired) {
-            msg += 'shared a live location (expired)';
+            msg += 'shared a live location (ended)';
             continue;
           } else {
             atts[attsNo] = a.share.uri;
