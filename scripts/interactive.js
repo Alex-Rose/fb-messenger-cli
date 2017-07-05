@@ -334,8 +334,11 @@ InteractiveCli.prototype.handleCommands = function(command) {
         att = parseInt(att);
         if (att >= 0 && att < attsNo) {
           let url = atts[att];
-          console.log('Attachment now open in browser');
-          open(url);
+          if(url) {
+	    open(url);
+            console.log('Attachment now open in browser');
+	  } else 
+	    console.log('Couldn\'t open attachement in browser');
           return;
         }
       }
