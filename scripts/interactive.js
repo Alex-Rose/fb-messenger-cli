@@ -304,6 +304,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
         if (id !== -1) {
           console.log('Switching conversation...'.cyan);
           interactive.initializeConversationViewFromFbid(id);
+	  action = 1;
           return;
         }
       }
