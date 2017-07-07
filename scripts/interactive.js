@@ -342,7 +342,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
     case '/?':
     case '/help':
       console.log('/b /back /menu .... Get back to conversation selection'.cyan);
-      console.log('/exit /quit /q .... Quit the application'.cyan);
+      console.log('/q /exit /quit .... Quit the application'.cyan);
       console.log('/logout ........... Exit and flush credentials'.cyan);
       console.log('/g /groups ........ Bring up your goup conversations'.cyan);
       console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
