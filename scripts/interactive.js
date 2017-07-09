@@ -51,9 +51,17 @@ function InteractiveCli(){
   this.currentConversationId = undefined;
 }
 
+function getDisplayName(author) {
+  if (!Settings.getInstance().properties['useCustomNicknames']) {
+    return author.name;
+  }
+
+  return author.custom_nickname || author.name;
+}
+
 function renderMessage(userId, author, message) {
   var msg;
-  const name = author.custom_nickname || author.name;
+  const name = getDisplayName(author);
   if (author.id != messenger.userId) {
     msg = `${name.green}: `;
   } else {
@@ -204,7 +212,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     try {
       if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
         notifier.notify({
-          title: author.name,
+          title: getDisplayName(author),
           message: message.body,
           icon: path.join(__dirname, '../resources/logo.png')
         });
