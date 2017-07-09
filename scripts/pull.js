@@ -119,24 +119,53 @@ Pull.prototype.sendRequest = function() {
               var ms = message.ms[j];
               // console.log(ms.type);
               if (ms.type == 'delta' && ms.delta !== undefined) {
-                if (ms.delta.body !== undefined) {
-                  // console.log(JSON.stringify(ms.delta));
-                  pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId,
-                                        'body' : ms.delta.body,
+                if (ms.delta.class == 'NewMessage') {
+                  if (ms.delta.body !== undefined) {
+                    pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId,
+                                          'body' : ms.delta.body,
+                                          'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                          'threadId' : ms.delta.messageMetadata.threadKey.threadFbId,
+                                          'timestamp' : ms.delta.messageMetadata.timestamp});
+                  } else if (ms.delta.attachments !== undefined) {
+                    var att = ms.delta.attachments[0];
+                    if (att.mercury.attach_type == 'animated_image') {
+                      pull.emit('message', {'author' : ms.delta.messageMetadata.actorFbId,
+                                            'body' : 'sent a gif',
+                                            'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                            'threadId' : ms.delta.messageMetadata.threadKey.threadFbId,
+                                            'timestamp' : ms.delta.messageMetadata.timestamp});
+                    } else if (att.mercury.attach_type == 'sticker') {
+                      var body = 'sent a sticker';
+                      if (att.mercury.metadata !== undefined && att.mercury.metadata.accessibilityLabel !== undefined) {
+                        body += ': ' + att.mercury.metadata.accessibilityLabel;
+                      }
+                      pull.emit('message', {'author': ms.delta.messageMetadata.actorFbId,
+                                            'body' : body,
+                                            'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                            'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                            'timestamp' : ms.delta.messageMetadata.timestamp});
+                    } else if (att.mercury.attach_type == 'share') {
+                      if (att.mercury.share !== undefined) {
+                        var share = att.mercury.share;
+                        if (share.target !== undefined && share.target.live_location_id !== undefined) {
+                          var body = 'shared a live location';
+                          pull.emit('message', {'author': ms.delta.messageMetadata.actorFbId,
+                                                'body' : body,
+                                                'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                'timestamp' : ms.delta.messageMetadata.timestamp});
+                        }
+                      }
+                    }
+                  }
+                } else if (ms.delta.class == 'AdminTextMessage') {
+                  pull.emit('message', {'author': ms.delta.messageMetadata.actorFbId,
+                                        'body' : ms.delta.messageMetadata.adminText,
                                         'otherUserId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
-                                        'threadId' : ms.delta.messageMetadata.threadKey.threadFbId,
+                                        'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId,
                                         'timestamp' : ms.delta.messageMetadata.timestamp});
-                  }
-              } else if (ms.delta.attachements !== undefined) {
-                var delta = ms.delta;
-                if (delta.attachements[0] !== undefined) {
-                  var att = delta.attachements[0];
-                  if (att.type == 'sticker') {
-                    pull.emit('message', {'author': delta.messageMetadata.actorFbId, 'body' : 'sent a sticker', 'threadId' : ms.delta.messageMetadata.threadKey.otherUserFbId});
-                  }
                 }
-              }
-              else if (ms.type == 'typ') {
+              } else if (ms.type == 'typ') {
                 if (ms.st == '1') {
                   // console.log('Started typing');
                 } else {
