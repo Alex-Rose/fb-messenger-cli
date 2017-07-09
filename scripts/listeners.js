@@ -2,9 +2,12 @@ var util = require('./util.js');
 
 Listeners = function() {};
 
+Listeners.prototype.setMessenger = function(messenger) {
+  this.messenger = messenger;
+}
 Listeners.prototype.getMessagesListener = function(nb, searchId, callback) {
-  var id = options[nb];
-  if(searchId){
+  var id = this.options[nb];
+  if(searchId) {
     id = searchId;
   }
   callback(id);
@@ -25,69 +28,37 @@ function printThreadSnippet(thread, idx, isGroup) {
   console.log(line);
 }
 
-Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
-
-  messenger.getThreads(function(err,threads) {
-    util.refreshConsole();
-    options = {};
-
-    threads.sort((a, b) => {
-      return b.timestamp - a.timestamp;
-    });
-
-    for (var i = 0; i < threads.length; ++i) {
-      var thread = threads[i];
-      printThreadSnippet(thread, i);
-
-      options[i] = thread.thread_fbid;
-
-      if (thread.thread_fbid == userId) {
-        continue;
-      }
-      heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
+Listeners.prototype.conversationsListener = function(userId, heading, callback, isGroup = false) {
+  this.messenger.getThreads((err, threads) => {
+    if (err) {
+      console.error('Found error while fetching conversations.', err);
+      return;
     }
 
-    var data = {
-      action: 0,
-      threadCount: threads.length
-    };
+    util.refreshConsole();
+    this.options = {};
+
+    threads.sort((a, b) => b.timestamp - a.timestamp);
+    for (let i = 0; i < threads.length; ++i) {
+      const thread = threads[i];
+      printThreadSnippet(thread, i, isGroup);
+      this.options[i] = thread.thread_fbid;
+      if (thread.thread_fbid !== userId) {
+        heading[i] = { fbid: thread.thread_fbid, name: thread.name, unread: 0};
+      }
+    }
 
     console.log("Select conversation :");
-    cb(data);
+    callback({ action: 0, threadCount: threads.length });
   });
+}
+
+Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
+  this.conversationsListener(userId, heading, cb);
 };
 
 Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb) {
-  messenger.getGroupThreads(function(err,threads) {
-  util.refreshConsole();
-  options = {};
-
-  threads.sort((a, b) => {
-    return b.timestamp - a.timestamp;
-  });
-
-  for (var i = 0; i < threads.length; ++i) {
-    var thread = threads[i];
-    printThreadSnippet(thread, i, true);
-
-    options[i] = thread.thread_fbid;
-
-    if (thread.thread_fbid == userId) {
-      continue;
-    }
-    heading[i] = {fbid: thread.thread_fbid, name: thread.name, unread: 0};
-  }
-
-  console.log("Select conversation :");
-
-  var data = {
-    action: 0,
-    threadCount: threads.length
-  };
-
-    // Change state (action) in the callback
-    cb(data);
-  });
+  this.conversationsListener(userId, heading, cb, true);
 };
 
 Listeners.prototype.sendMessageListener = function(m, recipientId) {

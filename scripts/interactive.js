@@ -53,11 +53,11 @@ function InteractiveCli(){
 
 function renderMessage(userId, author, message) {
   var msg;
-
+  const name = author.custom_nickname || author.name;
   if (author.id != messenger.userId) {
-    msg = `${author.name.green}: `;
+    msg = `${name.green}: `;
   } else {
-    msg = `${author.name}: `;
+    msg = `${name}: `;
   }
 
   if (Settings.getInstance().properties['showTimestamps']) {
@@ -469,14 +469,15 @@ InteractiveCli.prototype.run = function(){
 
       // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
+      listeners.setMessenger(messenger);
       search = new Search(messenger);
 
       // register our listeners
-      emitter.on('getConvos', listeners.getConversationsListener);
-      emitter.on('getGroupConvos', listeners.getGroupConversationsListener);
-      emitter.on('sendMessage', listeners.sendMessageListener);
-      emitter.on('getMessages', listeners.getMessagesListener);
-      emitter.on('startSearch', listeners.searchListener);
+      emitter.on('getConvos', listeners.getConversationsListener.bind(listeners));
+      emitter.on('getGroupConvos', listeners.getGroupConversationsListener.bind(listeners));
+      emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
+      emitter.on('getMessages', listeners.getMessagesListener.bind(listeners));
+      emitter.on('startSearch', listeners.searchListener.bind(listeners));
 
       messenger.getFriends(function(friends) {
         var entry = {};
