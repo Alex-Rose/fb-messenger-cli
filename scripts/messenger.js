@@ -10,6 +10,10 @@ var request = require('request'); // For making HTTP requests
 var vm = require('vm');
 
 function getThreadName(thread, participant) {
+  if (!Settings.getInstance().properties['useCustomNicknames']) {
+    return participant.name;
+  }
+
   const nicknames = thread['custom_nickname'];
   return (nicknames && nicknames[participant['fbid']]) || participant.name;
 }
@@ -352,6 +356,7 @@ Messenger.prototype.parseRawBody = function(body) {
 Messenger.prototype.setCustomNickname = function(fbId, custom_nickname) {
   this.saveFriend({ id: fbId, custom_nickname });
 }
+
 // Updates the given friend with the new data in the provided object
 // friend (Object): {
 //   id: string [required]

@@ -15,6 +15,7 @@ Settings = function() {
         preventMessageFlicker: false,
         desktopNotifications: false,
         showTimestamps: false,
+        useCustomNicknames: true,
         timestampLocale: "en-US",
         timestampOptions: {}
     };
