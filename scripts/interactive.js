@@ -417,6 +417,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       emitter.emit('startSearch', command);
       break;
 
+    case '/times':
     case '/timestamp':
     case '/timestamps':
       var toggle = Settings.getInstance().properties['showTimestamps'];
@@ -425,6 +426,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('Changed the timestamp settings!'.cyan);
 
       interactive.handleCommands("/refresh");
+      break;
+    
+    case '/msg':
+      if (action == 1) {
+        emitter.emit('sendMessage', options.slice(1).join(' '), recipientId);
+      }
       break;
 
     default:
