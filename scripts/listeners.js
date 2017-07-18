@@ -29,7 +29,7 @@ function printThreadSnippet(thread, idx, isGroup) {
 }
 
 Listeners.prototype.conversationsListener = function(userId, heading, callback, isGroup = false) {
-  this.messenger.getThreads((err, threads) => {
+  this.messenger.getThreads(isGroup, (err, threads) => {
     if (err) {
       console.error('Found error while fetching conversations.', err);
       return;

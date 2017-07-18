@@ -1,36 +1,28 @@
 #!/usr/bin/env node
 
 (function () {
-  var Login = require('./scripts/login.js');
-  var Crypt = require('./scripts/crypt.js');
-  var Messenger = require('./scripts/messenger.js');
-  var Settings = require('./scripts/settings.js');
-  var colors = require('colors');
+  const Login = require('./scripts/login.js');
+  const Crypt = require('./scripts/crypt.js');
+  const Settings = require('./scripts/settings.js');
+  const colors = require('colors');
 
   function executeCompleteLogin(callback) {
     console.log('Facebook credentials');
-    var login = new Login();
-    login.execute(function(err, creds) {
-      var crypt = Crypt.getInstance();
-      // Return callback with no error
-      callback(err);
-    });
+    const login = new Login();
+    login.execute(callback);
   }
 
-    function verifyLogon(password, callback) {
-        var crypt = Crypt.getInstance(password);
+  function verifyLogon(password, callback) {
+    const crypt = Crypt.getInstance(password);
 
     crypt.load(function(err, data) {
 
-      var logonTimeout = 43200000; // 12hrs in ms
+      const logonTimeout = 43200000; // 12hrs in ms
 
       if(!err) {
-        json = JSON.parse(data);
-        var cookie = json.cookie;
-        var fbdtsg = json.fb_dtsg;
-        var userId = json.c_user;
-        var lastSave = json.saveTime;
-        var curTime = new Date().getTime();
+        const json = JSON.parse(data);
+        let lastSave = json.saveTime;
+        let curTime = new Date().getTime();
         console.log('Last logon time: ' + new Date(lastSave));
 
         // If we've been logged on for too long
@@ -39,11 +31,7 @@
           console.log('Your logged in time has expired'.yellow);
           callback(true);
         } else {
-          var messenger = new Messenger(cookie, userId, fbdtsg);
-
-          messenger.getThreads(function(err, threads) {
-            callback(err);
-          });
+          require('./scripts/interactive.js');
         }
       } else {
         callback(err);

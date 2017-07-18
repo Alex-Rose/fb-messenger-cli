@@ -90,7 +90,7 @@ describe('Messenger', function() {
     // Allow more time for network calls
     this.timeout(5000);
 
-    messenger.getThreads(done);
+    messenger.getThreads(true, done);
   });
 });
 
