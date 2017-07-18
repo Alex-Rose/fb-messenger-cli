@@ -13,6 +13,8 @@ Login.prototype.execute = function(callback) {
   result.email = readlineSync.question('Email: ');
   result.password = readlineSync.question('Password: ', {hideEchoBack: true});
 
+  console.log("Attempting login...");
+
   var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
 
   phantom = new login.run_cmd( phantomjs.path, arguments, function () {
