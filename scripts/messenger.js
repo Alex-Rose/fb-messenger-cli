@@ -63,7 +63,7 @@ Messenger.prototype.cleanGraphQl = function (body) {
 
 // Parses a list of conversation participants into users
 // Useful for adding users that are not "friends" to our database
-Messenger.prototype.parseParticipants = function (participants) {
+Messenger.prototype.saveParticipantsAsFriends = function (participants) {
   for (var i=0; i < participants.length; i++) {
     // Add only the ones we don't already have
     if(participants[i].is_friend != 'true') {
@@ -355,7 +355,7 @@ Messenger.prototype.parseRawBody = function(body) {
 // Sets the custom nickname for the friend with the given facebook id
 Messenger.prototype.setCustomNickname = function(fbId, custom_nickname) {
   this.saveFriend({ id: fbId, custom_nickname });
-}
+};
 
 // Updates the given friend with the new data in the provided object
 // friend (Object): {
@@ -364,6 +364,15 @@ Messenger.prototype.setCustomNickname = function(fbId, custom_nickname) {
 Messenger.prototype.saveFriend = function(friend) {
   const user = this.users[friend.id] || {};
   this.users[friend.id] = Object.assign(user, friend);
+};
+
+Messenger.prototype.getThreadNameFromParticipants = function(thread, allParticipants) {
+  // Get name from convo participants
+  let groupParticipants = thread.participants.map( participant => {
+    return allParticipants.find(user => user['fbid'] === participant.substring('fbid:'.length));
+  });
+
+  return `${groupParticipants[0].name}, ${groupParticipants[1].name}, ...`;
 };
 
 // Parses the thread data and returns a thread entry
@@ -379,11 +388,16 @@ Messenger.prototype.saveFriend = function(friend) {
 //   timestamp: timestamp of the thread's last message
 // }
 Messenger.prototype.parseThreadData = function(threads = [], participants = []) {
-  return threads.map(thread => ({
+  const privateThreads = threads.map(thread => ({
     thread,
     participant: participants.find(p => p['fbid'] === thread['other_user_fbid'])
-  })).map(({ thread, participant }) => {
-    const name = getThreadName(thread, participant)
+  })).filter( thread => {
+    // Where participant exists
+    return thread.participant;
+  });
+
+  return privateThreads.map(({ thread, participant }) => {
+    const name = getThreadName(thread, participant);
     this.setCustomNickname(participant['fbid'], name);
     return {
       name,
@@ -395,120 +409,60 @@ Messenger.prototype.parseThreadData = function(threads = [], participants = []) 
   });
 };
 
-Messenger.prototype.getThreads = function(callback) {
-  const messenger = this;
+Messenger.prototype.parseGroupThreadData = function(threads = [], participants = []) {
+  // Only get threads that don't have an "other user"
+  const groupThreads = threads.filter(thread => { return !thread.other_user_fbid });
+  return groupThreads.map(thread => {
+    let name;
+    if (thread.name) {
+      name = thread.name;
+    } else {
+      name = this.getThreadNameFromParticipants(thread, participants);
+    }
+    return {
+      name,
+      'snippet': thread.snippet,
+      'thread_fbid': thread.thread_fbid,
+      'timestamp': thread.last_message_timestamp
+    }
+  });
+};
+
+Messenger.prototype.getThreads = function(isGroup = false, callback) {
   const options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
-    headers: messenger.headers,
+    headers: this.headers,
     formData: {
       'inbox[offset]': '0',
       'inbox[filter]' : '',
-      'inbox[limit]' : '10',
+      'inbox[limit]' : 15,
       'client':'mercury',
-      '__user':messenger.userId,
+      '__user':this.userId,
       '__a':'1',
       '__req':'8',
       '__be':'0',
       '__pc':'EXP1:messengerdotcom_pkg',
       'ttstamp':'2658170878850518911395104515865817183457873106120677266',
-      'fb_dtsg': messenger.fbdtsg,
+      'fb_dtsg': this.fbdtsg,
       '__rev':'2338802'
     },
     gzip: true,
   };
 
   request.post(options, (err, response, body) => {
-    if (err) return;
+    if (err) callback(err);
     try {
-      const json = messenger.parseRawBody(body);
+      const json = this.parseRawBody(body);
       const threads = json['payload']['threads'];
       const participants = json['payload']['participants'];
-      callback(null, messenger.parseThreadData(threads, participants));
-    } catch (e) {
-      callback(e, null);
-    }
-  });
-};
+      this.saveParticipantsAsFriends(participants);
 
-Messenger.prototype.getGroupThreads = function(callback) {
-  var messenger = this;
-
-  var options = {
-    url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
-    headers: messenger.headers,
-    formData: {
-      'inbox[offset]': '0',
-      'inbox[filter]' : '',
-      'inbox[limit]' : '25',
-      'client':'mercury',
-      '__user':messenger.userId,
-      '__a':'1',
-      '__req':'8',
-      '__be':'0',
-      '__pc':'EXP1:messengerdotcom_pkg',
-      'ttstamp':'2658170878850518911395104515865817183457873106120677266',
-      'fb_dtsg': messenger.fbdtsg,
-      '__rev':'2338802'
-    },
-    gzip: true,
-  };
-
-  request.post(options, function(err, response, body){
-    var data;
-    if (err) return;
-    try {
-      let json = messenger.parseRawBody(body);
-      participants = json['payload']['participants'];
-      threads = json['payload']['threads'];
-
-      messenger.parseParticipants(participants);
-
-      var groupThreads = [];
-      for (var k=0; k < threads.length; k++) {
-        if (threads[k].other_user_fbid === null){
-          groupThreads.push(threads[k]);
-        }
+      if (isGroup) {
+        callback(null, this.parseGroupThreadData(threads, participants));
+      } else {
+        callback(null, this.parseThreadData(threads, participants));
       }
 
-      data = [];
-
-      for (var l=0; l < groupThreads.length; l++) {
-        if (groupThreads[l].name !== ''){
-          data.push({
-            'name': groupThreads[l].name,
-            'snippet': groupThreads[l].snippet,
-            'thread_fbid': groupThreads[l].thread_fbid
-          });
-        } else {
-          // Get name from convo participants
-          var count = 0;
-          var name = '';
-          for (var m=0; m < groupThreads[l].participants.length; m++) {
-            var gParticipants = groupThreads[l].participants;
-            for (var n=0; n < participants.length; n++) {
-              if (gParticipants[m].substring('fbid:'.length) == participants[n].fbid) {
-                // Only show name of first 2 participants
-                if (count < 2) {
-                  name += participants[n].name + ', ';
-                }
-                count++;
-              }
-              if (count > 3 ) { break; }
-            }
-          }
-          name = name.slice(0, -2).trim();
-          // You are included in participants
-          if ( count > 3) { name += ' + others...'; }
-          data.push({
-            'name': name,
-            'snippet': groupThreads[l].snippet,
-            'thread_fbid': groupThreads[l].thread_fbid,
-            'timestamp': groupThreads[l].last_message_timestamp
-          });
-        }
-      }
-
-      callback(null, data);
     } catch (e) {
       callback(e, null);
     }

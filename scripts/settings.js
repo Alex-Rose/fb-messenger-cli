@@ -2,10 +2,10 @@
 // All settings are used in memory and should be persisted to disk
 // with save function
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var instance;
+let instance;
 
 Settings = function() {
     instance = this;
