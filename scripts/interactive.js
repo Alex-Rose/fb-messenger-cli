@@ -214,7 +214,20 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     }
   }
 
-  if (author === undefined || message.otherUserId != recipientId || action === 0) {
+  if (action === 0) {
+    let listener;
+    if (group) {
+      listener = 'getGroupConvos';
+    } else {
+      listener = 'getConvos';
+    }
+    emitter.emit(listener, current_userId, heading.getData(), function (data) {
+      action = data.action;
+      currentThreadCount = data.threadCount;
+      rlInterface.prompt(true);
+    });
+    return;
+  } else if (author === undefined || message.otherUserId != recipientId) {
     // Extra check for groups
     if (message.threadId != recipientId) {
       // Don't warn for current user messages (from another device)
