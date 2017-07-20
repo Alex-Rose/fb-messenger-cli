@@ -10,41 +10,43 @@
   function executeCompleteLogin(callback) {
     console.log('Facebook credentials');
     var login = new Login();
-    login.execute(function(err, creds) {
+    login.execute(function (err, creds) {
       var crypt = Crypt.getInstance();
       // Return callback with no error
       callback(err);
     });
   }
 
-    function verifyLogon(password, callback) {
-        var crypt = Crypt.getInstance(password);
+  function verifyLogon(password, callback) {
+    var crypt = Crypt.getInstance(password);
 
-    crypt.load(function(err, data) {
+    crypt.load(function (err, data) {
 
-      var logonTimeout = 43200000; // 12hrs in ms
+      if (!err) {
+        Settings.getInstance().load(function (err, settings) {
+          var logonTimeout = Settings.getInstance().getLogonTimeout();
 
-      if(!err) {
-        json = JSON.parse(data);
-        var cookie = json.cookie;
-        var fbdtsg = json.fb_dtsg;
-        var userId = json.c_user;
-        var lastSave = json.saveTime;
-        var curTime = new Date().getTime();
-        console.log('Last logon time: ' + new Date(lastSave));
+          json = JSON.parse(data);
+          var cookie = json.cookie;
+          var fbdtsg = json.fb_dtsg;
+          var userId = json.c_user;
+          var lastSave = json.saveTime;
+          var curTime = new Date().getTime();
+          console.log('Last logon time: ' + new Date(lastSave));
 
-        // If we've been logged on for too long
-        // Do an other login to refresh the cookie
-        if(lastSave + logonTimeout < curTime){
-          console.log('Your logged in time has expired'.yellow);
-          callback(true);
-        } else {
-          var messenger = new Messenger(cookie, userId, fbdtsg);
+          // If we've been logged on for too long
+          // Do an other login to refresh the cookie
+          if (lastSave + logonTimeout < curTime) {
+            console.log('Your logged in time has expired'.yellow);
+            callback(true);
+          } else {
+            var messenger = new Messenger(cookie, userId, fbdtsg);
 
-          messenger.getThreads(function(err, threads) {
-            callback(err);
-          });
-        }
+            messenger.getThreads(function (err, threads) {
+              callback(err);
+            });
+          }
+        });
       } else {
         callback(err);
       }
