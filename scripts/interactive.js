@@ -339,6 +339,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
         }
       }
       console.log('Invalid switch, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/v':
@@ -354,10 +355,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('Attachment now open in browser');
 	  } else 
 	    console.log('Couldn\'t open attachement in browser');
-          return;
+          rlInterface.prompt(true);
+          break;
         }
       }
       console.log('Invalid attachment number, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/logout':
@@ -383,6 +386,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/r /refresh ....... Refresh the current converation'.cyan);
       console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
       console.log('/help ............. Print this message'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/r':
@@ -413,6 +417,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
     default:
       console.log('Unknown command. Type /help for commands.'.cyan);
+      rlInterface.prompt(true);
   }
 };
 
