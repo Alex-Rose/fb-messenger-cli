@@ -290,6 +290,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
   let options = command.split(' ');
 
   switch (options[0]) {
+    case '/m':
     case '/menu':
       group = false;
     // Fallthrough
