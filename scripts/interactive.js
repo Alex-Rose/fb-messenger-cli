@@ -392,8 +392,11 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
     case '/r':
     case '/refresh':
-      if (action == 1)
+      if (action == 1) {
         interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      } else {
+        interactive.handleCommands("/back");
+      }
       break;
 
     case '/search':
@@ -410,11 +413,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       Settings.getInstance().save();
       console.log('Changed the timestamp settings!'.cyan);
 
-      if (this.currentConversationId) {
-        interactive.initializeConversationViewFromFbid(this.currentConversationId);
-      } else {
-        interactive.handleCommands("/back");
-      }
+      interactive.handleCommands("/refresh");
       break;
 
     default:
