@@ -392,7 +392,8 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
     case '/r':
     case '/refresh':
-      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      if (action == 1)
+        interactive.initializeConversationViewFromFbid(this.currentConversationId);
       break;
 
     case '/search':
