@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 (function () {
-  var Login = require('./scripts/login.js');
-  var Crypt = require('./scripts/crypt.js');
-  var Messenger = require('./scripts/messenger.js');
-  var Settings = require('./scripts/settings.js');
-  var colors = require('colors');
+  const Login = require('./scripts/login.js');
+  const Crypt = require('./scripts/crypt.js');
+  const Settings = require('./scripts/settings.js');
+  const colors = require('colors');
+  const Messenger = require('./scripts/messenger.js');
 
   function executeCompleteLogin(callback) {
     console.log('Facebook credentials');
@@ -19,7 +19,6 @@
 
   function verifyLogon(password, callback) {
     var crypt = Crypt.getInstance(password);
-
     crypt.load(function (err, data) {
 
       if (!err) {

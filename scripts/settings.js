@@ -2,10 +2,10 @@
 // All settings are used in memory and should be persisted to disk
 // with save function
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var instance;
+let instance;
 
 Settings = function() {
     instance = this;
@@ -15,6 +15,7 @@ Settings = function() {
         preventMessageFlicker: false,
         desktopNotifications: false,
         showTimestamps: false,
+        useCustomNicknames: true,
         timestampLocale: "en-US",
         timestampOptions: {},
         logonTimeout: 43200000 // 12hrs in ms
