@@ -5,3 +5,4 @@ phantomjs.exe
 .settings
 .test_*
 .idea/
+.sublime-project
