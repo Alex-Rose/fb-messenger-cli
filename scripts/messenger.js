@@ -55,9 +55,9 @@ Messenger.prototype.cleanGraphQl = function (body) {
 // Parses a list of conversation participants into users
 // Useful for adding users that are not "friends" to our database
 Messenger.prototype.parseParticipants = function (participants) {
-  for (var i=0; i < participants.length; i++) {
+  for (var i = 0; i < participants.length; i++) {
     // Add only the ones we don't already have
-    if(participants[i].is_friend != 'true') {
+    if (participants[i].is_friend != 'true') {
       var entry = {};
       var user = participants[i];
 
@@ -524,7 +524,7 @@ Messenger.prototype.getFriends = function(callback) {
     body = messenger.cleanJson(body);
     json = JSON.parse(body);
     users = json['payload'];
-
+    
     for (var id in users) {
       var entry = {};
       var user = users[id];
