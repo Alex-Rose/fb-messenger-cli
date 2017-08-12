@@ -301,6 +301,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
   let options = command.split(' ');
 
   switch (options[0]) {
+    case '/m':
     case '/menu':
       group = false;
     // Fallthrough
@@ -350,6 +351,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
         }
       }
       console.log('Invalid switch, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/v':
@@ -365,10 +367,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('Attachment now open in browser');
 	  } else 
 	    console.log('Couldn\'t open attachement in browser');
-          return;
+          rlInterface.prompt(true);
+          break;
         }
       }
       console.log('Invalid attachment number, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/logout':
@@ -394,11 +398,16 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/r /refresh ....... Refresh the current converation'.cyan);
       console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
       console.log('/help ............. Print this message'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/r':
     case '/refresh':
-      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      if (action == 1) {
+        interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      } else {
+        interactive.handleCommands("/back");
+      }
       break;
 
     case '/search':
@@ -415,15 +424,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
       Settings.getInstance().save();
       console.log('Changed the timestamp settings!'.cyan);
 
-      if (this.currentConversationId) {
-        interactive.initializeConversationViewFromFbid(this.currentConversationId);
-      } else {
-        interactive.handleCommands("/back");
-      }
+      interactive.handleCommands("/refresh");
       break;
 
     default:
       console.log('Unknown command. Type /help for commands.'.cyan);
+      rlInterface.prompt(true);
   }
 };
 
