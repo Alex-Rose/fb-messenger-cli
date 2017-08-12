@@ -1,5 +1,7 @@
 var util = require('./util.js');
 
+const message_limit = 255;
+
 Listeners = function() {};
 
 Listeners.prototype.setMessenger = function(messenger) {
@@ -15,6 +17,11 @@ Listeners.prototype.getMessagesListener = function(nb, searchId, callback) {
 
 function printThreadSnippet(thread, idx, isGroup) {
   var line = '[' + idx.toString().cyan + '] ' + thread.name.green + ' : ';
+  
+  if (thread.snippet.length > message_limit) {
+    thread.snippet = thread.snippet.substr(0, message_limit) + '...';
+  }
+
   if (thread.snippet !== '')
     line += thread.snippet + ' ';
 

@@ -69,17 +69,20 @@ function renderMessage(userId, author, message) {
   }
 
   if (Settings.getInstance().properties['showTimestamps']) {
+    
     var timeDifference = Date.now() - message.timestamp;
     var daysAgo = Math.ceil(timeDifference / msInADay);
+
     if (daysAgo <= 1) {
+      
       // Less than a day, show time
       var locale = Settings.getInstance().properties['timestampLocale'];
       var options = Settings.getInstance().properties['timestampOptions'];
       var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    
     } else if (daysAgo == 2) {
         var dateString = "Yesterday";
-    }
-    else {
+    } else {
       var dateString = daysAgo + " days ago";
     }
 
