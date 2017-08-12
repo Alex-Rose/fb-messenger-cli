@@ -495,7 +495,6 @@ Messenger.prototype.getFriends = function(callback) {
     body = messenger.cleanJson(body);
     json = JSON.parse(body);
     users = json['payload'];
-<<<<<<< HEAD
     for (const id in users) {
       const friend = users[id];
       messenger.saveFriend({
@@ -504,19 +503,6 @@ Messenger.prototype.getFriends = function(callback) {
         name: friend['name'],
         vanity: friend['vanity']
       });
-=======
-    
-    for (var id in users) {
-      var entry = {};
-      var user = users[id];
-
-      entry['id'] = id;
-      entry['firstName'] = user['firstName'];
-      entry['name'] = user['name'];
-      entry['vanity'] = user['vanity'];
-
-      messenger.users[id] = entry;
->>>>>>> FernandoSMonter-master
     }
     callback(messenger.users);
   });
