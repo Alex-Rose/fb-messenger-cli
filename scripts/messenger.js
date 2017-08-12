@@ -6,8 +6,9 @@
 // Login calls are executed differently (see login.js and phantom.js)
 // Comet style calls (receive live data) are handled in pull.js
 
-var request = require('request'); // For making HTTP requests
-var vm = require('vm');
+const request = require('request'); // For making HTTP requests
+const vm = require('vm');
+const Settings = require('./settings');
 
 function getThreadName(thread, participant) {
   if (!Settings.getInstance().properties['useCustomNicknames']) {
@@ -66,7 +67,7 @@ Messenger.prototype.cleanGraphQl = function (body) {
 Messenger.prototype.saveParticipantsAsFriends = function (participants) {
   for (var i=0; i < participants.length; i++) {
     // Add only the ones we don't already have
-    if(participants[i].is_friend != 'true') {
+    if(participants[i].is_friend !== 'true') {
       const user = participants[i];
       messenger.saveFriend({
         id: user.fbid,
@@ -429,13 +430,15 @@ Messenger.prototype.parseGroupThreadData = function(threads = [], participants =
 };
 
 Messenger.prototype.getThreads = function(isGroup = false, callback) {
+  let convoCount = Settings.getInstance().properties['conversationsToLoad'];
+
   const options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
     headers: this.headers,
     formData: {
       'inbox[offset]': '0',
       'inbox[filter]' : '',
-      'inbox[limit]' : 15,
+      'inbox[limit]' : convoCount,
       'client':'mercury',
       '__user':this.userId,
       '__a':'1',

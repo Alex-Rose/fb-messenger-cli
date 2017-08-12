@@ -18,7 +18,8 @@ Settings = function() {
       showTimestamps: false,
       useCustomNicknames: true,
       timestampLocale: "en-US",
-      timestampOptions: {}
+      timestampOptions: {},
+      logonTimeout: 43200000 // 12hrs in ms
     };
 };
 
@@ -54,8 +55,9 @@ Settings.prototype.load = function(callback){
                 settings.properties = JSON.parse(data.toString());
             } catch (except) {
                 err = except;
-            }
-        } else {
+          }
+        }
+        if (err) {
             console.log('Warning : settings not found, lets try to create default'.yellow);
             try {
                 settings.save();
@@ -73,6 +75,17 @@ Settings.prototype.flush = function() {
   var settings = this;
   fs.unlink(settings.filename);
   settings.properties = {};
+};
+
+Settings.prototype.getLogonTimeout = function () {
+  var settings = this;
+
+  if (settings.properties.logonTimeout === undefined) {
+    settings.properties.logonTimeout = 43200000; // 12hrs in ms
+    settings.save();
+  }
+
+  return settings.properties.logonTimeout;
 };
 
 module.exports = Settings;

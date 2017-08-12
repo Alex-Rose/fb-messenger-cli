@@ -222,7 +222,20 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     }
   }
 
-  if (author === undefined || message.otherUserId != recipientId || action === 0) {
+  if (action === 0) {
+    let listener;
+    if (group) {
+      listener = 'getGroupConvos';
+    } else {
+      listener = 'getConvos';
+    }
+    emitter.emit(listener, current_userId, heading.getData(), function (data) {
+      action = data.action;
+      currentThreadCount = data.threadCount;
+      rlInterface.prompt(true);
+    });
+    return;
+  } else if (author === undefined || message.otherUserId != recipientId) {
     // Extra check for groups
     if (message.threadId != recipientId) {
       // Don't warn for current user messages (from another device)
@@ -306,6 +319,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       });
       break;
 
+    case '/g':
     case '/group':
     case '/groups':
       console.log('Showing you group conversations...'.cyan);
@@ -335,6 +349,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('Invalid switch, please try again'.cyan);
       break;
 
+    case '/v':
     case '/view':
       let att = options[1];
 
@@ -363,18 +378,22 @@ InteractiveCli.prototype.handleCommands = function(command) {
       interactive.exit();
       break;
 
+    case '/h':
+    case '/?':
     case '/help':
-      console.log('/back or /menu .... Get back to conversation selection'.cyan);
-      console.log('/exit or /quit .... Quit the application'.cyan);
+      console.log('/b /back /menu .... Get back to conversation selection'.cyan);
+      console.log('/q /exit /quit .... Quit the application'.cyan);
       console.log('/logout ........... Exit and flush credentials'.cyan);
-      console.log('/groups ........... Bring up your goup conversations'.cyan);
-      console.log('/s[witch] # ....... Quick switch to conversation number #'.cyan);
+      console.log('/g /groups ........ Bring up your goup conversations'.cyan);
+      console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
       console.log('/search [query] ... Search your friends to chat'.cyan);
-      console.log('/view # ........... View the attachment by the number given after the type'.cyan);
+      console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
+      console.log('/r /refresh ....... Refresh the current converation'.cyan);
       console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
       console.log('/help ............. Print this message'.cyan);
       break;
 
+    case '/r':
     case '/refresh':
       interactive.initializeConversationViewFromFbid(this.currentConversationId);
       break;

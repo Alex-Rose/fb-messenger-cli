@@ -39,7 +39,7 @@ Heading.prototype.writeHeader = function (convoId) {
     entry += '[' + i + '] ' + this.data[i].name + (this.data[i].unread > 0 ? '*' : '');
     if (head.length + entry.length < columns) {
       if (this.data[i].unread > 0) {
-        head += entry.bold;
+        head += entry.bold + ''.reset;
       } else {
         head += entry;
       }

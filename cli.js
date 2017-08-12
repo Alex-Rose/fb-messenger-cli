@@ -15,24 +15,23 @@
   function verifyLogon(password, callback) {
     const crypt = Crypt.getInstance(password);
 
-    crypt.load(function(err, data) {
+    crypt.load(function (err, data) {
 
-      const logonTimeout = 43200000; // 12hrs in ms
+      if (!err) {
+        Settings.getInstance().load((err, settings) => {
+          const loginInfo = JSON.parse(data);
+          let curTime = new Date().getTime();
+          console.log('Last logon time: ' + new Date(loginInfo.saveTime));
 
-      if(!err) {
-        const json = JSON.parse(data);
-        let lastSave = json.saveTime;
-        let curTime = new Date().getTime();
-        console.log('Last logon time: ' + new Date(lastSave));
-
-        // If we've been logged on for too long
-        // Do an other login to refresh the cookie
-        if(lastSave + logonTimeout < curTime){
-          console.log('Your logged in time has expired'.yellow);
-          callback(true);
-        } else {
-          require('./scripts/interactive.js');
-        }
+          // If we've been logged on for too long
+          // Do an other login to refresh the cookie
+          if (loginInfo.saveTime + settings.logonTimeout < curTime) {
+            console.log('Your logged in time has expired'.yellow);
+            callback(true);
+          } else {
+            require('./scripts/interactive');
+          }
+        });
       } else {
         callback(err);
       }
@@ -43,9 +42,9 @@
     if (err) {
       executeCompleteLogin(launchApp);
     } else {
-      var settings = Settings.getInstance();
+      const settings = Settings.getInstance();
       settings.load(function(err, data) {
-        var delay = 0;
+        let delay = 0;
         if (!err && data !== undefined) {
           if (data.disableColors) {
             colors.enabled = false;
