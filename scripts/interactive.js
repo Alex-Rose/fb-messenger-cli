@@ -384,7 +384,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/b /back /menu .... Get back to conversation selection'.cyan);
       console.log('/q /exit /quit .... Quit the application'.cyan);
       console.log('/logout ........... Exit and flush credentials'.cyan);
-      console.log('/g /groups ........ Bring up your goup conversations'.cyan);
+      console.log('/g /groups ........ Bring up your group conversations'.cyan);
       console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
       console.log('/search [query] ... Search your friends to chat'.cyan);
       console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
