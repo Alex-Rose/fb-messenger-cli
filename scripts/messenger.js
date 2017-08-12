@@ -6,8 +6,18 @@
 // Login calls are executed differently (see login.js and phantom.js)
 // Comet style calls (receive live data) are handled in pull.js
 
-var request = require('request'); // For making HTTP requests
-var vm = require('vm');
+const request = require('request'); // For making HTTP requests
+const vm = require('vm');
+const Settings = require('./settings');
+
+function getThreadName(thread, participant) {
+  if (!Settings.getInstance().properties['useCustomNicknames']) {
+    return participant.name;
+  }
+
+  const nicknames = thread['custom_nickname'];
+  return (nicknames && nicknames[participant['fbid']]) || participant.name;
+}
 
 var Messenger = function(cookie, userId, fbdtsg) {
   this.baseUrl = 'https://www.messenger.com';
@@ -54,19 +64,17 @@ Messenger.prototype.cleanGraphQl = function (body) {
 
 // Parses a list of conversation participants into users
 // Useful for adding users that are not "friends" to our database
-Messenger.prototype.parseParticipants = function (participants) {
-  for (var i=0; i < participants.length; i++) {
+Messenger.prototype.saveParticipantsAsFriends = function (participants) {
+  for (let i = 0; i < participants.length; i++) {
     // Add only the ones we don't already have
-    if(participants[i].is_friend != 'true') {
-      var entry = {};
-      var user = participants[i];
-
-      entry['id'] = user.fbid;
-      entry['firstName'] = user.short_name;
-      entry['name'] = user.name;
-      entry['vanity'] = user.vanity;
-
-      messenger.users[user.fbid] = entry;
+    if(participants[i].is_friend !== 'true') {
+      const user = participants[i];
+      messenger.saveFriend({
+        id: user.fbid,
+        firstName: user.short_name,
+        name: user.name,
+        vanity: user.vanity
+      });
     }
   }
 };
@@ -330,173 +338,136 @@ Messenger.prototype.getMessagesGraphQl = function(recipient, recipientId, count,
   });
 };
 
-Messenger.prototype.getThreads = function(callback) {
-  var messenger = this;
 
-  var options = {
-    url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
-    headers: messenger.headers,
-    formData: {
-      'inbox[offset]': '0',
-      'inbox[filter]' : '',
-      'inbox[limit]' : '10',
-      'client':'mercury',
-      '__user':messenger.userId,
-      '__a':'1',
-      '__req':'8',
-      '__be':'0',
-      '__pc':'EXP1:messengerdotcom_pkg',
-      'ttstamp':'2658170878850518911395104515865817183457873106120677266',
-      'fb_dtsg': messenger.fbdtsg,
-      '__rev':'2338802'
-    },
-    gzip: true,
-  };
+Messenger.prototype.parseRawBody = function(body) {
+  let messenger = this;
+  let cleanBody = messenger.cleanJson(body);
+  let json = JSON.parse(cleanBody);
+  if (json.error) {
+    if (json.errorSummary) {
+      throw new Error('Error happened getting resource. Inner message : ' + json.errorSummary);
+    } else {
+      throw new Error('An unknown error happened while getting resource');
+    }
+  }
+  return json;
+};
 
-  request.post(options, function(err, response, body){
-    var data;
+// Sets the custom nickname for the friend with the given facebook id
+Messenger.prototype.setCustomNickname = function(fbId, custom_nickname) {
+  this.saveFriend({ id: fbId, custom_nickname });
+};
 
-    if (!err) {
+// Updates the given friend with the new data in the provided object
+// friend (Object): {
+//   id: string [required]
+// }
+Messenger.prototype.saveFriend = function(friend) {
+  const user = this.users[friend.id] || {};
+  this.users[friend.id] = Object.assign(user, friend);
+};
 
-      body = messenger.cleanJson(body);
+Messenger.prototype.getThreadNameFromParticipants = function(thread, allParticipants) {
+  // Get name from convo participants
+  let groupParticipants = thread.participants.map( participant => {
+    return allParticipants.find(user => user['fbid'] === participant.substring('fbid:'.length));
+  });
 
-      var json;
-      try {
-        json = JSON.parse(body);
+  return `${groupParticipants[0].name}, ${groupParticipants[1].name}, ...`;
+};
 
-        if (json.error !== undefined) {
-          if (json.errorSummary !== undefined) {
-            err = new Error('Error happened getting resource. Inner message : ' + json.errorSummary);
-          } else {
-            err = new Error('An unknown error happened while getting resource');
-          }
-        } else {
-          participants = json['payload']['participants'];
-          threads = json['payload']['threads'];
+// Parses the thread data and returns a thread entry
+//
+// threads: Raw array of thread data incoming from the JSON payload
+// participans: Raw array of participants entry incoming from the JSON payload
+//
+// returns {
+//   name: <thread name>
+//   snippet: <thread message snippet>
+//   attachments: <snippet attachments>
+//   thread_fbid: id of the thread
+//   timestamp: timestamp of the thread's last message
+// }
+Messenger.prototype.parseThreadData = function(threads = [], participants = []) {
+  const privateThreads = threads.map(thread => ({
+    thread,
+    participant: participants.find(p => p['fbid'] === thread['other_user_fbid'])
+  })).filter( thread => {
+    // Where participant exists
+    return thread.participant;
+  });
 
-          data = [];
-
-          for (i = 0; i < participants.length; ++i) {
-            name = participants[i]['name'];
-
-            for (j = 0; j < threads.length; ++j) {
-              if (threads[j]['other_user_fbid'] == participants[i]['fbid']) {
-                data.push({
-                  'name': name,
-                  'snippet': threads[j]['snippet'],
-                  'attachments': threads[j]['snippet_attachments'],
-                  'thread_fbid': threads[j]['thread_fbid'],
-                  'timestamp': threads[j].last_message_timestamp
-                });
-                break;
-              }
-            }
-          }
-        }
-
-      } catch (except){
-        err = except;
-      } finally {
-        callback(err, data);
-      }
+  return privateThreads.map(({ thread, participant }) => {
+    const name = getThreadName(thread, participant);
+    this.setCustomNickname(participant['fbid'], name);
+    return {
+      name,
+      'snippet': thread['snippet'],
+      'attachments': thread['snippet_attachments'],
+      'thread_fbid': thread['thread_fbid'],
+      'timestamp': thread.last_message_timestamp
     }
   });
 };
 
-Messenger.prototype.getGroupThreads = function(callback) {
-  var messenger = this;
+Messenger.prototype.parseGroupThreadData = function(threads = [], participants = []) {
+  // Only get threads that don't have an "other user"
+  const groupThreads = threads.filter(thread => { return !thread.other_user_fbid });
+  return groupThreads.map(thread => {
+    let name;
+    if (thread.name) {
+      name = thread.name;
+    } else {
+      name = this.getThreadNameFromParticipants(thread, participants);
+    }
+    return {
+      name,
+      'snippet': thread.snippet,
+      'thread_fbid': thread.thread_fbid,
+      'timestamp': thread.last_message_timestamp
+    }
+  });
+};
 
-  var options = {
+Messenger.prototype.getThreads = function(isGroup = false, callback) {
+  let convoCount = Settings.getInstance().properties['conversationsToLoad'];
+
+  const options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
-    headers: messenger.headers,
+    headers: this.headers,
     formData: {
       'inbox[offset]': '0',
       'inbox[filter]' : '',
-      'inbox[limit]' : '25',
+      'inbox[limit]' : convoCount,
       'client':'mercury',
-      '__user':messenger.userId,
+      '__user':this.userId,
       '__a':'1',
       '__req':'8',
       '__be':'0',
       '__pc':'EXP1:messengerdotcom_pkg',
       'ttstamp':'2658170878850518911395104515865817183457873106120677266',
-      'fb_dtsg': messenger.fbdtsg,
+      'fb_dtsg': this.fbdtsg,
       '__rev':'2338802'
     },
     gzip: true,
   };
 
-  request.post(options, function(err, response, body){
-    var data;
+  request.post(options, (err, response, body) => {
+    if (err) callback(err);
+    try {
+      const json = this.parseRawBody(body);
+      const threads = json['payload']['threads'];
+      const participants = json['payload']['participants'];
+      this.saveParticipantsAsFriends(participants);
 
-    if (!err) {
-
-      body = messenger.cleanJson(body);
-
-      var json;
-      try {
-        json = JSON.parse(body);
-
-        if (json.error !== undefined) {
-          if (json.errorSummary !== undefined) {
-            err = new Error('Error happened getting resource. Inner message : ' + json.errorSummary);
-          } else {
-            err = new Error('An unknown error happened while getting resource');
-          }
-        } else {
-          participants = json['payload']['participants'];
-          threads = json['payload']['threads'];
-
-          messenger.parseParticipants(participants);
-
-          var groupThreads = [];
-          for (var k=0; k < threads.length; k++) {
-            if (threads[k].other_user_fbid === null){
-              groupThreads.push(threads[k]);
-            }
-          }
-
-          data = [];
-
-          for (var l=0; l < groupThreads.length; l++) {
-            if (groupThreads[l].name !== ''){
-              data.push({'name': groupThreads[l].name, 'snippet': groupThreads[l].snippet, 'thread_fbid': groupThreads[l].thread_fbid});
-
-            } else {
-              // Get name from convo participants
-              var count = 0;
-              var name = '';
-              for (var m=0; m < groupThreads[l].participants.length; m++) {
-                var gParticipants = groupThreads[l].participants;
-                for (var n=0; n < participants.length; n++) {
-                  if (gParticipants[m].substring('fbid:'.length) == participants[n].fbid) {
-                    // Only show name of first 2 participants
-                    if (count < 2) {
-                      name += participants[n].name + ', ';
-                    }
-                    count++;
-                    }
-                    if (count > 3 ) { break; }
-                }
-              }
-              name = name.slice(0, -2).trim();
-              // You are included in participants
-              if ( count > 3) { name += ' + others...'; }
-              data.push({
-                'name': name,
-                'snippet': groupThreads[l].snippet,
-                'thread_fbid': groupThreads[l].thread_fbid,
-                'timestamp': groupThreads[l].last_message_timestamp
-              });
-            }
-          }
-        }
-
-      } catch (except){
-        err = except;
-      } finally {
-        callback(err, data);
+      if (isGroup) {
+        callback(null, this.parseGroupThreadData(threads, participants));
+      } else {
+        callback(null, this.parseThreadData(threads, participants));
       }
+
+    } catch (e) {
+      callback(e, null);
     }
   });
 };
@@ -520,21 +491,18 @@ Messenger.prototype.getFriends = function(callback) {
     gzip: true,
   };
 
-  request.post(options, function(err, response, body){
+  request.post(options, function(err, response, body) {
     body = messenger.cleanJson(body);
     json = JSON.parse(body);
     users = json['payload'];
-
-    for (var id in users) {
-      var entry = {};
-      var user = users[id];
-
-      entry['id'] = id;
-      entry['firstName'] = user['firstName'];
-      entry['name'] = user['name'];
-      entry['vanity'] = user['vanity'];
-
-      messenger.users[id] = entry;
+    for (const id in users) {
+      const friend = users[id];
+      messenger.saveFriend({
+        id,
+        firstName: friend['firstName'],
+        name: friend['name'],
+        vanity: friend['vanity']
+      });
     }
     callback(messenger.users);
   });

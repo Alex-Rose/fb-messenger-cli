@@ -51,27 +51,38 @@ function InteractiveCli(){
   this.currentConversationId = undefined;
 }
 
+function getDisplayName(author) {
+  if (!Settings.getInstance().properties['useCustomNicknames']) {
+    return author.name;
+  }
+
+  return author.custom_nickname || author.name;
+}
+
 function renderMessage(userId, author, message) {
   var msg;
-
+  const name = getDisplayName(author);
   if (author.id != messenger.userId) {
-    msg = `${author.name.green}: `;
+    msg = `${name.green}: `;
   } else {
-    msg = `${author.name}: `;
+    msg = `${name}: `;
   }
 
   if (Settings.getInstance().properties['showTimestamps']) {
+    
     var timeDifference = Date.now() - message.timestamp;
     var daysAgo = Math.ceil(timeDifference / msInADay);
+
     if (daysAgo <= 1) {
+      
       // Less than a day, show time
       var locale = Settings.getInstance().properties['timestampLocale'];
       var options = Settings.getInstance().properties['timestampOptions'];
       var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
+    
     } else if (daysAgo == 2) {
         var dateString = "Yesterday";
-    }
-    else {
+    } else {
       var dateString = daysAgo + " days ago";
     }
 
@@ -204,7 +215,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     try {
       if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
         notifier.notify({
-          title: author.name,
+          title: getDisplayName(author),
           message: message.body,
           icon: path.join(__dirname, '../resources/logo.png')
         });
@@ -290,6 +301,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
   let options = command.split(' ');
 
   switch (options[0]) {
+    case '/m':
     case '/menu':
       group = false;
     // Fallthrough
@@ -339,6 +351,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
         }
       }
       console.log('Invalid switch, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/v':
@@ -354,10 +367,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('Attachment now open in browser');
 	  } else 
 	    console.log('Couldn\'t open attachement in browser');
-          return;
+          rlInterface.prompt(true);
+          break;
         }
       }
       console.log('Invalid attachment number, please try again'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/logout':
@@ -376,18 +391,23 @@ InteractiveCli.prototype.handleCommands = function(command) {
       console.log('/b /back /menu .... Get back to conversation selection'.cyan);
       console.log('/q /exit /quit .... Quit the application'.cyan);
       console.log('/logout ........... Exit and flush credentials'.cyan);
-      console.log('/g /groups ........ Bring up your goup conversations'.cyan);
+      console.log('/g /groups ........ Bring up your group conversations'.cyan);
       console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
       console.log('/search [query] ... Search your friends to chat'.cyan);
       console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
       console.log('/r /refresh ....... Refresh the current converation'.cyan);
       console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
       console.log('/help ............. Print this message'.cyan);
+      rlInterface.prompt(true);
       break;
 
     case '/r':
     case '/refresh':
-      interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      if (action == 1) {
+        interactive.initializeConversationViewFromFbid(this.currentConversationId);
+      } else {
+        interactive.handleCommands("/back");
+      }
       break;
 
     case '/search':
@@ -404,15 +424,12 @@ InteractiveCli.prototype.handleCommands = function(command) {
       Settings.getInstance().save();
       console.log('Changed the timestamp settings!'.cyan);
 
-      if (this.currentConversationId) {
-        interactive.initializeConversationViewFromFbid(this.currentConversationId);
-      } else {
-        interactive.handleCommands("/back");
-      }
+      interactive.handleCommands("/refresh");
       break;
 
     default:
       console.log('Unknown command. Type /help for commands.'.cyan);
+      rlInterface.prompt(true);
   }
 };
 
@@ -469,14 +486,15 @@ InteractiveCli.prototype.run = function(){
 
       // Globals
       messenger = new Messenger(cookie, userId, fbdtsg);
+      listeners.setMessenger(messenger);
       search = new Search(messenger);
 
       // register our listeners
-      emitter.on('getConvos', listeners.getConversationsListener);
-      emitter.on('getGroupConvos', listeners.getGroupConversationsListener);
-      emitter.on('sendMessage', listeners.sendMessageListener);
-      emitter.on('getMessages', listeners.getMessagesListener);
-      emitter.on('startSearch', listeners.searchListener);
+      emitter.on('getConvos', listeners.getConversationsListener.bind(listeners));
+      emitter.on('getGroupConvos', listeners.getGroupConversationsListener.bind(listeners));
+      emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
+      emitter.on('getMessages', listeners.getMessagesListener.bind(listeners));
+      emitter.on('startSearch', listeners.searchListener.bind(listeners));
 
       messenger.getFriends(function(friends) {
         var entry = {};

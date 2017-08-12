@@ -1,50 +1,35 @@
 #!/usr/bin/env node
 
 (function () {
-  var Login = require('./scripts/login.js');
-  var Crypt = require('./scripts/crypt.js');
-  var Messenger = require('./scripts/messenger.js');
-  var Settings = require('./scripts/settings.js');
-  var colors = require('colors');
+  const Login = require('./scripts/login.js');
+  const Crypt = require('./scripts/crypt.js');
+  const Settings = require('./scripts/settings.js');
+  const colors = require('colors');
 
   function executeCompleteLogin(callback) {
     console.log('Facebook credentials');
-    var login = new Login();
-    login.execute(function (err, creds) {
-      var crypt = Crypt.getInstance();
-      // Return callback with no error
-      callback(err);
-    });
+    const login = new Login();
+    login.execute(callback);
   }
 
   function verifyLogon(password, callback) {
-    var crypt = Crypt.getInstance(password);
+    const crypt = Crypt.getInstance(password);
 
     crypt.load(function (err, data) {
 
       if (!err) {
-        Settings.getInstance().load(function (err, settings) {
-          var logonTimeout = Settings.getInstance().getLogonTimeout();
-
-          json = JSON.parse(data);
-          var cookie = json.cookie;
-          var fbdtsg = json.fb_dtsg;
-          var userId = json.c_user;
-          var lastSave = json.saveTime;
-          var curTime = new Date().getTime();
-          console.log('Last logon time: ' + new Date(lastSave));
+        Settings.getInstance().load((err, settings) => {
+          const loginInfo = JSON.parse(data);
+          let curTime = new Date().getTime();
+          console.log('Last logon time: ' + new Date(loginInfo.saveTime));
 
           // If we've been logged on for too long
           // Do an other login to refresh the cookie
-          if (lastSave + logonTimeout < curTime) {
+          if (loginInfo.saveTime + settings.logonTimeout < curTime) {
             console.log('Your logged in time has expired'.yellow);
             callback(true);
           } else {
-            var messenger = new Messenger(cookie, userId, fbdtsg);
-
-            messenger.getThreads(function (err, threads) {
-              callback(err);
-            });
+            require('./scripts/interactive');
           }
         });
       } else {
@@ -57,9 +42,9 @@
     if (err) {
       executeCompleteLogin(launchApp);
     } else {
-      var settings = Settings.getInstance();
+      const settings = Settings.getInstance();
       settings.load(function(err, data) {
-        var delay = 0;
+        let delay = 0;
         if (!err && data !== undefined) {
           if (data.disableColors) {
             colors.enabled = false;
