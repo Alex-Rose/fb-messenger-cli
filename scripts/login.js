@@ -1,18 +1,13 @@
 var Crypt = require('./crypt.js');
-var readlineSync = require('readline-sync');
 var phantomjs = require('phantomjs-prebuilt');
 var path = require('path');
 var phantom;
+var prompt = require('prompt');
+
 
 Login = function() { };
 
-Login.prototype.execute = function(callback) {
-  var login = this;
-  var result = {};
-
-  result.email = readlineSync.question('Email: ');
-  result.password = readlineSync.question('Password: ', {hideEchoBack: true});
-
+function attemptLogin(result, login, callback) {
   console.log("Attempting login...");
 
   var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
@@ -40,6 +35,38 @@ Login.prototype.execute = function(callback) {
     } else {
       console.log('Bad Facebook Login');
       callback(true, null);
+    }
+  });
+}
+
+Login.prototype.execute = function(callback) {
+  var login = this;
+ 
+  //schema for prompt
+  var schema = {
+    properties: {
+      email: {
+        required: true
+      },
+      password: {
+        hidden: true,
+        replace: '*',
+        required: true
+      }
+    }
+  };
+
+  prompt.message = ""
+  prompt.delimiter = ""
+
+  prompt.start();
+ 
+  prompt.get(schema, function (err, result) {
+    if (!err) {
+      attemptLogin(result, login, callback)
+    }
+    else{
+      console.log(err)
     }
   });
 };
