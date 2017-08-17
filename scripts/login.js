@@ -42,13 +42,15 @@ function attemptLogin(result, login, callback) {
 Login.prototype.execute = function(callback) {
   var login = this;
  
-  //schema for prompt
+  //settings for the prompt
   var schema = {
     properties: {
       email: {
+        description: 'Email',
         required: true
       },
       password: {
+        description: 'Password',
         hidden: true,
         replace: '*',
         required: true
@@ -56,9 +58,8 @@ Login.prototype.execute = function(callback) {
     }
   };
 
-  prompt.message = ""
-  prompt.delimiter = ""
-
+  prompt.message = "" //prevents Prompt: <description>
+  prompt.colors = false
   prompt.start();
  
   prompt.get(schema, function (err, result) {
@@ -66,6 +67,7 @@ Login.prototype.execute = function(callback) {
       attemptLogin(result, login, callback)
     }
     else{
+      //Todo: check that owner is okay with this error logging
       console.log(err)
     }
   });
