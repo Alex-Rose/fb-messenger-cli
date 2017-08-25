@@ -24,5 +24,8 @@
   },
   "bin": {
     "fb-messenger-cli": "cli.js"
+  },
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha scripts/test/*"
   }
 }

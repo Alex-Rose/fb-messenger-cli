@@ -44,6 +44,11 @@ describe('Crypt', function() {
   });
 });
 
+// Constants for testing
+const testUser = 'ar.alexandre.rose';
+const testUserId = '731419306';
+const testMessage = 'Running tests - Send message'
+
 describe('Messenger', function() {
   var json;
   var messenger;
@@ -73,17 +78,32 @@ describe('Messenger', function() {
     // Allow more time for network calls
     this.timeout(5000);
 
-    messenger.sendMessage('ar.alexandre.rose', '731419306', 'Running tests - Send message', done);
+    messenger.sendMessage(testUser, testUserId, testMessage, done);
   });
 
-  it('GetLastMessage', function(done) {
+  it('Get last 10 messages', function(done) {
     // Allow more time for network calls
-    this.timeout(5000);
+    this.timeout(20000);
 
-    messenger.getMessages('ar.alexandre.rose', '731419306', 10, function(err, messages) {
-      expect(messages.length).is.equal(10);
-      done();
-    });
+    function finished() {
+      messenger.getMessages(testUser, testUserId, 10, function(err, messages) {
+        expect(messages.length).is.equal(10);
+        done();
+      });
+    }
+
+    // Ensure that there are at least 10 messages in the conversation
+    function sender(i) {
+      if(i < 11) {
+        messenger.sendMessage(testUser, testUserId, testMessage, function(err) {
+          expect(err).to.not.be.ok;
+          sender(i+1);
+        });
+      } else {
+        finished();
+      }
+    }
+    sender(0);
   });
 
   it('Get threads', function(done) {

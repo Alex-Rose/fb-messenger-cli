@@ -29,9 +29,8 @@ Then ``fb-messenger-cli`` from anywhere
 4. Develop away
 
 ### Running tests
-1. ``cd`` into the test directory
-2. Mocha should be installed with the dev dependencies
-3. Run ``mocha regression.js``**
+1. Mocha should be installed with the dev dependencies
+2. Run ``npm run test`` **
 
 ** Make sure you've logged in to the cli at least once before running the tests. Regression.js uses your log-in to test the sending and receiving features
 
