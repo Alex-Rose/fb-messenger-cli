@@ -236,6 +236,9 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
   options.formData[limitString] = count;
 
   request.post(options, function(err, response, body){
+        if(!body) {
+          callback(err, []);
+        }
         body = messenger.cleanJson(body);
         let json = JSON.parse(body);
         let payload = json['payload'];
