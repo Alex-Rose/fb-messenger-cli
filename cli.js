@@ -2,7 +2,7 @@
 
 (function () {
   const Login = require('./scripts/login.js');
-  const Crypt = require('./scripts/crypt.js');
+  const crypt = require('./scripts/crypt.js');
   const Settings = require('./scripts/settings.js');
   const colors = require('colors');
 
@@ -12,41 +12,44 @@
     login.execute(callback);
   }
 
-  function verifyLogon(password, callback) {
-    const crypt = Crypt.getInstance(password);
-
-    crypt.load(function (err, data) {
-
+  function verifyLogon(callback) {
+    crypt.load((err, data) => {
       if (!err) {
-        Settings.getInstance().load((err, settings) => {
-          const loginInfo = JSON.parse(data);
-          let curTime = new Date().getTime();
-          console.log('Last logon time: ' + new Date(loginInfo.saveTime));
+        Settings.load((loadErr) => {
+          if (!loadErr) {
+            let loginInfo;
+            try {
+              loginInfo = JSON.parse(data);
+            } catch(cryptErr) {
+              return callback(cryptErr);
+            }
 
-          // If we've been logged on for too long
-          // Do an other login to refresh the cookie
-          if (loginInfo.saveTime + settings.logonTimeout < curTime) {
-            console.log('Your logged in time has expired'.yellow);
-            callback(true);
-          } else {
-            require('./scripts/interactive');
-          }
+            let curTime = new Date().getTime();
+            console.log('Last logon time: ' + new Date(loginInfo.saveTime));
+
+            // If we've been logged on for too long
+            // Do an other login to refresh the cookie
+            if (loginInfo.saveTime + Settings.getLogonTimeout() < curTime) {
+              return callback(new Error('Login time expired'));
+            } else
+              return callback();
+          } else
+            return callback(loadErr);
         });
-      } else {
-        callback(err);
-      }
+      } else
+        return callback(err);
     });
   }
 
   function launchApp(err) {
     if (err) {
+      console.log(`Login verification failed: ${err}`.yellow);
       executeCompleteLogin(launchApp);
     } else {
-      const settings = Settings.getInstance();
-      settings.load(function(err, data) {
+      Settings.load((err) => {
         let delay = 0;
-        if (!err && data !== undefined) {
-          if (data.disableColors) {
+        if (!err) {
+          if (Settings.properties.disableColors) {
             colors.enabled = false;
           }
         } else {
@@ -79,9 +82,9 @@
   // First check if current cookie is still valid
   try {
     initSignalListeners();
-    verifyLogon('pass', launchApp);
+    verifyLogon(launchApp);
   } catch (err) {
-    console.log('You need to logon');
+    console.log('You need to login');
     executeCompleteLogin(launchApp);
   }
 }());

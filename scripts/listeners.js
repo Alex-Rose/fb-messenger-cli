@@ -1,4 +1,4 @@
-var util = require('./util.js');
+const { refreshConsole } = require('./util.js');
 
 const messageLimit = 75;
 
@@ -42,7 +42,7 @@ Listeners.prototype.conversationsListener = function(userId, heading, callback, 
       return;
     }
 
-    util.refreshConsole();
+    refreshConsole();
     this.options = {};
 
     threads.sort((a, b) => b.timestamp - a.timestamp);

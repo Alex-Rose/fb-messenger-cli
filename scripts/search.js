@@ -1,5 +1,5 @@
-var util = require('./util.js');
-var colors = require('colors');
+const { refreshConsole } = require('./util.js');
+const colors = require('colors');
 
 var Search = function(messenger){
   this.messenger = messenger;
@@ -10,7 +10,7 @@ var Search = function(messenger){
 Search.prototype.run = function(searchString) {
   var search = this;
   search.parseFriendsList(searchString, function() {
-    util.refreshConsole();
+    refreshConsole();
     search.printChoices();
   });
 };

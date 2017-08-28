@@ -4,12 +4,11 @@
   "description": "An interface for facebook communications through the cli",
   "author": "Alexandre Rose and Samuel Bergeron",
   "license": "MIT",
+  "repository": "http://github.com/Alex-Rose/fb-messenger-cli",
   "dependencies": {
     "cheerio": "^0.20.0",
     "colors": "^1.1.2",
-    "crypto": "0.0.3",
     "events": "^1.1.0",
-    "fs": "0.0.2",
     "node-notifier": "^5.1.2",
     "open": "0.0.5",
     "phantomjs-prebuilt": "^2.1.7",

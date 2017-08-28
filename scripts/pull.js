@@ -1,5 +1,5 @@
 var request = require('request');
-var Crypt = require('./crypt.js');
+const crypt = require('./crypt.js');
 var stream = require('stream');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
@@ -20,9 +20,8 @@ util.inherits(Pull, EventEmitter);
 
 Pull.prototype.execute = function() {
   var pull = this;
-  var crypt = Crypt.getInstance();
 
-  crypt.load(function(err, data) {
+  crypt.load((err, data) => {
     if(!err) {
       json = JSON.parse(data);
       pull.cookie = json.cookie;
@@ -31,10 +30,6 @@ Pull.prototype.execute = function() {
 
       pull.sendRequest();
     }
-
-      // function(err, response, body){
-        // console.log(body);
-      // });
   });
 
 };

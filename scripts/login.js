@@ -1,4 +1,4 @@
-var Crypt = require('./crypt.js');
+const crypt = require('./crypt.js');
 var readlineSync = require('readline-sync');
 var phantomjs = require('phantomjs-prebuilt');
 var path = require('path');
@@ -17,29 +17,36 @@ Login.prototype.execute = function(callback) {
 
   var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
 
-  phantom = new login.run_cmd( phantomjs.path, arguments, function () {
+  phantom = new login.run_cmd( phantomjs.path, arguments, () => {
     if(phantom.data){
-      // Save data in the vault
-      crypt = new Crypt(result.password);
-
-      // Add save time to the data
+      let objData;
       try {
-        var objData = JSON.parse(phantom.data);
+        objData = JSON.parse(phantom.data);
       } catch (err) {
         console.log('Warning: Errors caught in return data'.yellow);
         if (phantom.data.indexOf('{') !== -1) {
           let trimmed = phantom.data.substring(phantom.data.indexOf('{'));
-          objData = JSON.parse(trimmed);
+          try {
+            objData = JSON.parse(trimmed);
+          } catch (err2) {
+            return callback(err2);
+          }
+        } else {
+          return callback(new Error('Invalid phantomJS data'));
         }
       }
 
+      // Add save time to data
       objData.saveTime = new Date().getTime();
+
+      // Save user data to file for next login
       crypt.save(JSON.stringify(objData));
 
-      callback(false, result);
+      return callback();
+
     } else {
       console.log('Bad Facebook Login');
-      callback(true, null);
+      return callback(new Error('Bad Facebook Login'));
     }
   });
 };

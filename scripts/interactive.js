@@ -1,6 +1,6 @@
-const Crypt = require('./crypt.js');
+const crypt = require('./crypt.js');
 const Messenger = require('./messenger.js');
-const util = require('./util.js');
+const { refreshConsole } = require('./util.js');
 const Pull = require('./pull.js');
 const Search = require('./search.js');
 const Listeners = require('./listeners.js');
@@ -10,13 +10,9 @@ const open = require('open');
 
 const colors = require('colors');
 const events = require('events');
-const crypt = new Crypt('password');
 const path = require('path');
 const notifier = require('node-notifier');
 const readline = require('readline');
-
-const stdin = process.openStdin();
-const stdout = process.stdout;
 
 // 0 is select conversation, 1 is send message
 var action = 0;
@@ -52,38 +48,38 @@ function InteractiveCli(){
 }
 
 function getDisplayName(author) {
-  if (!Settings.getInstance().properties['useCustomNicknames']) {
+  if (!Settings.properties.useCustomNicknames) {
     return author.name;
   }
 
   return author.custom_nickname || author.name;
 }
 
-function renderMessage(userId, author, message) {
-  var msg;
+function renderMessage(author, message) {
+  let msg;
   const name = getDisplayName(author);
-  if (author.id != messenger.userId) {
+  if (author.id !== messenger.userId) {
     msg = `${name.green}: `;
   } else {
     msg = `${name}: `;
   }
 
-  if (Settings.getInstance().properties['showTimestamps']) {
+  if (Settings.properties.showTimestamps) {
     
     var timeDifference = Date.now() - message.timestamp;
     var daysAgo = Math.ceil(timeDifference / msInADay);
 
     if (daysAgo <= 1) {
-      
+
       // Less than a day, show time
-      var locale = Settings.getInstance().properties['timestampLocale'];
-      var options = Settings.getInstance().properties['timestampOptions'];
+      var locale = Settings.properties.timestampLocale;
+      var options = Settings.properties.timestampOptions;
       var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
-    
-    } else if (daysAgo == 2) {
-        var dateString = "Yesterday";
+
+    } else if (daysAgo === 2) {
+      dateString = "Yesterday";
     } else {
-      var dateString = daysAgo + " days ago";
+      dateString = daysAgo + " days ago";
     }
 
     msg = `${dateString} - ${msg}`
@@ -96,11 +92,11 @@ function renderMessage(userId, author, message) {
     for (var i = 0; i < message.attachmentsLegacy.length; i++) {
       var a = message.attachmentsLegacy[i];
       var attType;
-      if (a.attach_type == 'sticker' || a.attach_type == 'video') {
+      if (a.attach_type === 'sticker' || a.attach_type === 'video') {
         atts[attsNo] = a.url;
         attType = a.attach_type;
       }
-      else if (a.attach_type == 'share') {
+      else if (a.attach_type === 'share') {
         if (a.share.target && a.share.target.live_location_id) {
           if (a.share.target.is_expired) {
             msg += 'shared a live location (ended)';
@@ -114,15 +110,15 @@ function renderMessage(userId, author, message) {
         attType = a.attach_type;
         }
       }
-      else if (a.attach_type == 'photo') {
+      else if (a.attach_type === 'photo') {
         atts[attsNo] = a.large_preview_url;
         attType = a.attach_type;
       }
-      else if (a.attach_type == 'animated_image') {
+      else if (a.attach_type === 'animated_image') {
         atts[attsNo] = a.preview_url;
         attType = 'gif'
       }
-      else if (a.attach_type == 'file') {
+      else if (a.attach_type === 'file') {
         atts[attsNo] = a.url;
         if (a.name.startsWith("audioclip")) {
           attType = 'audio clip'
@@ -155,7 +151,7 @@ function renderMessage(userId, author, message) {
     attsNo++;
   }
 
-  if (message.action_type == 'ma-type:log-message') {
+  if (message.action_type === 'ma-type:log-message') {
     if (message.log_message_body !== undefined) {
       msg += message.log_message_body;
     }
@@ -177,7 +173,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   let printMessages = messages => {
     recipientId = id;
     interactive.threadHistory = [];
-    util.overwriteConsole();
+    refreshConsole();
     attsNo = 0;
     atts = [];
     for (var i in messages) {
@@ -188,7 +184,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
         authorString = authorString.substr('fbid:'.length);
 
       var author = messenger.users[authorString];
-      var msg = renderMessage(messenger.userId, author, message);
+      var msg = renderMessage(author, message);
 
       interactive.threadHistory.push(msg);
     }
@@ -211,9 +207,9 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
 InteractiveCli.prototype.readPullMessage = function(message) {
   var author = messenger.users[message.author];
 
-  if (Settings.getInstance().properties['desktopNotifications']) {
+  if (Settings.properties.desktopNotifications) {
     try {
-      if (author !== undefined && author.id != messenger.userId && message.threadId != recipientId) {
+      if (author !== undefined && author.id !== messenger.userId && message.threadId !== recipientId) {
         notifier.notify({
           title: getDisplayName(author),
           message: message.body,
@@ -238,22 +234,22 @@ InteractiveCli.prototype.readPullMessage = function(message) {
       rlInterface.prompt(true);
     });
     return;
-  } else if (author === undefined || message.otherUserId != recipientId) {
+  } else if (author === undefined || message.otherUserId !== recipientId) {
     // Extra check for groups
-    if (message.threadId != recipientId) {
+    if (message.threadId !== recipientId) {
       // Don't warn for current user messages (from another device)
-      if (author.id != messenger.userId) {
+      if (author.id !== messenger.userId) {
         var headingData = heading.getData();
         for (var i in headingData) {
           // Doesn't work when it's a group
-          if (headingData[i].fbid == message.otherUserId || headingData[i].fbid == message.threadId) {
+          if (headingData[i].fbid === message.otherUserId || headingData[i].fbid === message.threadId) {
             headingData[i].unread++;
           }
         }
         // Moved this out of the for, in case we get a message from someone
         // not in the heading, we still need to refresh
         // ...but don't refresh if in the menu
-        if (recipientId != '') {
+        if (recipientId !== '') {
           interactive.printThread();
         }
       }
@@ -261,14 +257,14 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     }
   }
 
-  var msg = renderMessage(messenger.userId, author, message);
+  var msg = renderMessage(author, message);
 
   interactive.threadHistory.push(msg);
   interactive.printThread();
 };
 
 InteractiveCli.prototype.printThread = function(){
-  util.overwriteConsole();
+  refreshConsole();
   var w = process.stdout.columns - 1;
   var lines = [];
 
@@ -287,7 +283,7 @@ InteractiveCli.prototype.printThread = function(){
   // just show most recent visible lines
   var linesToWrite = lines.slice(x);
 
-  if (Settings.getInstance().properties['preventMessageFlicker']) {
+  if (Settings.properties.preventMessageFlicker) {
     // erase content on the line from before
     linesToWrite = linesToWrite.map(ln => "\x1b[K" + ln)
   }
@@ -403,7 +399,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
     case '/r':
     case '/refresh':
-      if (action == 1) {
+      if (action === 1) {
         interactive.initializeConversationViewFromFbid(this.currentConversationId);
       } else {
         interactive.handleCommands("/back");
@@ -419,9 +415,8 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
     case '/timestamp':
     case '/timestamps':
-      var toggle = Settings.getInstance().properties['showTimestamps'];
-      Settings.getInstance().properties.showTimestamps = !toggle;
-      Settings.getInstance().save();
+      Settings.properties.showTimestamps = !Settings.properties.showTimestamps;
+      Settings.save();
       console.log('Changed the timestamp settings!'.cyan);
 
       interactive.handleCommands("/refresh");
@@ -476,7 +471,7 @@ InteractiveCli.prototype.handler = function(value) {
 };
 
 InteractiveCli.prototype.run = function(){
-    crypt.load(function(err, data) {
+    crypt.load((err, data) => {
       json = JSON.parse(data);
       var cookie = json.cookie;
       var fbdtsg = json.fb_dtsg;

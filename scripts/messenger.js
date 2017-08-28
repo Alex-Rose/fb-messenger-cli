@@ -7,11 +7,10 @@
 // Comet style calls (receive live data) are handled in pull.js
 
 const request = require('request'); // For making HTTP requests
-const vm = require('vm');
 const Settings = require('./settings');
 
 function getThreadName(thread, participant) {
-  if (!Settings.getInstance().properties['useCustomNicknames']) {
+  if (!Settings.properties.useCustomNicknames) {
     return participant.name;
   }
 
@@ -433,7 +432,7 @@ Messenger.prototype.parseGroupThreadData = function(threads = [], participants =
 };
 
 Messenger.prototype.getThreads = function(isGroup = false, callback) {
-  let convoCount = Settings.getInstance().properties['conversationsToLoad'];
+  let convoCount = Settings.properties.conversationsToLoad;
 
   const options = {
     url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
