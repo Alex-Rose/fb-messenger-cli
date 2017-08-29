@@ -3,7 +3,6 @@
   "version": "1.8.1",
   "description": "An interface for facebook communications through the cli",
   "author": "Alexandre Rose and Samuel Bergeron",
-  "repository": "http://github.com/Alex-Rose/fb-messenger-cli",
   "license": "MIT",
   "repository": "http://github.com/Alex-Rose/fb-messenger-cli",
   "dependencies": {
