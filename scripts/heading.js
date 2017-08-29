@@ -1,61 +1,56 @@
-Heading = function(){
-  this.data = {};
-};
-
-Heading.prototype.getData = function() {
-  return this.data;
-};
-
-Heading.prototype.clearUnread = function (id) {
-  for (var i in this.data) {
-    if (this.data[i].fbid == id) {
-      this.data[i].unread = 0;
-    }
+class Heading {
+  constructor() {
+    this.data = [];
   }
-};
 
-Heading.prototype.getFbid = function(nb) {
-  var item = this.data[nb];
-  if (item !== undefined)
-    return this.data[nb].fbid;
-  else return -1;
-};
-
-Heading.prototype.writeHeader = function (convoId) {
-  var head = '';
-  var roomLeft = true;
-  var first = true;
-  var columns = process.stdout.columns - 1;
-
-  for (var i in this.data) {
-    if (this.data[i].fbid == convoId) {
-      continue;
-    }
-
-    var entry = '';
-    if (!first) {
-      entry += ' - ';
-    }
-    entry += '[' + i + '] ' + this.data[i].name + (this.data[i].unread > 0 ? '*' : '');
-    if (head.length + entry.length < columns) {
-      if (this.data[i].unread > 0) {
-        head += entry.bold + ''.reset;
-      } else {
-        head += entry;
+  clearUnread(id) {
+    for (let entry of this.data) {
+      if (entry.fbid === id) {
+        entry.unread = 0;
       }
-    } else {
-      break;
+    }
+  }
+
+  getFbid(nb) {
+    if (this.data[nb])
+      return this.data[nb].fbid;
+    else return -1;
+  }
+
+  writeHeader(convoId) {
+    let head = '';
+    let first = true;
+    const columns = process.stdout.columns - 1;
+
+    this.data.forEach((entry, i) => {
+      if (entry.fbid === convoId) {
+        return;
+      }
+
+      let textEntry = '';
+      if (!first) {
+        textEntry += ' - ';
+      }
+      textEntry += '[' + i + '] ' + entry.name + (entry.unread > 0 ? '*' : '');
+      if (head.length + textEntry.length < columns) {
+        if (entry.unread > 0) {
+          head += textEntry.bold + ''.reset;
+        } else {
+          head += textEntry;
+        }
+      } else {
+        return;
+      }
+
+      first = false;
+    });
+
+    for (let j = head.length; j < columns; ++j) {
+      head += ' ';
     }
 
-    first = false;
+    console.log(head.bgBlue);
   }
+}
 
-  for (var j = head.length; j < columns; ++j) {
-    head += ' ';
-  }
-
-  console.log(head.bgBlue);
-
-};
-
-module.exports = Heading;
+module.exports = new Heading();

@@ -4,7 +4,7 @@ const { refreshConsole } = require('./util.js');
 const Pull = require('./pull.js');
 const Search = require('./search.js');
 const Listeners = require('./listeners.js');
-const Heading = require('./heading.js');
+const heading = require('./heading.js');
 const Settings = require('./settings.js');
 const open = require('open');
 
@@ -23,7 +23,6 @@ var group = false;
 
 // Initialize our listeners
 var emitter = new events.EventEmitter();
-var heading = new Heading();
 var listeners = new Listeners();
 
 var atts = [];
@@ -228,7 +227,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     } else {
       listener = 'getConvos';
     }
-    emitter.emit(listener, current_userId, heading.getData(), function (data) {
+    emitter.emit(listener, current_userId, function (data) {
       action = data.action;
       currentThreadCount = data.threadCount;
       rlInterface.prompt(true);
@@ -239,11 +238,10 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     if (message.threadId !== recipientId) {
       // Don't warn for current user messages (from another device)
       if (author.id !== messenger.userId) {
-        var headingData = heading.getData();
-        for (var i in headingData) {
+        for (let entry of heading.data) {
           // Doesn't work when it's a group
-          if (headingData[i].fbid === message.otherUserId || headingData[i].fbid === message.threadId) {
-            headingData[i].unread++;
+          if (entry.fbid === message.otherUserId || entry.fbid === message.threadId) {
+            entry.unread++;
           }
         }
         // Moved this out of the for, in case we get a message from someone
@@ -311,7 +309,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
         console.log('Bringing you back to the friend selection screen...'.cyan);
         listener = 'getConvos';
       }
-      emitter.emit(listener, current_userId, heading.getData(), function(data){
+      emitter.emit(listener, current_userId, function(data){
         action = data.action;
         currentThreadCount = data.threadCount;
         rlInterface.prompt(true);
@@ -323,7 +321,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
     case '/group':
     case '/groups':
       console.log('Showing you group conversations...'.cyan);
-      emitter.emit('getGroupConvos', current_userId, heading.getData(), function(data) {
+      emitter.emit('getGroupConvos', current_userId, function(data) {
         action = data.action;
         currentThreadCount = data.threadCount;
         group = true;
@@ -459,7 +457,7 @@ InteractiveCli.prototype.handler = function(value) {
             interactive.initializeConversationViewFromFbid(id);
           });
         } else {
-          emitter.emit('getConvos', current_userId, heading.getData(), function (data) {
+          emitter.emit('getConvos', current_userId, function (data) {
             action = data.action;
             currentThreadCount = data.threadCount;
             rlInterface.prompt(true);
@@ -502,7 +500,7 @@ InteractiveCli.prototype.run = function(){
       });
 
       // Print the list for the first times
-      emitter.emit('getConvos', current_userId, heading.getData(), function(data){
+      emitter.emit('getConvos', current_userId, function(data){
         action = data.action;
         currentThreadCount = data.threadCount;
         rlInterface.prompt(true);

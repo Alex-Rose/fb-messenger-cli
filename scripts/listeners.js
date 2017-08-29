@@ -1,4 +1,5 @@
-const { refreshConsole } = require('./util.js');
+const { refreshConsole } = require('./util');
+const heading = require('./heading');
 
 const messageLimit = 75;
 
@@ -35,7 +36,7 @@ function printThreadSnippet(thread, idx, isGroup) {
   console.log(line);
 }
 
-Listeners.prototype.conversationsListener = function(userId, heading, callback, isGroup = false) {
+Listeners.prototype.conversationsListener = function(userId, callback, isGroup = false) {
   this.messenger.getThreads(isGroup, (err, threads) => {
     if (err) {
       console.error('Found error while fetching conversations.', err);
@@ -51,7 +52,7 @@ Listeners.prototype.conversationsListener = function(userId, heading, callback, 
       printThreadSnippet(thread, i, isGroup);
       this.options[i] = thread.thread_fbid;
       if (thread.thread_fbid !== userId) {
-        heading[i] = { fbid: thread.thread_fbid, name: thread.name, unread: 0};
+        heading.data.push({ fbid: thread.thread_fbid, name: thread.name, unread: 0});
       }
     }
 
@@ -60,12 +61,12 @@ Listeners.prototype.conversationsListener = function(userId, heading, callback, 
   });
 }
 
-Listeners.prototype.getConversationsListener = function(userId, heading, cb) {
-  this.conversationsListener(userId, heading, cb);
+Listeners.prototype.getConversationsListener = function(userId, cb) {
+  this.conversationsListener(userId, cb);
 };
 
-Listeners.prototype.getGroupConversationsListener = function(userId, heading, cb) {
-  this.conversationsListener(userId, heading, cb, true);
+Listeners.prototype.getGroupConversationsListener = function(userId, cb) {
+  this.conversationsListener(userId, cb, true);
 };
 
 Listeners.prototype.sendMessageListener = function(m, recipientId) {
