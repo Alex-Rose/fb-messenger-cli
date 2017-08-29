@@ -35,17 +35,29 @@ class Settings {
 
   // Load previously saved properties from disk
   // callback(error, properties), where properties is a dictionary
-  load(callback) {
+  read(callback) {
     fs.readFile(path.resolve(__dirname, '../', this.filename), (err, data) => {
       if (!err) {
         try {
-          this.properties = JSON.parse(data.toString());
+          let fileProperties = JSON.parse(data.toString());
+
+          // Compare with defaults
+          let diff = false;
+          Object.keys(this.properties).forEach((prop) => {
+            if(prop in fileProperties)
+              this.properties[prop] = fileProperties[prop];
+            else diff = true;
+          });
+
+          if (diff) this.save();
+
         } catch (parseErr) {
-          return callback(parseErr)
+          this.save();
+          return callback('Warning: Settings are invalid, saving default values')
         }
       } else {
-        console.log('Warning : settings not found, lets try to create default'.yellow);
         this.save();
+        return callback('Warning: Settings not found, saving default values');
       }
       callback();
     });

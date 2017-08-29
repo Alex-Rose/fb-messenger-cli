@@ -7,7 +7,7 @@
   const colors = require('colors');
 
   function executeCompleteLogin(callback) {
-    console.log('Facebook credentials');
+    console.log('Facebook credentials:');
     const login = new Login();
     login.execute(callback);
   }
@@ -15,7 +15,7 @@
   function verifyLogon(callback) {
     crypt.load((err, data) => {
       if (!err) {
-        Settings.load((loadErr) => {
+        Settings.read((loadErr) => {
           if (!loadErr) {
             let loginInfo;
             try {
@@ -46,7 +46,7 @@
       console.log(`Login verification failed: ${err}`.yellow);
       executeCompleteLogin(launchApp);
     } else {
-      Settings.load((err) => {
+      Settings.read((err) => {
         let delay = 0;
         if (!err) {
           if (Settings.properties.disableColors) {
@@ -54,7 +54,7 @@
           }
         } else {
           delay = 2000;
-          console.log('Warning : settings can\'t be read'.yellow);
+          console.log(err.yellow);
         }
 
         setTimeout(function() {

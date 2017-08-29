@@ -41,11 +41,9 @@ Login.prototype.execute = function(callback) {
 
       // Save user data to file for next login
       crypt.save(JSON.stringify(objData));
-
       return callback();
 
     } else {
-      console.log('Bad Facebook Login');
       return callback(new Error('Bad Facebook Login'));
     }
   });

@@ -21,11 +21,15 @@ class Crypt {
     return crypted;
   }
 
-  decrypt(text) {
-    let decipher = crypto.createDecipher(this.algorithm, this.password);
-    let dec = decipher.update(text,'hex','utf8');
-    dec += decipher.final('utf8');
-    return dec;
+  decrypt(text, callback) {
+    try {
+      let decipher = crypto.createDecipher(this.algorithm, this.password);
+      let dec = decipher.update(text, 'hex', 'utf8');
+      dec += decipher.final('utf8');
+      callback(null, dec);
+    } catch (err) {
+      callback(err);
+    }
   }
 
   save(data) {
@@ -38,16 +42,20 @@ class Crypt {
     if (!this.data) {
       fs.readFile(path.resolve(__dirname, '../', this.filename), (err, data) => {
         if(err) {
-          // Unessecairy console.log, we know the file is missing.
-          console.log('Can\'t find the .kryptonite file, we\'ll make a new one');
-          callback(err);
+          callback('No saved profile, please login');
         } else {
-          this.data = this.decrypt(data.toString());
-          callback(undefined, this.data);
+          this.decrypt(data.toString(), (err, dec) => {
+            if (err)
+              callback(err);
+            else {
+              this.data = dec;
+              callback(null, this.data);
+            }
+          });
         }
       });
     } else {
-      callback(undefined, this.data);
+      callback(null, this.data);
     }
   }
 
