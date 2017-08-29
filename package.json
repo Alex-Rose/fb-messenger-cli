@@ -18,8 +18,11 @@
     "system": "^1.0.4"
   },
   "devDependencies": {
-    "mocha": "2.4.x",
+    "mocha": "3.5.x",
     "chai": "3.5.x"
+  },
+  "engines": {
+    "node": ">=6.0"
   },
   "bin": {
     "fb-messenger-cli": "cli.js"
