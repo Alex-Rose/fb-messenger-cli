@@ -4,6 +4,9 @@ Use your Facebook account to chat with your friends sneakily in the command line
 
 ![npm](https://nodei.co/npm/fb-messenger-cli.png?downloads=true)
 #### Install
+
+Make sure you have Node 6.x installed, then run:
+
 ``npm install -g fb-messenger-cli``
 Then ``fb-messenger-cli`` from anywhere
 
