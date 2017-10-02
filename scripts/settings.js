@@ -11,6 +11,7 @@ class Settings {
     this.path = path.resolve(__dirname, '../', this.filename);
     this.properties = {
       disableColors: false,
+      groupColors: true,
       conversationsToLoad: 15,
       preventMessageFlicker: false,
       desktopNotifications: false,

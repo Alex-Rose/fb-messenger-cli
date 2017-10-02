@@ -3,6 +3,7 @@ var readlineSync = require('readline-sync');
 var phantomjs = require('phantomjs-prebuilt');
 var path = require('path');
 var phantom;
+const DEBUG = true;
 
 Login = function() { };
 
@@ -54,7 +55,10 @@ Login.prototype.run_cmd = function(cmd, args, cb) {
     var child = spawn(cmd, args);
     var me = this;
     var data = '';
+    
+    if (DEBUG) child.stdout.pipe(process.stdout); 
 
+    child.stderr.pipe(process.stderr);
     child.stdout.on('data', function (buffer) {
         if (me.data === undefined) {
             me.data = buffer.toString();

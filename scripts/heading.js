@@ -34,7 +34,7 @@ class Heading {
       textEntry += '[' + i + '] ' + entry.name + (entry.unread > 0 ? '*' : '');
       if (head.length + textEntry.length < columns) {
         if (entry.unread > 0) {
-          head += textEntry.bold + ''.reset;
+          head += textEntry.bold;
         } else {
           head += textEntry;
         }

@@ -21,6 +21,9 @@
     "mocha": "2.4.x",
     "chai": "3.5.x"
   },
+  "engines": {
+    "node": ">=6.x"
+  }, 
   "bin": {
     "fb-messenger-cli": "cli.js"
   }

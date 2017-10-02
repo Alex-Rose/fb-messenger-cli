@@ -9,6 +9,7 @@ const Settings = require('./settings.js');
 const open = require('open');
 
 const colors = require('colors');
+const safeColors = require('colors/safe');
 const events = require('events');
 const path = require('path');
 const notifier = require('node-notifier');
@@ -37,6 +38,15 @@ const rlInterface = readline.createInterface({
   prompt: '> '
 });
 
+const colorList = [
+  safeColors.green,
+  safeColors.red,
+  safeColors.blue,
+  safeColors.cyan,
+  safeColors.magenta,
+  safeColors.yellow
+];
+
 function InteractiveCli(){
   this.pull = new Pull();
   this.pull.on('message', this.readPullMessage);
@@ -47,35 +57,42 @@ function InteractiveCli(){
 }
 
 function getDisplayName(author) {
-  if (!Settings.properties.useCustomNicknames) {
-    return author.name;
-  }
+  let colorPosition = 0;
 
-  return author.custom_nickname || author.name;
+  if(!author) author = { name: 'unknown' };
+
+  if(group && Settings.properties.groupColors) { 
+    colorPosition = author.name.length % colorList.length; 
+  }
+	
+  let displayName;	
+  if (!Settings.properties.useCustomNicknames) {
+    displayName = author.name
+  } else displayName = author.custom_nickname || author.name;
+  
+  if (author.id === messenger.userId)
+    return displayName
+  else {
+    return colorList[colorPosition](displayName);
+  }
 }
 
 function renderMessage(author, message) {
-  let msg;
-  const name = getDisplayName(author);
-  if (author.id !== messenger.userId) {
-    msg = `${name.green}: `;
-  } else {
-    msg = `${name}: `;
-  }
-
+  let msg = `${getDisplayName(author)}: `;
+  
   if (Settings.properties.showTimestamps) {
     
     var timeDifference = Date.now() - message.timestamp;
-    var daysAgo = Math.ceil(timeDifference / msInADay);
+    var daysAgo = Math.round(timeDifference / msInADay);
 
-    if (daysAgo <= 1) {
+    if (daysAgo < 1) {
 
       // Less than a day, show time
       var locale = Settings.properties.timestampLocale;
       var options = Settings.properties.timestampOptions;
       var dateString = new Date(+message.timestamp).toLocaleTimeString(locale, options);
 
-    } else if (daysAgo === 2) {
+    } else if (daysAgo === 1) {
       dateString = "Yesterday";
     } else {
       dateString = daysAgo + " days ago";
@@ -168,8 +185,8 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
 
   var recipientUrl;
   if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
-
-  let printMessages = messages => {
+  
+  const printMessages = (messages) => {
     recipientId = id;
     interactive.threadHistory = [];
     refreshConsole();
@@ -188,7 +205,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
       interactive.threadHistory.push(msg);
     }
     interactive.printThread();
-  };
+  }
 
   messenger.getMessages(recipientUrl, id, process.stdout.rows - 1, (err, messages) => {
     // TODO: deal with errors

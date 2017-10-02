@@ -42,8 +42,10 @@ var Messenger = function(cookie, userId, fbdtsg) {
 // Facebook prepend jsonp with infinite for loop.
 // We remove it when present.
 Messenger.prototype.cleanJson = function (body) {
-  if (body.indexOf('for (;;);') === 0) {
+  if (body && body.indexOf('for (;;);') === 0) { 
     body = body.substr('for (;;);'.length);
+  } else {
+    return '';  
   }
 
   return body;
