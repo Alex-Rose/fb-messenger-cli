@@ -505,27 +505,36 @@ InteractiveCli.prototype.run = function(){
       emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
       emitter.on('getMessages', listeners.getMessagesListener.bind(listeners));
       emitter.on('startSearch', listeners.searchListener.bind(listeners));
+	
+      console.log("Fetching conversations...".cyan);	    	
+      messenger.getFriends((err, friends) => {
+        if (err) {
+	  console.log(`An error occured initially fetching friends list: ${err}`);
+	  console.log('Exiting...');
+	  process.exit(1);
+	}
 
-      messenger.getFriends(function(friends) {
-        var entry = {};
+	let entry = {
+	  id: userId,
+	  firstName: "Me",
+	  name: "Me",
+	  vanity: "unknown",
+	};
 
-        entry.id = userId;
-        entry.firstName = "Me";
-        entry.name = "Me";
-        entry.vanity = "unknown";
         messenger.users[userId] = entry;
-      });
 
-      // Print the list for the first times
-      emitter.emit('getConvos', current_userId, function(data){
-        action = data.action;
-        currentThreadCount = data.threadCount;
-        rlInterface.prompt(true);
-      });
+	// Print the list for the first times
+        emitter.emit('getConvos', current_userId, (data) => {
+          action = data.action;
+          currentThreadCount = data.threadCount;
+          rlInterface.prompt(true);
+        });
 
-      rlInterface.on("line", interactive.handler);
-      rlInterface.on("close", interactive.exit);
-      rlInterface.prompt(true);
+	// Set up the line reader	      
+        rlInterface.on("line", interactive.handler);
+        rlInterface.on("close", interactive.exit);
+        rlInterface.prompt(true);      
+      });
   });
 };
 

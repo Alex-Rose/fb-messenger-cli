@@ -8,19 +8,19 @@ var Search = function(messenger){
 };
 
 Search.prototype.run = function(searchString) {
-  var search = this;
-  search.parseFriendsList(searchString, function() {
+  this.parseFriendsList(searchString, (err) => {
     refreshConsole();
-    search.printChoices();
+    if (err)
+      console.log(`Error occured while fetching friends list: ${err}`);	  
+    this.printChoices();
   });
 };
 
 Search.prototype.selectConvo = function(choice) {
-  var search = this;
-  for (var i=0; i < search.filtered.length; i++){
-    if (search.filtered[i].position == choice.toLowerCase().trim()){
-      console.log('Sending message to: ' + search.filtered[i].name);
-      return search.filtered[i].id;
+  for (var i=0; i < this.filtered.length; i++) {
+    if (this.filtered[i].position == choice.toLowerCase().trim()){
+      console.log('Sending message to: ' + this.filtered[i].name);
+      return this.filtered[i].id;
     }
   }
   console.log('No conversation has that number'.cyan);
@@ -29,21 +29,19 @@ Search.prototype.selectConvo = function(choice) {
 };
 
 Search.prototype.parseFriendsList = function(searchString, callback) {
-  var search = this;
-    search.messenger.getFriends(function(friends){
-      if (search.friends.length <= 0){
-        for (var id in friends){
-          search.friends.push(friends[id]);
-        }
+  this.messenger.getFriends((err, friends) => {
+    if (this.friends.length <= 0) {
+      for (var id in friends){
+        this.friends.push(friends[id]);
       }
-      search.filterFriends(searchString);
-      callback();
-    });
+    }
+    this.filterFriends(searchString);
+    return callback(err);
+  });
 };
 
 Search.prototype.filterFriends = function(searchString) {
-  var friends = this.friends;
-  this.filtered = friends.filter(function(friend) {
+  this.filtered = this.friends.filter((friend) => {
     return friend.name.toLowerCase().indexOf(searchString.toLowerCase()) !== -1;
   });
 };

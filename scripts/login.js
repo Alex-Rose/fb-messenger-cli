@@ -18,12 +18,14 @@ Login.prototype.execute = function(callback) {
 
   var arguments = [path.resolve(__dirname, 'phantom.js'), result.email, result.password];
 
-  phantom = new login.run_cmd( phantomjs.path, arguments, () => {
-    if(phantom.data){
+  phantom = new login.run_cmd( phantomjs.path, arguments, (err) => {
+    if (err) return callback(err);
+    
+    if (phantom.data){
       let objData;
       try {
         objData = JSON.parse(phantom.data);
-      } catch (err) {
+      } catch (parseErr) {
         console.log('Warning: Errors caught in return data'.yellow);
         if (phantom.data.indexOf('{') !== -1) {
           let trimmed = phantom.data.substring(phantom.data.indexOf('{'));
@@ -45,7 +47,7 @@ Login.prototype.execute = function(callback) {
       return callback();
 
     } else {
-      return callback(new Error('Bad Facebook Login'));
+      return callback(new Error('Bad Facebook credentials'));
     }
   });
 };

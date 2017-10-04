@@ -238,7 +238,7 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
 
   request.post(options, function(err, response, body){
         if(!body) {
-          callback(err, []);
+          return callback(err, []);
         }
         body = messenger.cleanJson(body);
         let json = JSON.parse(body);
@@ -271,7 +271,7 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
           }
         }
 
-        callback(err, data);
+        return callback(err, data);
     });
 };
 
@@ -310,35 +310,43 @@ Messenger.prototype.getMessagesGraphQl = function(recipient, recipientId, count,
   };
 
   request.post(options, function(err, response, body){
-    let results = messenger.cleanGraphQl(body);
-    let thread = results.o0.data.message_thread;
-    let messages = thread.messages.nodes;
+    if (err) return callback(err);
+    
+    if (body) {  
+      let results = messenger.cleanGraphQl(body);
+	
+      // Check we actually have messages	    
+      if (!results.o0)
+	return callback(new Error('No messages found'), []);	    
+      let thread = results.o0.data.message_thread;
+      let messages = thread.messages.nodes;
 
-    let data = [];
-    if (messages !== undefined) {
-      for (let message in messages) {
-        let m = messages[message];
+      let data = [];
+      if (messages !== undefined) {
+        for (let message in messages) {
+          let m = messages[message];
 
-        let obj = {
-          'author': m.message_sender.id,
-          'body': m.message ? m.message.text : m.snippet,
-          'other_user_fbid': thread.thread_key.other_user_fbid,
-          'thread_fbid': thread.thread_key.thread_fbid,
-          'timestamp': m.timestamp_precise
-        };
+          let obj = {
+            'author': m.message_sender.id,
+            'body': m.message ? m.message.text : m.snippet,
+            'other_user_fbid': thread.thread_key.other_user_fbid,
+            'thread_fbid': thread.thread_key.thread_fbid,
+            'timestamp': m.timestamp_precise
+          };
 
-        if (m.extensible_attachment)
-          obj.storyAttachment = m.extensible_attachment.story_attachment;
+          if (m.extensible_attachment)
+            obj.storyAttachment = m.extensible_attachment.story_attachment;
 
-        if (m.blob_attachments) {
-          obj.attachment = m.blob_attachments[0];
+          if (m.blob_attachments) {
+            obj.attachment = m.blob_attachments[0];
+          }
+          data.push(obj);
         }
-
-        data.push(obj);
       }
+      return callback (err, data);	    
     }
 
-    callback(err, data);
+    callback(new Error('Could not fetch thread messages'));
   });
 };
 
@@ -496,19 +504,24 @@ Messenger.prototype.getFriends = function(callback) {
   };
 
   request.post(options, function(err, response, body) {
-    body = messenger.cleanJson(body);
-    json = JSON.parse(body);
-    users = json['payload'];
-    for (const id in users) {
-      const friend = users[id];
-      messenger.saveFriend({
-        id,
-        firstName: friend['firstName'],
-        name: friend['name'],
-        vanity: friend['vanity']
-      });
-    }
-    callback(messenger.users);
+    if (err) return callback(err);
+    
+    if (body) {  
+      body = messenger.cleanJson(body);
+      json = JSON.parse(body);
+      users = json['payload'];
+      for (const id in users) {
+        const friend = users[id];
+        messenger.saveFriend({
+          id,
+          firstName: friend['firstName'],
+          name: friend['name'],
+          vanity: friend['vanity']
+        });
+      }
+      return callback(null, messenger.users);
+    } else 
+        callback(new Error('Error fetching friends from Messenger.com'));
   });
 
 };
