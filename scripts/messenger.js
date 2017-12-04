@@ -241,7 +241,7 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
           return callback(err, []);
         }
         body = messenger.cleanJson(body);
-        let json = JSON.parse(body);
+        let json = JSON.parse(JSON.stringify(body));
         let payload = json['payload'];
         let msg;
         if(payload !== undefined) {
