@@ -240,35 +240,42 @@ Messenger.prototype.getMessages = function(recipient, recipientId, count, callba
         if(!body) {
           return callback(err, []);
         }
-        body = messenger.cleanJson(body);
-        let json = JSON.parse(body);
-        let payload = json['payload'];
-        let msg;
-        if(payload !== undefined) {
-          msg = payload['actions'];
-        }
-
-        let data = [];
-
-        if(msg !== undefined) {
-          for (let i = 0; i < msg.length; ++i) {
-              let m = msg[i];
-              let obj = {
-                  'author': m.author,
-                  'body': m.body,
-                  'other_user_fbid': m.other_user_fbid,
-                  'thread_fbid': m.thread_fbid,
-                  'timestamp': m.timestamp,
-                  'timestamp_datetime': m.timestamp_datetime,
-                  'action_type' : m.action_type,
-                  'log_message_body' : m.log_message_body
-              };
-
-              if (m.has_attachment)
-                obj.attachmentsLegacy = m.attachments;
-
-               data.push(obj);
+        
+        try {
+          body = messenger.cleanJson(body);
+          let json = JSON.parse(body);
+          let payload = json['payload'];
+          let msg;
+          if(payload !== undefined) {
+            msg = payload['actions'];
           }
+
+          let data = [];
+
+          if(msg !== undefined) {
+            for (let i = 0; i < msg.length; ++i) {
+                let m = msg[i];
+                let obj = {
+                    'author': m.author,
+                    'body': m.body,
+                    'other_user_fbid': m.other_user_fbid,
+                    'thread_fbid': m.thread_fbid,
+                    'timestamp': m.timestamp,
+                    'timestamp_datetime': m.timestamp_datetime,
+                    'action_type' : m.action_type,
+                    'log_message_body' : m.log_message_body
+                };
+
+                if (m.has_attachment)
+                  obj.attachmentsLegacy = m.attachments;
+
+                data.push(obj);
+            }
+          }
+        } catch (error) {
+          // When using Graph API the response for this call won't be JSON
+          // therefore things will throw. 
+          return callback(error, []);
         }
 
         return callback(err, data);

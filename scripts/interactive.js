@@ -209,7 +209,7 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
 
   messenger.getMessages(recipientUrl, id, process.stdout.rows - 1, (err, messages) => {
     // TODO: deal with errors
-    if (messages.length > 0)
+    if (messages.length > 0 && !err)
       printMessages(messages);
     else {
       // Nothing found, must be using GraphQl
