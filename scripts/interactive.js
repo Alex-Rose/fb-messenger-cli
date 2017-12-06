@@ -151,11 +151,19 @@ function renderMessage(author, message) {
   // New GraphQl call attachements
   if (message.attachment) {
     let a = message.attachment;
-    atts[attsNo] = a.preview.uri;
-
-    let x = `${attsNo}`;
-    msg += '[ '.red + 'link' + " " + x.cyan + ' ]'.red;
-    attsNo++;
+    let uri;
+    if (a.preview && a.preview.uri) {
+      uri = a.preview.uri;      
+    } else if (a.preview_image && a.preview_image.uri) {
+      uri = a.preview_image.uri; 
+    }
+    
+    if (uri) {
+      atts[attsNo] = uri;
+      let x = `${attsNo}`;
+      msg += '[ '.red + 'link' + " " + x.cyan + ' ]'.red;
+      attsNo++;
+    }
   }
 
   if (message.storyAttachment) {
