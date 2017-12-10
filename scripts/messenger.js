@@ -66,6 +66,7 @@ Messenger.prototype.cleanGraphQl = function (body) {
 // Parses a list of conversation participants into users
 // Useful for adding users that are not "friends" to our database
 Messenger.prototype.saveParticipantsAsFriends = function (participants) {
+  let messenger = this;
   for (let i = 0; i < participants.length; i++) {
     // Add only the ones we don't already have
     if(participants[i].is_friend !== 'true') {
