@@ -15,6 +15,7 @@ class Settings {
       conversationsToLoad: 15,
       preventMessageFlicker: false,
       desktopNotifications: false,
+      notificationScript: false,
       showTimestamps: false,
       useCustomNicknames: true,
       timestampLocale: "en-US",

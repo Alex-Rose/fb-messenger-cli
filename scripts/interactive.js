@@ -14,6 +14,7 @@ const events = require('events');
 const path = require('path');
 const notifier = require('node-notifier');
 const readline = require('readline');
+const spawn = require('child_process').spawn;
 
 // 0 is select conversation, 1 is send message
 var action = 0;
@@ -228,20 +229,59 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
   });
 };
 
-InteractiveCli.prototype.readPullMessage = function(message) {
-  var author = messenger.users[message.author];
-
-  if (Settings.properties.desktopNotifications) {
-    try {
-      if (author !== undefined && author.id !== messenger.userId && message.threadId !== recipientId) {
-        notifier.notify({
-          title: getDisplayName(author),
-          message: message.body,
-          icon: path.join(__dirname, '../resources/logo.png')
-        });
+const executeScriptedNotification = function(authorName, messageBody, logFn) {
+  try {
+    const scriptWithArgs = Settings.properties.notificationScript.concat();
+    const executablePath = scriptWithArgs.shift();
+    const args = scriptWithArgs.concat([authorName, messageBody]);
+    const process = spawn(executablePath, args);
+    let stdout = '', stderr = '';
+    process.stdout.on('data', data => { stdout += data; });
+    process.stderr.on('data', data => { stderr += data; });
+    process.on('close', code => {
+      if (code != 0) {
+        logFn(`${executablePath} failed with code ${code}.\n`)
+        logFn(`---- STANDARD OUTPUT ----\n${stdout}\n`);
+        logFn(`---- STANDARD ERROR ----\n${stderr}`);
       }
-    } catch (err) {
-      // Don't break over notifications
+    });
+  } catch(err) {
+    logFn('failed to execute scripted notification');
+    logFn(err);
+  }
+}
+
+const notifyDesktop = function(authorName, messageBody) {
+  try {
+    notifier.notify({
+      title: authorName,
+      message: messageBody,
+      icon: path.join(__dirname, '../resources/logo.png')
+    });
+  } catch (err) {
+    // Don't break over notifications
+  }
+}
+
+InteractiveCli.prototype.readPullMessage = function(message) {
+  const author = messenger.users[message.author];
+  const logFn = (entry) => {
+    interactive.threadHistory.push(String(entry));
+    interactive.printThread();
+  };
+
+
+  if (author !== undefined &&
+      author.id !== messenger.userId &&
+      message.threadId !== recipientId) {
+
+    if (Settings.properties.desktopNotifications) {
+      notifyDesktop.apply(this, [getDisplayName(author), message.body]);
+    }
+
+    if (Settings.properties.notificationScript) {
+      executeScriptedNotification.apply(
+        this, [getDisplayName(author), message.body, logFn]);
     }
   }
 
