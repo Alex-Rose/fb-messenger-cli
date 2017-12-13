@@ -424,7 +424,8 @@ Messenger.prototype.parseThreadData = function(threads = [], participants = []) 
       'snippet': thread['snippet'],
       'attachments': thread['snippet_attachments'],
       'thread_fbid': thread['thread_fbid'],
-      'timestamp': thread.last_message_timestamp
+      'timestamp': thread.last_message_timestamp,
+      'sent_by_me': thread.snippet_sender !== ('fbid:' + thread.thread_fbid)
     }
   });
 };
@@ -439,11 +440,14 @@ Messenger.prototype.parseGroupThreadData = function(threads = [], participants =
     } else {
       name = this.getThreadNameFromParticipants(thread, participants);
     }
+    // Current user is always last in the participants list
+    var sent_by_me = thread.snippet_sender == thread.participants[thread.participants.length - 1];
     return {
       name,
       'snippet': thread.snippet,
       'thread_fbid': thread.thread_fbid,
-      'timestamp': thread.last_message_timestamp
+      'timestamp': thread.last_message_timestamp,
+      sent_by_me
     }
   });
 };
