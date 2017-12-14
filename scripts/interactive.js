@@ -286,7 +286,9 @@ InteractiveCli.prototype.readPullMessage = function(message) {
     } else if (message.type === 'typ' && message.st && !group) {
         // Someone is typing
         if (message.to === parseInt(current_userId) && message.from === parseInt(recipientId)) {
-            console.log(`${messenger.users[recipientId].name} started typing...`);
+            interactive.printThread();
+            console.log(`\n${messenger.users[recipientId].name} started typing...`);
+            rlInterface.prompt(true);
         }
     }
 };
