@@ -8,20 +8,51 @@ Use your Facebook account to chat with your friends sneakily in the command line
 Then ``fb-messenger-cli`` from anywhere
 
 ### Choose a friend
+ - Pick from a list of recent conversations
+ - Use /search to find other friends
+ - Use /group to find group conersations
+ - Easily switch between conversations with /switch
+ 
 ![Selection](http://puu.sh/pSNkL/7d82e4d9f2.png)
 
 ### Chat away
+ - Get responses instantly in real-time
+ - See when your friends are typing *NEW*
+ 
 ![Chat](http://puu.sh/pSNNb/e7e08ca16e.png)
 
-### Helpful options
-![Options](http://puu.sh/pSNRM/07c6c51fff.png)
+### Helpful settings and commands
+ - Toggle timestamps on/off
+ - Color coded people in group chats 
+ - Load an unlimited number of conversations
+ - Use custom nicknames
+ - Stay logged in forever *almost
+ 
+> /help
 
-### Features:
-* Real time refreshing on new messages
-* Ability to search for your friends and initiate conversations
-* A header showing unread messages in recent convos
-* Easy switching between conversations
-* Support for group convos
+> /b /back /menu .... Get back to conversation selection
+
+> /q /exit /quit .... Quit the application
+
+> /logout ........... Exit and flush credentials
+
+> /g /groups ........ Bring up your group conversations
+
+> /s /switch [#] .... Quick switch to conversation number #
+
+> /search [query] ... Search your friends to chat
+
+> /v /view [#] ...... View the attachment by the number given after the type
+
+> /r /refresh ....... Refresh the current converation
+
+> /timestamp ........ Toggle timestamp for messages
+
+> /help ............. Print this message
+
+### Notes
+- 2FA is not currently supported
+- Requires a node version that supports most ES6 feautres (i.e node 6.x)
 
 ### Dev install instructions
 1. Run ``npm install`` for dependencies
