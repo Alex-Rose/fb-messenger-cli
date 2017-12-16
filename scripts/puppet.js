@@ -18,7 +18,7 @@ class Puppet {
             page = promisedPage[0];
             return page.goto("https://www.messenger.com/login");
         }).then(response => {
-            if (!response.ok) throw new Error(`Could not navigate to messenger login page. Error:${status}`);
+            if (!response.ok) throw new Error(`Could not navigate to messenger login page. Error:${response.status}`);
 
             return page.evaluate((user, pass) => {
                 document.getElementById("email").value = user;
@@ -27,7 +27,7 @@ class Puppet {
         }).then(() => {
             this.authPromise = new Promise((resolve, reject) => {
                 let attempt = 0;
-                let interval = setInterval(() => {
+                const interval = setInterval(() => {
                     if (this.cookie) {
                         resolve(this.cookie);
                         clearInterval(interval);
@@ -41,9 +41,9 @@ class Puppet {
                 }, 500);
             });
 
-            page.on('load', frame => {
+            page.on('load', () => {
                 return this.browser.pages().then(pages => {
-                    let page = pages[0];
+                    const page = pages[0];
                     return page.cookies();
                 }).then(cookies => {
                     return this._getAuthCookie(cookies);
@@ -55,11 +55,11 @@ class Puppet {
                         // Check if failure is because of wrong password
                         return page.evaluate(() => {
                             return new Promise((resolve, reject) => {
-                                let errorElements = document.getElementsByClassName('_3403 _3404');
+                                const errorElements = document.getElementsByClassName('_3403 _3404');
                                 if (errorElements.length > 0) {
                                     reject(new Error(errorElements[0].children[0].innerHTML));
                                 } else {
-                                    reject(err);
+                                    reject("Cookie not found. Cause unknown.");
                                 }
                             });
                         });
@@ -75,7 +75,7 @@ class Puppet {
         }).then(result => {
             return this.browser.close().then(() => {
                 return Promise.resolve(result);
-            }).catch(err => {
+            }).catch(() => {
                 return Promise.resolve(result);
             });
         }).catch(err => {
@@ -89,7 +89,6 @@ class Puppet {
     }
 
     executeAndGetCookie2FA() {
-        let attempt = 0;
         let page;
         return puppeteer.launch({headless: false}).then(browser => {
             this.browser = browser;
@@ -98,7 +97,7 @@ class Puppet {
             page = promisedPage[0];
             return page.goto("https://www.messenger.com/login");
         }).then(response => {
-            if (!response.ok) throw new Error(`Could not navigate to messenger login page. Error:${status}`);
+            if (!response.ok) throw new Error(`Could not navigate to messenger login page. Error:${response.status}`);
 
             return page.evaluate((user, pass) => {
                 document.getElementById("email").value = user;
@@ -115,9 +114,9 @@ class Puppet {
                     }
                 }, 500);
             });
-            page.on('load', frame => {
+            page.on('load', () => {
                 return this.browser.pages().then(pages => {
-                    let page = pages[0];
+                    const page = pages[0];
                     return page.cookies();
                 }).then(cookies => {
                     return this._getAuthCookie(cookies);
@@ -125,7 +124,7 @@ class Puppet {
                     if (cookie) {
                         this.cookie = cookie;
                     }
-                }).catch(err => {
+                }).catch(() => {
                     console.log(`Waiting for user to complete 2FA flow`);
                 });
             });
@@ -136,7 +135,7 @@ class Puppet {
         }).then(result => {
             return this.browser.close().then(() => {
                 return Promise.resolve(result);
-            }).catch(err => {
+            }).catch(() => {
                 return Promise.resolve(result);
             });
         }).catch(err => {
@@ -158,7 +157,6 @@ class Puppet {
                 }
             }
 
-            //reject(new Error(`Cookie was not found. Here are the available cookies: \r\n ${JSON.stringify(cookies)}`));
             resolve(null);
         });
     }
