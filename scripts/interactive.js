@@ -283,12 +283,18 @@ InteractiveCli.prototype.readPullMessage = function(message) {
 
         interactive.threadHistory.push(msg);
         interactive.printThread();
-    } else if (message.type === 'typ' && message.st && !group) {
+    } else if (message.type === 'typ' && !group) {
         // Someone is typing
         if (message.to === parseInt(current_userId) && message.from === parseInt(recipientId)) {
-            interactive.printThread();
-            console.log(`\n${messenger.users[recipientId].name} started typing...`);
-            rlInterface.prompt(true);
+			// st === 1 is started typing
+			if (message.st) {
+				interactive.printThread();
+				console.log(`\n${messenger.users[recipientId].name} started typing...`);
+				rlInterface.prompt(true);
+			} else {
+				// Clear the message if he stopped typing
+				interactive.printThread();
+			}
         }
     }
 };
