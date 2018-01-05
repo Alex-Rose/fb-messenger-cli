@@ -43,8 +43,10 @@ class Listeners {
     conversationsListener(userId, callback, isGroup = false) {
         this.messenger.getThreads(isGroup, (err, threads) => {
             if (err) {
+                // This only loads once, if it fails, close app
                 console.error('Found error while fetching conversations.', err);
-                return;
+                console.log(`Could not properly initialize conversation listener. \nReason: ${err}. \nExiting...`);
+                process.exit(1);
             }
 
             refreshConsole();
