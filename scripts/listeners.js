@@ -30,7 +30,7 @@ class Listeners {
         if (thread.snippet !== '')
             line += `${thread.snippet} `;
 
-        if (!isGroup) {
+        if (!isGroup && thread.attachements) {
             for (let j = 0; j < thread.attachments.length; j++) {
                 const a = thread.attachments[j];
                 line += '[ '.red + a.attach_type + ' ]'.red;
@@ -40,8 +40,8 @@ class Listeners {
         console.log(line);
     }
 
-    conversationsListener(userId, callback, isGroup = false) {
-        this.messenger.getThreads(isGroup, (err, threads) => {
+    conversationsListener(userId, callback) {
+        this.messenger.getThreads((err, threads) => {
             if (err) {
                 // This only loads once, if it fails, close app
                 console.error('Found error while fetching conversations.', err);
@@ -55,7 +55,7 @@ class Listeners {
             threads.sort((a, b) => b.timestamp - a.timestamp);
             for (let i = 0; i < threads.length; ++i) {
                 const thread = threads[i];
-                this.printThreadSnippet(thread, i, isGroup);
+                this.printThreadSnippet(thread, i, threads[i].isGroup);
                 this.options[i] = thread.thread_fbid;
                 if (thread.thread_fbid !== userId) {
                     heading.data.push({fbid: thread.thread_fbid, name: thread.name, unread: 0});
@@ -69,10 +69,6 @@ class Listeners {
 
     getConversationsListener(userId, cb) {
         this.conversationsListener(userId, cb);
-    }
-
-    getGroupConversationsListener(userId, cb) {
-        this.conversationsListener(userId, cb, true);
     }
 
     sendMessageListener(m, recipientId) {

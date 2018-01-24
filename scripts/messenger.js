@@ -54,8 +54,8 @@ class Messenger {
 
     cleanGraphQl(body) {
         // Response contains two json objects, we want the first one only
-        const pos = body.indexOf('}}}}') + 4;
-        body = body.substr(0, pos);
+        const pos = body.lastIndexOf('{');
+        body = body.slice(0, pos - 1);
 
         try {
             return JSON.parse(body);
@@ -67,16 +67,16 @@ class Messenger {
     // Parses a list of conversation participants into users
     // Useful for adding users that are not "friends" to our database
     saveParticipantsAsFriends(participants) {
-        if (participants) {
-            for (let i = 0; i < participants.length; i++) {
+        if (participants && participants.nodes) {
+            for (const participant of participants.nodes) {
                 // Add only the ones we don't already have
-                if (participants[i].is_friend !== 'true') {
-                    const user = participants[i];
+                if (!participant.messaging_actor.is_viewer_friend) {
+                    const user = participant.messaging_actor;
                     this.saveFriend({
-                        id: user.fbid,
+                        id: user.id,
                         firstName: user.short_name,
                         name: user.name,
-                        vanity: user.vanity
+                        vanity: user.name
                     });
                 }
             }
@@ -402,7 +402,7 @@ class Messenger {
     //   thread_fbid: id of the thread
     //   timestamp: timestamp of the thread's last message
     // }
-    parseThreadData(threads = [], participants = []) {
+    legacyParseThreadData(threads = [], participants = []) {
         const privateThreads = threads.map(thread => ({
             thread,
             participant: participants.find(p => p['fbid'] === thread['other_user_fbid'])
@@ -420,6 +420,33 @@ class Messenger {
                 'attachments': thread['snippet_attachments'],
                 'thread_fbid': thread['thread_fbid'],
                 'timestamp': thread.last_message_timestamp
+            };
+        });
+    }
+
+    parseThreadData(threads = []) {
+
+        return threads.map(thread => {
+            const id = thread.thread_key.thread_fbid || thread.thread_key.other_user_id;
+            const isGroup = thread.thread_type === 'GROUP';
+            let name;
+
+            if (isGroup) {
+                name = thread.name || 'TEMP';
+            } else {
+                // No nicknames for now
+                for (const participant of thread.all_participants.nodes) {
+                    if (participant.messaging_actor.id === id)
+                        name = participant.messaging_actor.name;
+                }
+            }
+            return {
+                name,
+                isGroup,
+                'snippet': thread.last_message.nodes[0].snippet,
+                'attachments': thread.last_message.nodes[0].blob_attachements,
+                'thread_fbid': id,
+                'timestamp': thread.last_message.nodes[0].timestamp_precise
             };
         });
     }
@@ -445,25 +472,38 @@ class Messenger {
         });
     }
 
-    getThreads(isGroup = false, callback) {
+    getThreads(callback) {
         const convoCount = Settings.properties.conversationsToLoad;
 
+        const query = {
+            "o0": {
+                "doc_id": "1349387578499440",
+                "query_params": {
+                    "limit": convoCount,
+                    "before": null,
+                    "tags": [],
+                    "includeDeliveryReceipts": true,
+                    "includeSeqID": false
+                }
+            }
+        };
+
         const options = {
-            url: 'https://www.messenger.com/ajax/mercury/threadlist_info.php?dpr=1',
+            url: 'https://www.messenger.com/api/graphqlbatch',
             headers: this.headers,
             formData: {
-                'inbox[offset]': '0',
-                'inbox[filter]': '',
-                'inbox[limit]': convoCount,
-                'client': 'mercury',
+                'batch_name': 'MessengerGraphQLThreadlistFetcher',
                 '__user': this.userId,
                 '__a': '1',
                 '__req': '8',
                 '__be': '0',
-                '__pc': 'EXP1:messengerdotcom_pkg',
+                '__pc': 'PHASED:messengerdotcom_pkg',
                 'ttstamp': '2658170878850518911395104515865817183457873106120677266',
                 'fb_dtsg': this.fbdtsg,
-                '__rev': '2338802'
+                '__rev': '3584147',
+                '__dyn': '7AgNeS-aFoGi4Q9UrEwlg9odpbGAdy8-S-C11xG3F6wAxu13wFGEa8Gm4UJi28rxuF98qDKuEjKewExail0h8S6Uhx6byoW58nxGUOEixu1tyrgcUhxGbwYUmCK5UB1G6XDwEwSxqawDDgsxm1NDx6qUpCwCGm8xC784afBxm9yUvy8lUF3bDwgUgoKcU-q48x5x6789E-bQ6e4obAumUlwPzp4h2osAAxC',
+                'jazoest': '26581718469487545754573975865817111211670111110112906676',
+                'queries': JSON.stringify(query)
             },
             gzip: true,
         };
@@ -471,21 +511,21 @@ class Messenger {
         request.post(options, (err, response, body) => {
             if (err) callback(err);
             try {
-                const json = this.parseRawBody(body);
-                const threads = json['payload']['threads'];
-                const participants = json['payload']['participants'];
+                const results = this.cleanGraphQl(body);
 
-                if (!threads || !participants) {
+                // threads is an array of graphQl conversation info, no messages
+                const threads = results.o0.data.viewer.message_threads.nodes;
+
+                if (!threads) {
                     return callback(new Error('Payload contained no threads'));
                 }
 
-                this.saveParticipantsAsFriends(participants);
-
-                if (isGroup) {
-                    callback(null, this.parseGroupThreadData(threads, participants));
-                } else {
-                    callback(null, this.parseThreadData(threads, participants));
+                for (const thread of threads) {
+                    this.saveParticipantsAsFriends(thread.all_participants);
                 }
+
+                // All threads are together (YAY)
+                callback(null, this.parseThreadData(threads));
 
             } catch (e) {
                 callback(e);

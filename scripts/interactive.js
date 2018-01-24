@@ -191,8 +191,12 @@ InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
     heading.clearUnread(id);
 
     let recipientUrl;
-    if (group) { recipientUrl = id; } else { recipientUrl = user.vanity; }
-  
+    if (user) {
+        recipientUrl = user.vanity;
+    } else {
+        recipientUrl = id;
+    }
+
     const printMessages = (messages) => {
         recipientId = id;
         interactive.threadHistory = [];
@@ -245,12 +249,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
         }
 
         if (action === 0) {
-            let listener;
-            if (group) {
-                listener = 'getGroupConvos';
-            } else {
-                listener = 'getConvos';
-            }
+            const listener = 'getConvos';
             emitter.emit(listener, current_userId, (data) => {
                 action = data.action;
                 currentThreadCount = data.threadCount;
@@ -327,20 +326,13 @@ InteractiveCli.prototype.handleCommands = function(command) {
     const options = command.split(' ');
 
     switch (options[0]) {
+        case '/home':
         case '/m':
         case '/menu':
-            group = false;
-            // Fallthrough
         case '/b':
         case '/back': {
-            let listener;
-            if (group) {
-                console.log('Back to group conversations...'.cyan);
-                listener = 'getGroupConvos';
-            } else {
-                console.log('Bringing you back to the friend selection screen...'.cyan);
-                listener = 'getConvos';
-            }
+            const listener = 'getConvos';
+            console.log('Bringing you back to the conversation selection screen...'.cyan);
             emitter.emit(listener, current_userId, (data) => {
                 action = data.action;
                 currentThreadCount = data.threadCount;
@@ -349,19 +341,6 @@ InteractiveCli.prototype.handleCommands = function(command) {
             });
             break;
         }
-
-        case '/g':
-        case '/group':
-        case '/groups':
-            console.log('Showing you group conversations...'.cyan);
-            emitter.emit('getGroupConvos', current_userId, (data) => {
-                action = data.action;
-                currentThreadCount = data.threadCount;
-                group = true;
-                rlInterface.prompt(true);
-                recipientId = '';
-            });
-            break;
 
         case '/s':
         case '/switch': {
@@ -421,7 +400,6 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('/b /back /menu .... Get back to conversation selection'.cyan);
             console.log('/q /exit /quit .... Quit the application'.cyan);
             console.log('/logout ........... Exit and flush credentials'.cyan);
-            console.log('/g /groups ........ Bring up your group conversations'.cyan);
             console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
             console.log('/search [query] ... Search your friends to chat'.cyan);
             console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
@@ -520,7 +498,6 @@ InteractiveCli.prototype.run = function(){
 
         // register our listeners
         emitter.on('getConvos', listeners.getConversationsListener.bind(listeners));
-        emitter.on('getGroupConvos', listeners.getGroupConversationsListener.bind(listeners));
         emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
         emitter.on('getMessages', listeners.getMessagesListener.bind(listeners));
         emitter.on('startSearch', listeners.searchListener.bind(listeners));
