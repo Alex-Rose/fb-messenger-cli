@@ -22,7 +22,7 @@ let action = 0;
 let currentThreadCount = 0;
 let recipientId = '';
 let current_userId;
-let group = false;
+let currentConversation;
 
 // Initialize our listeners
 const emitter = new events.EventEmitter();
@@ -59,7 +59,7 @@ function getDisplayName(author) {
 
     if(!author) author = { name: 'unknown' };
 
-    if(group && Settings.properties.groupColors) { 
+    if(currentConversation && currentConversation.isGroup && Settings.properties.groupColors) {
         colorPosition = author.name.length % colorList.length; 
     }
 	
@@ -185,49 +185,59 @@ function renderMessage(author, message) {
 
 InteractiveCli.prototype.initializeConversationViewFromFbid = function(id) {
     const user = messenger.users[id];
-    this.currentConversationId = id;
 
-    // Unread messages in heading
-    heading.clearUnread(id);
-
-    let recipientUrl;
-    if (user) {
-        recipientUrl = user.vanity;
-    } else {
-        recipientUrl = id;
-    }
-
-    const printMessages = (messages) => {
-        recipientId = id;
-        interactive.threadHistory = [];
-        refreshConsole();
-        attsNo = 0;
-        atts = [];
-        for (const i in messages) {
-            const message = messages[i];
-            let authorString = message.author;
-
-            if (authorString.indexOf('fbid:') === 0)
-                authorString = authorString.substr('fbid:'.length);
-
-            const author = messenger.users[authorString];
-            const msg = renderMessage(author, message);
-
-            interactive.threadHistory.push(msg);
+    listeners.getThreadInfo(id, (err, threadInfo) => {
+        if (err) {
+            console.log(err);
+            console.log('Exiting...');
+            process.exit(1);
         }
-        interactive.printThread();
-    };
 
-    messenger.getMessages(recipientUrl, id, process.stdout.rows - 1, (err, messages) => {
-    // TODO: deal with errors
-        if (messages.length > 0 && !err)
-            printMessages(messages);
-        else {
-            // Nothing found, must be using GraphQl
-            messenger.getMessagesGraphQl(recipientUrl, id, process.stdout.rows - 1, (err2, qlMessages) => {
-                printMessages(qlMessages);
-            });
+        currentConversation = threadInfo;
+        this.currentConversationId = threadInfo.thread_fbid;
+
+        // Unread messages in heading
+        heading.clearUnread(id);
+
+        let recipientUrl;
+        if (user) {
+            recipientUrl = user.vanity;
+        } else {
+            recipientUrl = id;
         }
+
+        const printMessages = (messages) => {
+            recipientId = id;
+            interactive.threadHistory = [];
+            refreshConsole();
+            attsNo = 0;
+            atts = [];
+            for (const i in messages) {
+                const message = messages[i];
+                let authorString = message.author;
+
+                if (authorString.indexOf('fbid:') === 0)
+                    authorString = authorString.substr('fbid:'.length);
+
+                const author = messenger.users[authorString];
+                const msg = renderMessage(author, message);
+
+                interactive.threadHistory.push(msg);
+            }
+            interactive.printThread();
+        };
+
+        messenger.getMessages(recipientUrl, id, process.stdout.rows - 1, (err, messages) => {
+        // TODO: deal with errors
+            if (messages.length > 0 && !err)
+                printMessages(messages);
+            else {
+                // Nothing found, must be using GraphQl
+                messenger.getMessagesGraphQl(recipientUrl, id, process.stdout.rows - 1, (err2, qlMessages) => {
+                    printMessages(qlMessages);
+                });
+            }
+        });
     });
 };
 
@@ -282,7 +292,7 @@ InteractiveCli.prototype.readPullMessage = function(message) {
 
         interactive.threadHistory.push(msg);
         interactive.printThread();
-    } else if (message.type === 'typ' && message.st && !group) {
+    } else if (message.type === 'typ' && message.st && !this.currentConversation.isGroup) {
         // Someone is typing
         if (message.to === parseInt(current_userId) && message.from === parseInt(recipientId)) {
             interactive.printThread();
@@ -451,7 +461,7 @@ InteractiveCli.prototype.handler = function(value) {
             const selection = parseInt(value);
             if (!isNaN(selection)) {
                 if (selection >= 0 && selection < currentThreadCount) {
-                    emitter.emit('getMessages', selection, null, (id) => {
+                    emitter.emit('getThreadId', selection, (id) => {
                         interactive.initializeConversationViewFromFbid(id);
                     });
                     action = 1;
@@ -467,9 +477,7 @@ InteractiveCli.prototype.handler = function(value) {
             emitter.emit('startSearch', value, (a, searchId) => {
                 if (a === 1) {
                     action = 1;
-                    emitter.emit('getMessages', null, searchId, (id) => {
-                        interactive.initializeConversationViewFromFbid(id);
-                    });
+                    interactive.initializeConversationViewFromFbid(searchId);
                 } else {
                     emitter.emit('getConvos', current_userId, (data) => {
                         action = data.action;
@@ -499,7 +507,7 @@ InteractiveCli.prototype.run = function(){
         // register our listeners
         emitter.on('getConvos', listeners.getConversationsListener.bind(listeners));
         emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
-        emitter.on('getMessages', listeners.getMessagesListener.bind(listeners));
+        emitter.on('getThreadId', listeners.getThreadIdListener.bind(listeners));
         emitter.on('startSearch', listeners.searchListener.bind(listeners));
 	
         console.log("Fetching conversations...".cyan);	    	

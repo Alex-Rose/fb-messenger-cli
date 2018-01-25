@@ -12,12 +12,18 @@ class Listeners {
         this.messenger = messenger;
     }
 
-    getMessagesListener(nb, searchId, callback) {
-        let id = this.options[nb];
-        if (searchId) {
-            id = searchId;
+    getThreadIdListener(option, callback) {
+        let threadInfo = this.options[option];
+        callback(threadInfo.thread_fbid);
+    }
+
+    getThreadInfo(id, callback) {
+        for (let thread in this.options) {
+            if (this.options[thread].thread_fbid === id)
+                return callback (null, this.options[thread]);
         }
-        callback(id);
+
+        return callback(new Error(`Could not find thread information for thread with ${id}`));
     }
 
     printThreadSnippet(thread, idx, isGroup) {
@@ -55,8 +61,8 @@ class Listeners {
             threads.sort((a, b) => b.timestamp - a.timestamp);
             for (let i = 0; i < threads.length; ++i) {
                 const thread = threads[i];
-                this.printThreadSnippet(thread, i, threads[i].isGroup);
-                this.options[i] = thread.thread_fbid;
+                this.printThreadSnippet(thread, i, thread.isGroup);
+                this.options[i] = thread;
                 if (thread.thread_fbid !== userId) {
                     heading.data.push({fbid: thread.thread_fbid, name: thread.name, unread: 0});
                 }
