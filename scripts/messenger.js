@@ -381,47 +381,19 @@ class Messenger {
         this.users[friend.id] = Object.assign(user, friend);
     }
 
-    getThreadNameFromParticipants(thread, allParticipants) {
+    getThreadNameFromParticipants(thread) {
         // Get name from convo participants
-        const groupParticipants = thread.participants.map(participant => {
-            return allParticipants.find(user => user['fbid'] === participant.substring('fbid:'.length));
-        });
+        const participants = thread.all_participants.nodes;
+        let threadName = '';
+        for (let i=0; i < 3; i++) {
+            threadName += `${participants[i].messaging_actor.short_name}, `;
+        }
+        threadName = threadName.slice(0, -2);
 
-        return `${groupParticipants[0].name}, ${groupParticipants[1].name}, ...`;
-    }
+        if (participants.length > 3)
+            threadName += '...';
 
-    // Parses the thread data and returns a thread entry
-    //
-    // threads: Raw array of thread data incoming from the JSON payload
-    // participans: Raw array of participants entry incoming from the JSON payload
-    //
-    // returns {
-    //   name: <thread name>
-    //   snippet: <thread message snippet>
-    //   attachments: <snippet attachments>
-    //   thread_fbid: id of the thread
-    //   timestamp: timestamp of the thread's last message
-    // }
-    legacyParseThreadData(threads = [], participants = []) {
-        const privateThreads = threads.map(thread => ({
-            thread,
-            participant: participants.find(p => p['fbid'] === thread['other_user_fbid'])
-        })).filter(thread => {
-            // Where participant exists
-            return thread.participant;
-        });
-
-        return privateThreads.map(({thread, participant}) => {
-            const name = getThreadName(thread, participant);
-            this.setCustomNickname(participant['fbid'], name);
-            return {
-                name,
-                'snippet': thread['snippet'],
-                'attachments': thread['snippet_attachments'],
-                'thread_fbid': thread['thread_fbid'],
-                'timestamp': thread.last_message_timestamp
-            };
-        });
+        return threadName;
     }
 
     parseThreadData(threads = []) {
@@ -432,7 +404,7 @@ class Messenger {
             let name;
 
             if (isGroup) {
-                name = thread.name || 'TEMP';
+                name = thread.name || this.getThreadNameFromParticipants(thread);
             } else {
                 // No nicknames for now
                 for (const participant of thread.all_participants.nodes) {
@@ -447,27 +419,6 @@ class Messenger {
                 'attachments': thread.last_message.nodes[0].blob_attachements,
                 'thread_fbid': id,
                 'timestamp': thread.last_message.nodes[0].timestamp_precise
-            };
-        });
-    }
-
-    parseGroupThreadData(threads = [], participants = []) {
-        // Only get threads that don't have an "other user"
-        const groupThreads = threads.filter(thread => {
-            return !thread.other_user_fbid;
-        });
-        return groupThreads.map(thread => {
-            let name;
-            if (thread.name) {
-                name = thread.name;
-            } else {
-                name = this.getThreadNameFromParticipants(thread, participants);
-            }
-            return {
-                name,
-                'snippet': thread.snippet,
-                'thread_fbid': thread.thread_fbid,
-                'timestamp': thread.last_message_timestamp
             };
         });
     }
