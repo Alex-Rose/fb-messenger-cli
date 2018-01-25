@@ -23,7 +23,7 @@ class Listeners {
     printThreadSnippet(thread, idx, isGroup) {
         let line = `[${idx.toString().cyan}] ${thread.name.green} : `;
 
-        if (thread.snippet.length > messageLimit) {
+        if (thread.snippet && thread.snippet.length > messageLimit) {
             thread.snippet = `${ thread.snippet.substr(0, messageLimit) }...`;
         }
 
