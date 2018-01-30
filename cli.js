@@ -6,45 +6,53 @@
     const Settings = require('./scripts/settings.js');
     const colors = require('colors');
 
-    function executeCompleteLogin(callback) {
+    function executeCompleteLogin(callback, options) {
         console.log('Facebook credentials:');
-        const login = new Login();
-        login.execute(callback);
+        Login.execute(callback, options);
     }
 
     function verifyLogon(callback) {
-        crypt.load((err, data) => {
-            if (!err) {
-                Settings.read((loadErr) => {
-                    if (!loadErr) {
-                        let loginInfo;
-                        try {
-                            loginInfo = JSON.parse(data);
-                        } catch(cryptErr) {
-                            return callback(cryptErr);
-                        }
+        crypt.load((cryptLoadErr, data) => {
+            // Load settings before performing any other actions
+            Settings.read((readSettingsErr) => {
+                if (readSettingsErr) {
+                    callback(readSettingsErr);
+                }
 
-                        const curTime = new Date().getTime();
-                        console.log(`Last logon time: ${  new Date(loginInfo.saveTime)}`);
+                const options = {
+                    twoFactor: Settings.properties.twoFactorAuth,
+                    headless: Settings.properties.headlessLogin
+                };
 
-                        // If we've been logged on for too long
-                        // Do an other login to refresh the cookie
-                        if (loginInfo.saveTime + Settings.getLogonTimeout() < curTime) {
-                            return callback(new Error('Login time expired'));
-                        } else
-                            return callback();
-                    } else
-                        return callback(loadErr);
-                });
-            } else
-                return callback(err);
+                // Check if we have a profile
+                if (!cryptLoadErr) {
+                    let loginInfo;
+                    try {
+                        loginInfo = JSON.parse(data);
+                    } catch(cryptErr) {
+                        return callback(cryptErr, options);
+                    }
+
+                    const curTime = new Date().getTime();
+                    console.log(`Last logon time: ${  new Date(loginInfo.saveTime)}`);
+
+                    // If we've been logged on for too long
+                    // Do an other login to refresh the cookie
+                    if (loginInfo.saveTime + Settings.getLogonTimeout() < curTime) {
+                        return callback(new Error('Login time expired'), options);
+                    } else {
+                        return callback(null, options);
+                    }
+                } else
+                    return callback(cryptLoadErr, options);
+            });
         });
     }
 
-    function launchApp(err) {
+    function launchApp(err, options) {
         if (err) {
             console.log(`Login verification failed: ${err}`.yellow);
-            executeCompleteLogin(launchApp);
+            executeCompleteLogin(launchApp, options);
         } else {
             Settings.read((err) => {
                 let delay = 0;

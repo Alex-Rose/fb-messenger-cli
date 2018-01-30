@@ -19,7 +19,9 @@ class Settings {
             useCustomNicknames: true,
             timestampLocale: "en-US",
             timestampOptions: {},
-            logonTimeout: 43200000 // 12hrs in ms
+            twoFactorAuth: false,
+            headlessLogin: true,
+            logonTimeout: 86400000 // 24hrs in ms
         };
     }
 
