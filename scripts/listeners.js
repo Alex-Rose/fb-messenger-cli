@@ -12,25 +12,31 @@ class Listeners {
         this.messenger = messenger;
     }
 
-    getMessagesListener(nb, searchId, callback) {
-        let id = this.options[nb];
-        if (searchId) {
-            id = searchId;
+    getThreadIdListener(option, callback) {
+        let threadInfo = this.options[option];
+        callback(threadInfo.thread_fbid);
+    }
+
+    getThreadInfo(id, callback) {
+        for (let thread in this.options) {
+            if (this.options[thread].thread_fbid === id)
+                return callback (null, this.options[thread]);
         }
-        callback(id);
+
+        return callback(new Error(`Could not find thread information for thread with ${id}`));
     }
 
     printThreadSnippet(thread, idx, isGroup) {
         let line = `[${idx.toString().cyan}] ${thread.name.green} : `;
 
-        if (thread.snippet.length > messageLimit) {
+        if (thread.snippet && thread.snippet.length > messageLimit) {
             thread.snippet = `${ thread.snippet.substr(0, messageLimit) }...`;
         }
 
         if (thread.snippet !== '')
             line += `${thread.snippet} `;
 
-        if (!isGroup) {
+        if (!isGroup && thread.attachements) {
             for (let j = 0; j < thread.attachments.length; j++) {
                 const a = thread.attachments[j];
                 line += '[ '.red + a.attach_type + ' ]'.red;
@@ -40,11 +46,13 @@ class Listeners {
         console.log(line);
     }
 
-    conversationsListener(userId, callback, isGroup = false) {
-        this.messenger.getThreads(isGroup, (err, threads) => {
+    conversationsListener(userId, callback) {
+        this.messenger.getThreads((err, threads) => {
             if (err) {
+                // This only loads once, if it fails, close app
                 console.error('Found error while fetching conversations.', err);
-                return;
+                console.log(`Could not properly initialize conversation listener. \nReason: ${err}. \nExiting...`);
+                process.exit(1);
             }
 
             refreshConsole();
@@ -53,8 +61,8 @@ class Listeners {
             threads.sort((a, b) => b.timestamp - a.timestamp);
             for (let i = 0; i < threads.length; ++i) {
                 const thread = threads[i];
-                this.printThreadSnippet(thread, i, isGroup);
-                this.options[i] = thread.thread_fbid;
+                this.printThreadSnippet(thread, i, thread.isGroup);
+                this.options[i] = thread;
                 if (thread.thread_fbid !== userId) {
                     heading.data.push({fbid: thread.thread_fbid, name: thread.name, unread: 0});
                 }
@@ -67,10 +75,6 @@ class Listeners {
 
     getConversationsListener(userId, cb) {
         this.conversationsListener(userId, cb);
-    }
-
-    getGroupConversationsListener(userId, cb) {
-        this.conversationsListener(userId, cb, true);
     }
 
     sendMessageListener(m, recipientId) {

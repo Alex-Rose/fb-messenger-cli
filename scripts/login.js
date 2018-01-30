@@ -70,7 +70,9 @@ class Login {
             const pageRequestCallback = this._onPageRequest.bind(this);
             page.on('request', pageRequestCallback);
 
-            return page.click('#loginbutton');
+            return page.evaluate(() => {
+                document.querySelector('#loginbutton').click();
+            });
         }).then(() => {
             console.log(`Waiting 20 seconds for login page`);
             return this.authPromise;
@@ -123,7 +125,9 @@ class Login {
             const pageRequestCallback = this._onPageRequest.bind(this);
             page.on('request', pageRequestCallback);
 
-            return page.click('#loginbutton');
+            return page.evaluate(() => {
+                document.querySelector('#loginbutton').click();
+            });
         }).then(() => {
             console.log(`You have 120 seconds to complete 2FA`);
             return this.authPromise;
