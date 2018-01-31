@@ -31,7 +31,7 @@ class Login {
 
     getCookie() {
         let page;
-        return puppeteer.launch({headless: this.headless}).then(browser => {
+        return puppeteer.launch({headless: this.headless, args: ['--no-sandbox', '--disable-setuid-sandbox']}).then(browser => {
             this.browser = browser;
             return this.browser.pages();
         }).then(promisedPage => {
