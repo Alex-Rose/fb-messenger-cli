@@ -318,39 +318,39 @@ class Messenger {
 
             if (body) {
                 const results = this.cleanGraphQl(body);
-
                 // Check we actually have messages
-                if (!results.o0)
-                    return callback(new Error('No messages found'), []);
-                const thread = results.o0.data.message_thread;
-                const messages = thread.messages.nodes;
+                if (results.o0 && results.o0.data) {
+                    const thread = results.o0.data.message_thread;
+                    if (thread) {
+                        const messages = thread.messages.nodes;
 
-                const data = [];
-                if (messages !== undefined) {
-                    for (const message in messages) {
-                        const m = messages[message];
+                        const data = [];
+                        if (messages !== undefined) {
+                            for (const message in messages) {
+                                const m = messages[message];
 
-                        const obj = {
-                            'author': m.message_sender.id,
-                            'body': m.message ? m.message.text : m.snippet,
-                            'other_user_fbid': thread.thread_key.other_user_fbid,
-                            'thread_fbid': thread.thread_key.thread_fbid,
-                            'timestamp': m.timestamp_precise
-                        };
+                                const obj = {
+                                    'author': m.message_sender.id,
+                                    'body': m.message ? m.message.text : m.snippet,
+                                    'other_user_fbid': thread.thread_key.other_user_fbid,
+                                    'thread_fbid': thread.thread_key.thread_fbid,
+                                    'timestamp': m.timestamp_precise
+                                };
 
-                        if (m.extensible_attachment)
-                            obj.storyAttachment = m.extensible_attachment.story_attachment;
+                                if (m.extensible_attachment)
+                                    obj.storyAttachment = m.extensible_attachment.story_attachment;
 
-                        if (m.blob_attachments) {
-                            obj.attachment = m.blob_attachments[0];
+                                if (m.blob_attachments) {
+                                    obj.attachment = m.blob_attachments[0];
+                                }
+                                data.push(obj);
+                            }
                         }
-                        data.push(obj);
+                        return callback(err, data);
                     }
                 }
-                return callback(err, data);
             }
-
-            callback(new Error('Could not fetch thread messages'));
+            return callback(new Error('Could not fetch thread messages'));
         });
     }
 

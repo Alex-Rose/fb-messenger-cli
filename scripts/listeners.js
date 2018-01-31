@@ -23,7 +23,7 @@ class Listeners {
                 return callback (null, this.options[thread]);
         }
 
-        return callback(new Error(`Could not find thread information for thread with ${id}`));
+        return callback(`Could not find thread information for thread with id: ${id}`);
     }
 
     printThreadSnippet(thread, idx, isGroup) {
