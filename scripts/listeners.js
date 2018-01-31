@@ -55,7 +55,7 @@ class Listeners {
                 process.exit(1);
             }
 
-            refreshConsole();
+            refreshConsole(true);
             this.options = {};
 
             threads.sort((a, b) => b.timestamp - a.timestamp);
