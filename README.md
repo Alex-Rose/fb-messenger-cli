@@ -2,6 +2,8 @@
 ## Facebook Messenger Command line client
 Use your Facebook account to chat with your friends sneakily in the command line, it's as easy as logging in, choosing a convo and chatting away.
 
+*V2.0.0 Now with Google Chrome's Puppeteer for login*
+
 ![npm](https://nodei.co/npm/fb-messenger-cli.png?downloads=true)
 #### Install
 ``npm install -g fb-messenger-cli``
@@ -10,7 +12,6 @@ Then ``fb-messenger-cli`` from anywhere
 ### Choose a friend
  - Pick from a list of recent conversations
  - Use /search to find other friends
- - Use /group to find group conersations
  - Easily switch between conversations with /switch
  
 ![Selection](http://puu.sh/pSNkL/7d82e4d9f2.png)
@@ -35,8 +36,6 @@ Then ``fb-messenger-cli`` from anywhere
 > /q /exit /quit .... Quit the application
 
 > /logout ........... Exit and flush credentials
-
-> /g /groups ........ Bring up your group conversations
 
 > /s /switch [#] .... Quick switch to conversation number #
 
