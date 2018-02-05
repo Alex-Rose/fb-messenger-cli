@@ -1,6 +1,7 @@
 const crypt = require('./crypt.js');
 const readlineSync = require('readline-sync');
 const puppeteer = require('puppeteer');
+const Settings = require('./settings');
 
 class Login {
     constructor(username, password) {
@@ -31,7 +32,12 @@ class Login {
 
     getCookie() {
         let page;
-        return puppeteer.launch({headless: this.headless}).then(browser => {
+        let args = [];
+        if (Settings.properties.noSandox) {
+            args.push('--no-sandbox');
+            args.push('--disable-setuid-sandbox');
+        }
+        return puppeteer.launch({headless: this.headless, args}).then(browser => {
             this.browser = browser;
             return this.browser.pages();
         }).then(promisedPage => {
