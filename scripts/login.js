@@ -33,7 +33,7 @@ class Login {
     getCookie() {
         let page;
         let args = [];
-        if (Settings.properties.noSandox) {
+        if (Settings.properties.noSandbox) {
             args.push('--no-sandbox');
             args.push('--disable-setuid-sandbox');
         }
