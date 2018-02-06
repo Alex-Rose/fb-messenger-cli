@@ -384,14 +384,15 @@ class Messenger {
     getThreadNameFromParticipants(thread) {
         // Get name from convo participants
         const participants = thread.all_participants.nodes;
-        let threadName = '';
-        for (let i=0; i < 3; i++) {
-            threadName += `${participants[i].messaging_actor.short_name}, `;
-        }
+        const otherParticipants = participants.filter(participant => { return participant.messaging_actor.id !== this.userId;});
+        let threadName = otherParticipants.reduce((reducer, participant) => {
+            return `${reducer}${participant.messaging_actor.short_name}, `;
+        }, '');
+
         threadName = threadName.slice(0, -2);
 
-        if (participants.length > 3)
-            threadName += '...';
+        if (threadName.length > 40)
+            threadName = `${threadName.substring(0, 40)}...`;
 
         return threadName;
     }
