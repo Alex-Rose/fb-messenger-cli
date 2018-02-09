@@ -404,8 +404,10 @@ class Messenger {
             const isGroup = thread.thread_type === 'GROUP';
             let name;
 
-            if (isGroup) {
-                name = thread.name || this.getThreadNameFromParticipants(thread);
+            if (thread.name) {
+                name = thread.name;
+            } else if (isGroup) {
+                name = this.getThreadNameFromParticipants(thread);
             } else {
                 // No nicknames for now
                 for (const participant of thread.all_participants.nodes) {
@@ -413,6 +415,7 @@ class Messenger {
                         name = participant.messaging_actor.name;
                 }
             }
+
             return {
                 name,
                 isGroup,
