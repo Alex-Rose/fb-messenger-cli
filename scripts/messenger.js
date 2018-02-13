@@ -9,14 +9,6 @@
 const request = require('request'); // For making HTTP requests
 const Settings = require('./settings');
 
-function getThreadName(thread, participant) {
-    if (!Settings.properties.useCustomNicknames) {
-        return participant.name;
-    }
-
-    const nicknames = thread['custom_nickname'];
-    return (nicknames && nicknames[participant['fbid']]) || participant.name;
-}
 
 class Messenger {
 
@@ -62,6 +54,23 @@ class Messenger {
         } catch (e) {
             return {};
         }
+    }
+
+    getUserDisplayName(userId) {
+        if (!Settings.properties.useCustomNicknames) {
+            return this.users[userId].name;
+        }
+
+        return this.users[userId].custom_nickname
+            || this.users[userId].name;
+    }
+
+
+    saveParticipantCustomizations(customizations) {
+        customizations
+            .map(({ participant_id: id, nickname }) =>
+                 [ id, id !== this.userId ? nickname : 'Me' ])
+            .map(args => this.setCustomNickname(...args));
     }
 
     // Parses a list of conversation participants into users
@@ -385,6 +394,7 @@ class Messenger {
         // Get name from convo participants
         const participants = thread.all_participants.nodes;
         const otherParticipants = participants.filter(participant => { return participant.messaging_actor.id !== this.userId;});
+        // TODO: Use nicknames or short names?
         let threadName = otherParticipants.reduce((reducer, participant) => {
             return `${reducer}${participant.messaging_actor.short_name}, `;
         }, '');
@@ -411,8 +421,9 @@ class Messenger {
             } else {
                 // No nicknames for now
                 for (const participant of thread.all_participants.nodes) {
-                    if (participant.messaging_actor.id === id)
-                        name = participant.messaging_actor.name;
+                    if (participant.messaging_actor.id === id) {
+                        name = this.getUserDisplayName(id);
+                    }
                 }
             }
 
@@ -476,6 +487,11 @@ class Messenger {
                 }
 
                 for (const thread of threads) {
+                    if (thread.customization_info &&
+                        thread.customization_info.participant_customizations) {
+                        this.saveParticipantCustomizations(
+                            thread.customization_info.participant_customizations);
+                    }
                     this.saveParticipantsAsFriends(thread.all_participants);
                 }
 
