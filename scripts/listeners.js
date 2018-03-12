@@ -77,6 +77,11 @@ class Listeners {
         this.conversationsListener(userId, cb);
     }
 
+    sendLike(recipientId) {
+        let emoji = this.getThreadInfo(recipientId, (e, opt) => opt.emoji);
+        this.sendMessageListener(emoji, recipientId);
+    }
+
     sendMessageListener(m, recipientId) {
         if (this.messenger.users[recipientId]) {
             this.messenger.sendMessage(this.messenger.users[recipientId].vanity, recipientId, m, (err) => {
