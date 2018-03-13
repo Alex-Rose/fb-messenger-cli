@@ -469,19 +469,23 @@ class Messenger {
                 const results = this.cleanGraphQl(body);
 
                 // threads is an array of graphQl conversation info, no messages
-                const threads = results.o0.data.viewer.message_threads.nodes;
+                if (results.o0.data) {
+                    const threads = results.o0.data.viewer.message_threads.nodes;
 
-                if (!threads) {
-                    return callback(new Error('Payload contained no threads'));
+                    if (!threads) {
+                        return callback(new Error('Payload contained no threads'));
+                    }
+
+                    for (const thread of threads) {
+                        this.saveParticipantsAsFriends(thread.all_participants);
+                    }
+
+                    // All threads are together (YAY)
+                    callback(null, this.parseThreadData(threads));
+                } else {
+                    console.log('Data was empty, retrying...');
+                    this.getThreads(callback);
                 }
-
-                for (const thread of threads) {
-                    this.saveParticipantsAsFriends(thread.all_participants);
-                }
-
-                // All threads are together (YAY)
-                callback(null, this.parseThreadData(threads));
-
             } catch (e) {
                 callback(e);
             }
