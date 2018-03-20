@@ -153,6 +153,15 @@ class Pull extends EventEmitter {
                                                         });
                                                     }
                                                 }
+                                            } else if (att.mercury.blob_attachment.__typename === 'MessageImage') {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.blob_attachment
+                                                });
                                             }
                                         }
                                     } else if (ms.delta.class === 'AdminTextMessage') {
