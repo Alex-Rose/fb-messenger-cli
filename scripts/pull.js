@@ -157,6 +157,17 @@ class Pull extends EventEmitter {
                                                 this.emit('message', {
                                                     type: 'msg',
                                                     author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent an image ',
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.blob_attachment
+                                                });
+                                            } else if (att.mercury.blob_attachment.__typename === 'MessageAnimatedImage') {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent a gif ',
                                                     otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
                                                     threadId: ms.delta.messageMetadata.threadKey.threadFbId,
                                                     timestamp: ms.delta.messageMetadata.timestamp,
