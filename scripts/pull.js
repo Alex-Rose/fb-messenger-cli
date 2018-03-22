@@ -116,6 +116,18 @@ class Pull extends EventEmitter {
                                             });
                                         } else if (ms.delta.attachments !== undefined) {
                                             const att = ms.delta.attachments[0];
+                                            if (att.mercury.sticker_attachment !== undefined) {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent a sticker: ' + att.mercury.sticker_attachment.label + ' ',
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.sticker_attachment
+                                                });
+                                            }
+                                            
                                             if (att.mercury.attach_type === 'animated_image') {
                                                 this.emit('message', {
                                                     type: 'msg',
