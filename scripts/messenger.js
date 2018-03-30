@@ -402,6 +402,8 @@ class Messenger {
         return threads.map(thread => {
             const id = thread.thread_key.thread_fbid || thread.thread_key.other_user_id;
             const isGroup = thread.thread_type === 'GROUP';
+            const emoji = (thread.customization_info && thread.customization_info.emoji) ?
+                thread.customization_info.emoji : "👍";
             let name;
 
             if (thread.name) {
@@ -421,6 +423,7 @@ class Messenger {
                 isGroup,
                 'snippet': thread.last_message.nodes[0].snippet,
                 'attachments': thread.last_message.nodes[0].blob_attachements,
+                emoji, 
                 'thread_fbid': id,
                 'timestamp': thread.last_message.nodes[0].timestamp_precise
             };

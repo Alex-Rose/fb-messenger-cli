@@ -421,12 +421,22 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('/s /switch [#] .... Quick switch to conversation number #'.cyan);
             console.log('/search [query] ... Search your friends to chat'.cyan);
             console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
+            console.log('/l /like .......... Send the group emoji'.cyan);
             console.log('/r /refresh ....... Refresh the current converation'.cyan);
             console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
             console.log('/help ............. Print this message'.cyan);
             rlInterface.prompt(true);
             break;
 
+        case '/l':
+        case '/like':
+            if (action === 1) {
+                emitter.emit('sendLike', recipientId);
+            } else {
+                console.log('You are not currently in a conversation');
+            }
+            rlInterface.prompt(true);
+            break;
         case '/r':
         case '/refresh':
             if (action === 1) {
@@ -514,6 +524,7 @@ InteractiveCli.prototype.run = function(){
 
         // register our listeners
         emitter.on('getConvos', listeners.getConversationsListener.bind(listeners));
+        emitter.on('sendLike', listeners.sendLike.bind(listeners));
         emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
         emitter.on('getThreadId', listeners.getThreadIdListener.bind(listeners));
         emitter.on('startSearch', listeners.searchListener.bind(listeners));
