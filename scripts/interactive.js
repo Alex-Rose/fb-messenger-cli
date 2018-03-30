@@ -66,13 +66,11 @@ function getDisplayName(author) {
     let displayName;	
     if (!Settings.properties.useCustomNicknames) {
         displayName = author.name;
-    } else {
-        displayName = author.custom_nickname || author.name;
-    }
+    } else displayName = author.custom_nickname || author.name;
   
-    if (author.id === messenger.userId) {
+    if (author.id === messenger.userId)
         return displayName;
-    } else {
+    else {
         return colorList[colorPosition](displayName);
     }
 }
