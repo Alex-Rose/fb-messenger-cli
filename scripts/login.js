@@ -167,9 +167,14 @@ class Login {
     }
 
     _onPageLoad(is2FA) {
+	let page;    
         return this.browser.pages().then(pages => {
-            const page = pages[0];
-            return page.cookies();
+            if (pages) {  
+	      page = pages[0];
+              return page.cookies();
+	    } else {
+              throw new Error('Could not load browser pages');
+	    }
         }).then(cookies => {
             return this._getAuthCookie(cookies);
         }).then(cookie => {
