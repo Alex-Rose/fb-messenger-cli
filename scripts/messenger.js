@@ -342,6 +342,18 @@ class Messenger {
 
                                 if (m.blob_attachments) {
                                     obj.attachment = m.blob_attachments[0];
+
+                                    if (obj.body == "" && m.blob_attachments[0]) {
+                                        if (m.blob_attachments[0].__typename === "MessageImage") {
+                                          obj.body = 'sent an image ';
+                                        } else if (m.blob_attachments[0].__typename === "MessageAnimatedImage") {
+                                          obj.body = 'sent a gif ';
+                                        }
+                                    }
+                                }
+                                if (m.sticker) {
+                                    obj.body += 'sent a sticker: ' + m.sticker.label + ' ';
+                                    obj.attachment = m.sticker;
                                 }
                                 data.push(obj);
                             }

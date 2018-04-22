@@ -116,6 +116,18 @@ class Pull extends EventEmitter {
                                             });
                                         } else if (ms.delta.attachments !== undefined) {
                                             const att = ms.delta.attachments[0];
+                                            if (att.mercury.sticker_attachment !== undefined) {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent a sticker: ' + att.mercury.sticker_attachment.label + ' ',
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.sticker_attachment
+                                                });
+                                            }
+                                            
                                             if (att.mercury.attach_type === 'animated_image') {
                                                 this.emit('message', {
                                                     type: 'msg',
@@ -153,6 +165,26 @@ class Pull extends EventEmitter {
                                                         });
                                                     }
                                                 }
+                                            } else if (att.mercury.blob_attachment.__typename === 'MessageImage') {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent an image ',
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.blob_attachment
+                                                });
+                                            } else if (att.mercury.blob_attachment.__typename === 'MessageAnimatedImage') {
+                                                this.emit('message', {
+                                                    type: 'msg',
+                                                    author: ms.delta.messageMetadata.actorFbId,
+                                                    body: 'sent a gif ',
+                                                    otherUserId: ms.delta.messageMetadata.threadKey.otherUserFbId,
+                                                    threadId: ms.delta.messageMetadata.threadKey.threadFbId,
+                                                    timestamp: ms.delta.messageMetadata.timestamp,
+                                                    attachment: att.mercury.blob_attachment
+                                                });
                                             }
                                         }
                                     } else if (ms.delta.class === 'AdminTextMessage') {
