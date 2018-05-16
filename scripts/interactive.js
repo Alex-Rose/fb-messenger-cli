@@ -40,14 +40,16 @@ const rlInterface = readline.createInterface({
     prompt: '> '
 });
 
+
 const colorList = [
     safeColors.green,
-    safeColors.red,
     safeColors.blue,
-    safeColors.cyan,
     safeColors.magenta,
+    safeColors.cyan,
+    safeColors.red,
     safeColors.yellow
 ];
+
 
 function InteractiveCli() {
     Pull.execute(this.readPullMessage);
@@ -59,27 +61,32 @@ function getDisplayName(author) {
 
     if(!author) author = { name: 'unknown' };
 
-    if(currentConversation && currentConversation.isGroup && Settings.properties.groupColors) {
-        colorPosition = author.name.length % colorList.length; 
-    }
-	
-    let displayName;	
+    if(currentConversation && currentConversation.isGroup && Settings.properties.groupColors)
+        colorPosition = author.name.length % colorList.length;
+    if(currentConversation && !currentConversation.isGroup && Settings.properties.soloColors)
+        colorPosition = author.name.length % colorList.length;
+
+    let displayName;
     if (!Settings.properties.useCustomNicknames) {
         displayName = author.name;
     } else displayName = author.custom_nickname || author.name;
-  
-    if (author.id === messenger.userId)
-        return displayName;
-    else {
+
+    if (author.id === messenger.userId) {
+        try {
+            return safeColors[Settings.properties.userColor](displayName);
+        } catch (e) {
+            return colorList[colorPosition](displayName);
+        }
+    } else {
         return colorList[colorPosition](displayName);
     }
 }
 
 function renderMessage(author, message) {
     let msg = `${getDisplayName(author)}: `;
-  
+
     if (Settings.properties.showTimestamps) {
-    
+
         const timeDifference = Date.now() - message.timestamp;
         const daysAgo = Math.round(timeDifference / msInADay);
 
@@ -152,11 +159,11 @@ function renderMessage(author, message) {
         const a = message.attachment;
         let uri;
         if (a.preview && a.preview.uri) {
-            uri = a.preview.uri;      
+            uri = a.preview.uri;
         } else if (a.preview_image && a.preview_image.uri) {
-            uri = a.preview_image.uri; 
+            uri = a.preview_image.uri;
         }
-    
+
         if (uri) {
             atts[attsNo] = uri;
             const x = `${attsNo}`;
@@ -423,6 +430,7 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('/v /view [#] ...... View the attachment by the number given after the type'.cyan);
             console.log('/r /refresh ....... Refresh the current converation'.cyan);
             console.log('/timestamp ........ Toggle timestamp for messages'.cyan);
+            console.log('/color [#] ........ Set username color, https://www.npmjs.com/package/colors'.cyan);
             console.log('/help ............. Print this message'.cyan);
             rlInterface.prompt(true);
             break;
@@ -450,6 +458,11 @@ InteractiveCli.prototype.handleCommands = function(command) {
             console.log('Changed the timestamp settings!'.cyan);
 
             interactive.handleCommands("/refresh");
+            break;
+
+        case '/color':
+            Settings.properties.userColor = options[1];
+            console.log('User color changed!'.cyan);
             break;
 
         default:
@@ -517,8 +530,8 @@ InteractiveCli.prototype.run = function(){
         emitter.on('sendMessage', listeners.sendMessageListener.bind(listeners));
         emitter.on('getThreadId', listeners.getThreadIdListener.bind(listeners));
         emitter.on('startSearch', listeners.searchListener.bind(listeners));
-	
-        console.log("Fetching conversations...".cyan);	    	
+
+        console.log("Fetching conversations...".cyan);
         messenger.getFriends((err, friends) => {
             if (err) {
                 console.log(`An error occured initially fetching friends list: ${err}`);
@@ -527,7 +540,7 @@ InteractiveCli.prototype.run = function(){
             }
 
             const entry = {
-                id: userId, 
+                id: userId,
                 firstName: "Me",
                 name: "Me",
                 vanity: "unknown",
@@ -542,10 +555,10 @@ InteractiveCli.prototype.run = function(){
                 rlInterface.prompt(true);
             });
 
-            // Set up the line reader	      
+            // Set up the line reader
             rlInterface.on("line", interactive.handler);
             rlInterface.on("close", interactive.exit);
-            rlInterface.prompt(true);      
+            rlInterface.prompt(true);
         });
     });
 };

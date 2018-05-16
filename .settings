@@ -1,6 +1,8 @@
 {
   "disableColors": false,
   "groupColors": true,
+  "soloColors": true,
+  "userColor": "dim",
   "conversationsToLoad": 15,
   "preventMessageFlicker": false,
   "desktopNotifications": false,
