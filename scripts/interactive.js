@@ -107,9 +107,9 @@ function renderMessage(author, message) {
         msg = `${dateString} - ${msg}`;
     }
 
-    if (message.body !== undefined && message.body !== "")
-        msg += message.body;
-
+    if (message.body !== undefined && message.body !== "") {
+        msg += (author.id === messenger.userId) ? `${message.body.dim}` : message.body
+    }
     if (message.attachmentsLegacy) {
         for (let i = 0; i < message.attachmentsLegacy.length; i++) {
             const a = message.attachmentsLegacy[i];
@@ -126,6 +126,7 @@ function renderMessage(author, message) {
                     } else {
                         atts[attsNo] = a.share.uri;
                         attType = `live location - ${  a.share.description}`;
+
                     }
                 } else {
                     atts[attsNo] = a.share.uri;
@@ -462,7 +463,9 @@ InteractiveCli.prototype.handleCommands = function(command) {
 
         case '/color':
             Settings.properties.userColor = options[1];
-            console.log('User color changed!'.cyan);
+            Settings.save();
+	    console.log('User color changed!'.cyan);
+	    interactive.handleCommands("/refresh");
             break;
 
         default:

@@ -49,7 +49,8 @@ class Heading {
             head += ' ';
         }
 
-        console.log(head.bgBlue);
+        //console.log(head.bgBlue);
+	console.log(head.inverse);
     }
 }
 
