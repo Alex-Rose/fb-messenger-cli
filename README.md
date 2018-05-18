@@ -30,7 +30,7 @@ Then ``fb-messenger-cli`` from anywhere
  - Use custom nicknames
  - Use custom username colors
  - Use custom message colors *NEW*
- - Stay logged in forever *almost
+ - Stay logged in forever *almost*
  
 > /help
 
