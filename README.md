@@ -24,10 +24,13 @@ Then ``fb-messenger-cli`` from anywhere
 
 ### Helpful settings and commands
  - Toggle timestamps on/off
- - Color coded people in group chats 
+ - Color coded people in group chats
+ - Color coded people in single chats *NEW*
  - Load an unlimited number of conversations
  - Use custom nicknames
- - Stay logged in forever *almost
+ - Use custom username colors
+ - Use custom message colors *NEW*
+ - Stay logged in forever *almost*
  
 > /help
 
@@ -46,6 +49,8 @@ Then ``fb-messenger-cli`` from anywhere
 > /r /refresh ....... Refresh the current converation
 
 > /timestamp ........ Toggle timestamp for messages
+
+> /color [#] ........ Set username color, https://www.npmjs.com/package/colors
 
 > /help ............. Print this message
 

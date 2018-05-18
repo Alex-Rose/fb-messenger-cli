@@ -1,7 +1,9 @@
 {
   "disableColors": false,
   "groupColors": true,
-  "conversationsToLoad": 15,
+  "soloColors": true,
+  "userColor": "yellow",
+  "conversationsToLoad": 20,
   "preventMessageFlicker": false,
   "desktopNotifications": false,
   "showTimestamps": false,

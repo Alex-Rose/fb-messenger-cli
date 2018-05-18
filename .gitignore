@@ -8,3 +8,6 @@ phantomjs.exe
 
 ## Don't commit settings past default ones
 .settings
+
+## Don't commit dev scripts
+start-dev.sh

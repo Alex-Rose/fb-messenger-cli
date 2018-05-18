@@ -12,6 +12,8 @@ class Settings {
         this.properties = {
             disableColors: false,
             groupColors: true,
+            soloColors: false,
+            userColor: 'dim',
             conversationsToLoad: 15,
             preventMessageFlicker: false,
             desktopNotifications: false,
