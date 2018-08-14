@@ -4,6 +4,7 @@
   "conversationsToLoad": 15,
   "preventMessageFlicker": false,
   "desktopNotifications": false,
+  "showSenderInMenu": true,
   "showTimestamps": true,
   "useCustomNicknames": true,
   "timestampLocale": "en-US",
