@@ -5,6 +5,8 @@ phantomjs.exe
 .test_*
 .idea/
 .sublime-project
+*~
+[._]*.un~
 
 ## Don't commit settings past default ones
 .settings

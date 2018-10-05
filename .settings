@@ -4,12 +4,12 @@
   "conversationsToLoad": 15,
   "preventMessageFlicker": false,
   "desktopNotifications": false,
-  "showTimestamps": false,
+  "showTimestamps": true,
   "useCustomNicknames": true,
   "timestampLocale": "en-US",
   "timestampOptions": {},
   "twoFactorAuth": false,
   "headlessLogin": true,
-  "noSandbox": true,
+  "noSandbox": false,
   "logonTimeout": 86400000
 }

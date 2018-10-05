@@ -1,14 +1,22 @@
 #!/usr/bin/env node
 
 (function () {
-    const Login = require('./scripts/login.js');
-    const crypt = require('./scripts/crypt.js');
-    const Settings = require('./scripts/settings.js');
+    const Login = require('./lib/login.js');
+    const crypt = require('./lib/crypt.js');
+    const Settings = require('./lib/settings.js');
     const colors = require('colors');
 
     function executeCompleteLogin(callback, options) {
         console.log('Facebook credentials:');
-        Login.execute(callback, options);
+        Login.execute(err => {
+            if (err) {
+                console.log(`Login verification failed: ${err}`);
+                console.log('Exiting. Please try again.'.red);
+                process.exit(1);
+            } else {
+                callback();
+            }
+        }, options);
     }
 
     function verifyLogon(callback) {
@@ -67,7 +75,7 @@
 
                 setTimeout(() => {
                     console.log('Launching app...'.cyan);
-                    require('./scripts/interactive.js');
+                    require('./lib/interactive.js');
                 }, delay);
             });
         }
