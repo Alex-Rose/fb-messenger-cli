@@ -1,6 +1,6 @@
 {
   "name": "fb-messenger-cli",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "An interface for facebook communications through the cli",
   "author": "Alexandre Rose and Samuel Bergeron",
   "license": "MIT",
