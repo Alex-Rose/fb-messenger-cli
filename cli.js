@@ -22,7 +22,7 @@
     function verifyLogon(callback) {
         crypt.load((cryptLoadErr, data) => {
             // Load settings before performing any other actions
-            Settings.read((readSettingsErr) => {
+            Settings.read((readSettingsErr, settings) => {
                 if (readSettingsErr) {
                     callback(readSettingsErr);
                 }
