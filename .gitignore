@@ -10,3 +10,7 @@ phantomjs.exe
 
 ## Don't commit settings past default ones
 .settings
+
+## Don't commit any encryption/settings files
+.fbmessenger*
+test.*
